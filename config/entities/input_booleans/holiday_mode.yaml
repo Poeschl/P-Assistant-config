@@ -1,0 +1,7 @@
+---
+# A boolean which indicates if I'm away from home for a few days.
+# The state gets automatically changed and will trigger some precence simulation.
+#
+holiday_mode:
+  name: Urlaubsmodus
+  icon: mdi:airplane-takeoff

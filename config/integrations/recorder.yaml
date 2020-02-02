@@ -1,0 +1,13 @@
+---
+# The recorder component is storing details in a database which
+# then are handled by the history component.
+#
+recorder:
+  db_url: !secret recorder_url
+  purge_keep_days: 30
+  exclude:
+    domains:
+      - weblink
+      - updater
+    entities:
+      - binary_sensor.remote_ui

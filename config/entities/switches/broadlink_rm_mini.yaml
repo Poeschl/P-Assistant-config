@@ -1,0 +1,8 @@
+---
+# The broadlink remote platform allows you to interact with Broadlink remote control devices.
+#
+platform: broadlink
+host: !secret ip_rm_mini
+mac: !secret mac_rm_mini
+friendly_name: 'IR Sender Wohnzimmer'
+type: rm_mini

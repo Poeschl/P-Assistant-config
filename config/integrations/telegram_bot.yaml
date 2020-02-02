@@ -1,0 +1,11 @@
+---
+#
+# Telegram on your mobile or desktop device to send and receive messages
+# or commands to/from your Home Assistant.
+#
+telegram_bot:
+  - platform: polling
+    api_key: !secret telegram_bot_key
+    parse_mode: markdown
+    allowed_chat_ids:
+      - !secret telegram_markus_id

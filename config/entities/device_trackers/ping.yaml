@@ -1,0 +1,13 @@
+---
+#
+# The ping device tracker platform offers presence detection by using ping to send ICMP echo requests.
+#
+# I use it for pinging the Nintendo Switch and detect when its on.
+#
+platform: ping
+hosts:
+  p_switch: !secret ip_markus_switch
+consider_home: 0:04
+interval_seconds: 15
+new_device_defaults:
+  track_new_devices: true

@@ -1,0 +1,4 @@
+---
+# This file load up my switches
+#
+switch: !include_dir_list ../entities/switches

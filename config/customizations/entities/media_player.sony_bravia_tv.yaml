@@ -1,0 +1,5 @@
+---
+# Sets a better name for my sony tv
+#
+media_player.sony_bravia_tv:
+  friendly_name: P-TV

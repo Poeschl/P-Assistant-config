@@ -1,0 +1,5 @@
+substitutions:
+  devicename: tv_leuchte
+  upper_devicename: TV-Lampe
+
+<<: !include includes/alfawise_plug.yaml

@@ -1,0 +1,4 @@
+---
+# Sensors are gathering information about states and conditions.
+#
+sensor: !include_dir_list ../entities/sensors

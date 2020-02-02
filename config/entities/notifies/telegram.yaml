@@ -1,0 +1,6 @@
+---
+# Setup a notification enpoint for the telegram bot.
+#
+name: Telegram Notify
+platform: telegram
+chat_id: !secret telegram_markus_id

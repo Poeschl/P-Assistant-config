@@ -1,0 +1,22 @@
+{
+  "domain": "smartir",
+  "name": "SmartIR",
+  "documentation": "https://github.com/smartHomeHub/SmartIR",
+  "dependencies": [],
+  "codeowners": ["@smartHomeHub"],
+  "requirements": [],
+  "homeassistant": "0.96.0",
+  "updater": {
+    "version": "1.7.3",
+    "releaseNotes": "-- Added support for new AC models<br> -- Added support for device_class property on media_player devices",
+    "files": [
+      "__init__.py",
+      "climate.py",
+      "media_player.py",
+      "fan.py",
+      "controller.py",
+      "manifest.json",
+      "services.yaml"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+---
+# The fan component is built for the controlling of fan devices.
+#
+# This loads up the fan configurations
+#
+fan: !include_dir_list ../entities/fans

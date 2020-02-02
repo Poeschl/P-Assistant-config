@@ -1,0 +1,5 @@
+---
+# Sets my logo as person icon
+#
+person.markus:
+  entity_picture: https://s.gravatar.com/avatar/680042d1b126b40e9fcbd47929b61d8a?s=80

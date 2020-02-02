@@ -1,0 +1,6 @@
+---
+# This configures the connection to habitica. A real life RPG game.
+#
+habitica:
+  - api_user: !secret habitica_api_user
+    api_key: !secret habitica_api_key

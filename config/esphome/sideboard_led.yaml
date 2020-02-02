@@ -1,0 +1,186 @@
+esphome:
+  name: sideboard_led
+  platform: ESP8266
+  board: nodemcuv2
+
+<<: !include includes/common.yaml
+
+globals:
+  - id: box_size
+    type: int
+    restore_value: no
+    initial_value: '18'
+
+light:
+  - platform: fastled_clockless
+    id: led
+    rgb_order: GRB
+    chipset: WS2812B
+    pin: D1
+    num_leds: 72
+    name: "Sideboard LEDs"
+    effects:
+      - random:
+          update_interval: 5s
+      - addressable_lambda:
+          name: Block Random
+          update_interval: 5s
+          lambda: |-
+            uint8_t end_pixel;
+            for( int pixel = 0; pixel <= it.size(); pixel = pixel + id(box_size)) {
+              end_pixel = pixel + id(box_size);
+              it.range(pixel, end_pixel) = ESPColor(random(255), random(255), random(255));
+            }
+      - strobe:
+      - flicker:
+          alpha: 80%
+          intensity: 5%
+      - addressable_rainbow:    
+      - addressable_lambda:
+          name: Block Rainbow
+          lambda: |-
+            static uint8_t speed = 10;
+            static uint8_t width = 50;
+
+            ESPHSVColor hsv;
+            hsv.value = 255;
+            hsv.saturation = 240;
+            uint16_t hue = (millis() * speed) % 0xFFFF;
+            const uint16_t add = 0xFFFF / width;
+            const uint8_t block_size =  id(box_size) / 2;
+            uint8_t end_pixel;
+            for( int pixel = 0; pixel <= it.size(); pixel = pixel + block_size) {
+              hsv.hue = hue >> 8;
+              end_pixel = pixel + block_size;
+              it.range(pixel, end_pixel) = hsv;
+              hue += add;
+            }
+      - addressable_scan:
+          name: Box Scan
+          scan_width: 18
+          move_interval: 50ms
+      # - addressable_lambda:
+      #     name: Block Curtain
+      #     lambda: |-
+      #       static uint8_t curtain_size = 4;
+            
+      #       ESPColor current_color = id(led).current_values;
+      #       uint8_t end_pixel;
+      #       for( int pixel = 0; pixel <= it.size(); pixel = pixel + id(box_size)) {
+      #         end_pixel = pixel + id(box_size);
+      #         it.range(pixel, end_pixel) = current_color;
+      #       }
+      - addressable_twinkle:
+          twinkle_probability: 10%
+          progress_interval: 15ms
+      - addressable_lambda:
+          name: "Fire"
+          update_interval: 5ms
+          lambda: |-
+            for( int Pixel = 0; Pixel <= it.size(); Pixel++) {
+              it[Pixel] = ESPColor(155, 83, 27);
+              ESPColor color1;
+              uint8_t r1,g1,b1;
+              uint8_t r2,g2,b2;
+              uint8_t r3,g3,b3;
+              int16_t r,g,b;
+
+              color1 = it[Pixel].get();
+              //int color2[] = {80,35,0};
+              int color2[] = {179, 121, 7};
+      
+              r1 = (color1[0] ),
+              g1 = (color1[1] ),
+              b1 = (color1[2] );
+
+              r2 = (color2[0] ),
+              g2 = (color2[1] ),
+              b2 = (color2[2] );
+
+              // Add Color
+              it[Pixel] = ESPColor(constrain(r1+r2, 0, 255), constrain(g1+g2, 0, 255), constrain(b1+b2, 0, 255));
+              int rc = random(120);
+
+              // subtract
+              
+              color2[0] = rc;
+              color2[1] = rc/2;
+              color2[2] = rc/2;
+
+              r1 = (color1[0] ),
+              g1 = (color1[1] ),
+              b1 = (color1[2] );
+
+              r2 = (color2[0] ),
+              g2 = (color2[1] ),
+              b2 = (color2[2] );
+
+              r=(int16_t)r1-(int16_t)r2;
+              g=(int16_t)g1-(int16_t)g2;
+              b=(int16_t)b1-(int16_t)b2;
+              if(r<0) r=0;
+              if(g<0) g=0;
+              if(b<0) b=0;
+
+              /// Substract Color
+              it[Pixel] = ESPColor(r, g, b);
+            }
+            delay(random(10,120));
+      - addressable_lambda:
+          name: Switch Announce
+          update_interval: 1s
+          lambda: |-
+            it.all().fade_to_black(10);
+            it.range(18, 22) = ESPColor::WHITE;
+      - addressable_lambda:
+          name: PS2 Announce
+          update_interval: 1s
+          lambda: |-
+            it.all().fade_to_black(10);
+            it.range(40, 54) = ESPColor::WHITE;
+      # - addressable_color_wipe:
+      #     name: Progress
+      #     colors:
+      #       - red: 0%
+      #         green: 0%
+      #         blue: 100%
+      #         num_leds: 18
+      #       - red: 0%
+      #         green: 0%
+      #         blue: 0%
+      #         num_leds: 18
+      #     add_led_interval: 10ms
+      # - strobe:
+      #     name: Alarm
+      #     colors:
+      #       - state: True
+      #         brightness: 100%
+      #         red: 100%
+      #         green: 0%
+      #         blue: 0%
+      #         duration: 1s
+      #       - state: False
+      #         duration: 500ms
+      
+sensor:
+  - platform: dht
+    pin: D2
+    model: DHT22
+    temperature:
+      name: "Wohnzimmer Temperatur"
+      filters:
+        - offset: -0.5
+        - sliding_window_moving_average:
+            window_size: 5
+            send_every: 5
+    humidity:
+      name: "Wohnzimmer Luftfeuchte"
+      filters:
+        - sliding_window_moving_average:
+            window_size: 10
+            send_every: 10
+    update_interval: 60s
+
+switch:
+  - platform: restart
+    name: ESP sideboard_led Neustart

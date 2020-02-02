@@ -1,0 +1,8 @@
+---
+# Gets the CPU temperature of the Raspberry Pi.
+#
+platform: command_line
+name: CPU Raspi
+command: cat /sys/class/thermal/thermal_zone0/temp
+unit_of_measurement: '°C'
+value_template: '{{ value | multiply(0.001) }}'

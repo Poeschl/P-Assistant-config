@@ -1,0 +1,4 @@
+---
+# This loads up the media player configurations
+#
+media_player: !include_dir_list ../entities/media_players

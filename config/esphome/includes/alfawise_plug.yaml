@@ -1,0 +1,41 @@
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: esp01_1m
+
+<<: !include common.yaml
+
+binary_sensor:
+  - platform: gpio
+    id: input_switch
+    pin:
+      number: GPIO13
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - light.toggle: lightout
+
+light:
+  - platform: binary
+    id: lightout
+    name: ${upper_devicename}
+    output: relay
+
+switch:
+  - platform: restart
+    name: Steckdose ${upper_devicename} Neustart
+
+output:
+  - platform: esp8266_pwm
+    id: green_led
+    pin:
+      number: GPIO4
+      inverted: True
+  - platform: gpio
+    pin: GPIO12
+    id: relay
+
+status_led:
+  pin: 
+    number: GPIO5
+    inverted: True

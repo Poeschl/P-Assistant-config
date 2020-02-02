@@ -1,0 +1,8 @@
+---
+# Adjust the source list to prevent a state without control.
+#
+media_player.p_radio:
+  source_list:
+  - Internet Radio
+  - FM
+  - AUX in

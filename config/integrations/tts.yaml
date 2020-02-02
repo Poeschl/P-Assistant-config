@@ -1,0 +1,5 @@
+---
+# Text-to-Speech (TTS) enables Home Assistant to speak to you.
+# This loads up the TTS service configurations
+#
+tts: !include_dir_list ../entities/tts

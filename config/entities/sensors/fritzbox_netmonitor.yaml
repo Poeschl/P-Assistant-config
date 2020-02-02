@@ -1,0 +1,6 @@
+---
+#
+# The fritzbox_netmonitor sensor monitors the network statistics exposed by AVM Fritz!Box routers.
+#
+platform: fritzbox_netmonitor
+host: fritz.box

@@ -1,0 +1,7 @@
+---
+# The person integration allows connecting device tracker
+# entities to one or more person entities.
+#
+# Persons are defined via the web frontend.
+#
+person: 

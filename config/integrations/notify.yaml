@@ -1,0 +1,4 @@
+---
+# Setup the notification endpoints.
+#
+notify: !include_dir_list ../entities/notifies

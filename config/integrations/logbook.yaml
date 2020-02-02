@@ -1,0 +1,6 @@
+---
+# The logbook component provides a different perspective on the history of
+# your house by showing all the changes that happened to your house in
+# reverse chronological order.
+#
+logbook:

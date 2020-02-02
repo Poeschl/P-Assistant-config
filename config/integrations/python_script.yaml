@@ -1,0 +1,4 @@
+---
+# This enables the python script functionality. It allows HA to recognise the scripts from <config>/python_scripts/.
+#
+python_script:

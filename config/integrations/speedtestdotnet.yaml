@@ -1,0 +1,7 @@
+---
+# The speedtestdotnet integration uses the Speedtest.net
+# web service to measure network bandwidth performance.
+#
+#
+speedtestdotnet:
+  scan_interval: 12:00:00

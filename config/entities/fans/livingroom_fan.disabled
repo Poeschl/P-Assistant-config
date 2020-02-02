@@ -1,0 +1,11 @@
+---
+# This should make my ir fan in the living room more controlable over the ui.
+#
+# https://github.com/smartHomeHub/SmartIR
+#
+platform: smartir
+name: Wohnzimmer Lüfter
+unique_id: wohnzimmer_luefter
+device_code: 1100
+controller_data: !secret ip_rm_mini
+power_sensor: input_boolean.livingroom_fan_power

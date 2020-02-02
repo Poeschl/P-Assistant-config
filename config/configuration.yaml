@@ -1,0 +1,9 @@
+---
+# This is just a bootstrap for the configuration.
+# I structured this config after the example from FRENCK.
+#
+# He's explaining it here: https://www.youtube.com/watch?v=lndeybw21PY
+#
+homeassistant:
+  # All integration at the integration folder will be loaded with that.
+  packages: !include_dir_named integrations

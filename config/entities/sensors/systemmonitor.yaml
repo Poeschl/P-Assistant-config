@@ -1,0 +1,12 @@
+---
+# The systemmonitor sensor platform monitor disk usage, memory usage, CPU usage, and running processes. 
+#
+platform: systemmonitor
+resources:
+  - type: disk_use_percent
+    arg: /home
+  - type: memory_use
+  - type: swap_use
+  - type: load_5m
+  - type: processor_use
+  - type: last_boot

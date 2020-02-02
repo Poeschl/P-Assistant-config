@@ -1,0 +1,40 @@
+svg, svg * {
+  vector-effect: non-scaling-stroke !important;
+  pointer-events: all !important;
+  background-color: #7b7c81;
+}
+
+.switch-on {
+  fill: #d32f2f !important;
+  transition: fill .5s ease;
+}
+
+.switch-off {
+  fill: #d3d3d3 !important;
+  transition: fill .5s ease;
+}
+
+.vacuum-docked {
+  fill: #d3d3d3 !important;
+  transition: fill .5s ease;
+}
+
+.vacuum-stop {
+  fill: #fa7a0a !important;
+  transition: fill .5s ease;
+}
+
+.vacuum-cleaning, .vaccum-home {
+  fill: #1db351 !important;
+  transition: fill .5s ease;
+}
+
+.network-offline {
+  fill: #d32f2f !important;
+  transition: fill .5s ease;
+}
+
+.network-online {
+  fill: #14632f !important;
+  transition: fill .5s ease;
+}

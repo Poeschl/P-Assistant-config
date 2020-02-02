@@ -1,0 +1,8 @@
+---
+# Change the gui page title, favicon and app icons of your Home Assistant instance
+#
+# https://github.com/thomasloven/hass-favicon
+#
+favicon:
+  title: P-Assistant
+  icon_path: /local/favicons/

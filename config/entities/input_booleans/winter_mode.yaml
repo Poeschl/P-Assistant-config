@@ -1,0 +1,7 @@
+---
+# A boolean which indicates winter or not.
+# Depending on it some plugs and automations are used differently.
+#
+winter_mode:
+  name: Wintermodus
+  icon: mdi:snowman
