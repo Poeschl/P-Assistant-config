@@ -10,3 +10,5 @@ Its under development from time to time and it will change continuously.
 
 The structure of the config and also this repository is based on [Frenck's HA config](https://github.com/frenck/home-assistant-config).
 You might be a little confused first, but for me this structure seems more logic and cleaner.
+
+[![Home Assistant Git Exporter](https://img.shields.io/badge/Powered%20by-Home%20Assistant%20Git%20Exporter-%23d32f2f)](https://github.com/Poeschl/Hassio-Addons/tree/master/git-exporter)
