@@ -8,4 +8,4 @@ towerfan_power_off:
       state: 'on'
     - service: switch.turn_off
       data:
-        entity_id: switch.wohnzimmer_luefter_steckdose
+        entity_id: switch.shelly_plug_s_fan_livingroom_relay_0

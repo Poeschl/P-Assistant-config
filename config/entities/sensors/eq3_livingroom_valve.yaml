@@ -3,7 +3,7 @@
 #
 platform: template
 sensors:
-  wohnzimmer_climate_valve:
+  livingroom_climate_valve:
     friendly_name: "Wohnzimmer Heizungsventil"
     unit_of_measurement: '%'
-    value_template: "{{ state_attr('climate.wohnzimmer', 'valve') }}"
+    value_template: "{{ state_attr('climate.livingroom', 'valve') }}"

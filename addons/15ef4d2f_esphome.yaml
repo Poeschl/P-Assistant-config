@@ -1,0 +1,3 @@
+certfile: p-assist.crt
+keyfile: p-assist.key
+ssl: true

@@ -1,0 +1,18 @@
+anonymous: false
+certfile: p-assist.crt
+customize:
+  active: false
+  folder: mosquitto
+keyfile: p-assist.key
+logins:
+- password: '!secret debug_mqtt_user'
+  username: '!secret debug_mqtt_user'
+- password: '!secret roborock_mqtt_password'
+  username: '!secret roborock_mqtt_user'
+- password: '!secret esphome_mqtt_pass'
+  username: '!secret esphome_mqtt_user'
+- password: '!secret shelly_plug_mqtt_password'
+  username: '!secret shelly_plug_mqtt_user'
+- password: '!secret node-red_mqtt_password'
+  username: '!secret node-red_mqtt_user'
+require_certificate: false

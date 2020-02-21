@@ -20,5 +20,5 @@ switch:
     pin: GPIO4
     id: relay
   - platform: restart
-    name: "ESP Multimedia Steckdose Neustart"
+    name: "Multimedia Steckdose Neustart"
 

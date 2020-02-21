@@ -1,0 +1,24 @@
+check:
+  check_for_ips: true
+  check_for_secrets: false
+  enabled: true
+exclude:
+- '*.db'
+- '*.log'
+- __pycache__
+- deps/
+- known_devices.yaml
+- tts/
+- node-red
+- bravia.conf
+- .stignore
+export:
+  addons: true
+  esphome: true
+  lovelace: true
+repository:
+  commit_message: Initial Exporter Commit
+  password: '!secret github_api_token'
+  pull_before_push: true
+  url: https://github.com/Poeschl/home-assistant-config.git
+  username: Poeschl

@@ -183,4 +183,4 @@ sensor:
 
 switch:
   - platform: restart
-    name: ESP sideboard_led Neustart
+    name: ESP Sideboard Led Neustart

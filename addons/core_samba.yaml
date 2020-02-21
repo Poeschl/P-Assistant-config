@@ -1,0 +1,12 @@
+allow_hosts:
+- '!secret ip_home_range'
+interface: ''
+password: '!secret samba_pass'
+username: '!secret samba_user'
+veto_files:
+- ._*
+- .DS_Store
+- Thumbs.db
+- icon?
+- .Trashes
+workgroup: LAN

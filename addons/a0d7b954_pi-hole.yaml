@@ -1,0 +1,10 @@
+certfile: p-assist.crt
+hosts: []
+interface: eth0
+ipv4_address: ''
+ipv6: false
+ipv6_address: ''
+keyfile: p-assist.key
+ssl: false
+update_lists_on_start: false
+virtual_host: p-assist.fritz.box

@@ -1,0 +1,383 @@
+resources:
+- type: module
+  url: /community_plugin/lovelace-auto-entities/auto-entities.js
+- type: module
+  url: /community_plugin/mini-graph-card/mini-graph-card-bundle.js
+- type: module
+  url: /community_plugin/button-card/button-card.js
+- type: module
+  url: /community_plugin/weather-card/weather-card.js
+title: P-Assistant
+views:
+- badges: []
+  cards:
+  - entities:
+    - entity: switch.multimedia_steckdose
+      tap_action:
+        action: toggle
+    - entity: light.tv_lampe
+      tap_action:
+        action: toggle
+    - entity: light.sideboard_leds
+    show_icon: true
+    show_name: true
+    show_state: true
+    title: Schnellzugriff
+    type: glance
+  - card:
+      cards:
+      - aspect_ratio: 15/1
+        name: "Wohnzimmer L\xFCfter"
+        type: custom:button-card
+      - cards:
+        - entity: script.towerfan_power_on
+          icon: mdi:power
+          name: 'On'
+          type: custom:button-card
+        - entity: script.towerfan_power_off
+          icon: mdi:power-off
+          name: 'Off'
+          type: custom:button-card
+        - entity: script.towerfan_speed
+          icon: mdi:gauge
+          name: Speed
+          type: custom:button-card
+        - entity: script.towerfan_oscillate
+          icon: mdi:backup-restore
+          name: Oscillate
+          type: custom:button-card
+        - entity: script.towerfan_timer
+          icon: mdi:timer
+          name: Timer
+          type: custom:button-card
+        type: horizontal-stack
+      type: vertical-stack
+    conditions:
+    - entity: input_boolean.winter_mode
+      state: 'off'
+    type: conditional
+  - card:
+      entity: switch.schlafzimmer_lufter
+      hold_action:
+        action: more-info
+      icon: mdi:fan
+      show_icon: true
+      show_name: true
+      tap_action:
+        action: toggle
+      type: entity-button
+    conditions:
+    - entity: input_boolean.winter_mode
+      state: 'off'
+    type: conditional
+  - entity: weather.dark_sky
+    icons: /local/custom_ui/weather-icons/
+    type: custom:weather-card
+  - entities:
+    - entity: sensor.wohnzimmer_temperatur
+      index: 0
+    hour24: true
+    hours_to_show: 24
+    name: Wohnzimmer
+    type: custom:mini-graph-card
+  icon: mdi:home
+  path: home
+  title: Home
+- badges: []
+  cards:
+  - entity: media_player.sony_bravia_tv
+    type: media-control
+  - card:
+      entity: media_player.p_tv
+      type: media-control
+    conditions:
+    - entity: media_player.sony_bravia_tv
+      state: 'on'
+    type: conditional
+  - entity: media_player.p_radio
+    type: media-control
+  - entity: media_player.dlna_digital_media_renderer
+    type: media-control
+  - entities:
+    - entity: media_player.dlna_digital_media_renderer
+      name: Schenklradio
+      tap_action:
+        action: call-service
+        service: media_player.play_media
+        service_data:
+          entity_id: media_player.dlna_digital_media_renderer
+          media_content_id: https://listen.schenklradio.de/stream.mp3
+          media_content_type: music
+    show_state: false
+    title: Radio Auswahl
+    type: glance
+  icon: mdi:play-network
+  path: media
+  title: Media
+- badges:
+  - entity: vacuum.p_dusty
+  - entity: binary_sensor.valetudo_aktiv
+  cards:
+  - camera_image: camera.p_dusty_map
+    entities:
+    - vacuum.p_dusty
+    title: Dusty
+    type: picture-glance
+  - card:
+      title: Steckdosen
+      type: entities
+    filter:
+      exclude:
+      - entity_id: '*neustart'
+      include:
+      - domain: switch
+    type: custom:auto-entities
+  - entities:
+    - entity: sensor.shelly_plug_s_nintendo_switch_power_0
+      index: 0
+    hour24: true
+    hours_to_show: 6
+    name: Switch Leistungsaufnahme
+    points_per_hour: 3
+    type: custom:mini-graph-card
+  icon: mdi:router-wireless
+  path: devices
+  title: Devices
+- badges: []
+  cards:
+  - entity: climate.livingroom
+    name: Wohnzimmer
+    type: thermostat
+  - entities:
+    - entity: sensor.livingroom_climate_valve
+      index: 0
+    hour24: true
+    points_per_hour: 1
+    type: custom:mini-graph-card
+  - card:
+      cards:
+      - aspect_ratio: 15/1
+        name: "Wohnzimmer L\xFCfter"
+        type: custom:button-card
+      - cards:
+        - entity: script.towerfan_power_on
+          icon: mdi:power
+          name: 'On'
+          type: custom:button-card
+        - entity: script.towerfan_power_off
+          icon: mdi:power-off
+          name: 'Off'
+          type: custom:button-card
+        - entity: script.towerfan_speed
+          icon: mdi:gauge
+          name: Speed
+          type: custom:button-card
+        - entity: script.towerfan_oscillate
+          icon: mdi:backup-restore
+          name: Oscillate
+          type: custom:button-card
+        - entity: script.towerfan_timer
+          icon: mdi:timer
+          name: Timer
+          type: custom:button-card
+        type: horizontal-stack
+      type: vertical-stack
+    conditions:
+    - entity: input_boolean.winter_mode
+      state: 'off'
+    type: conditional
+  - card:
+      entity: switch.schlafzimmer_lufter
+      hold_action:
+        action: more-info
+      icon: mdi:fan
+      show_icon: true
+      show_name: true
+      tap_action:
+        action: toggle
+      type: entity-button
+    conditions:
+    - entity: input_boolean.winter_mode
+      state: 'off'
+    type: conditional
+  - cards:
+    - entities:
+      - entity: sensor.wohnzimmer_temperatur
+        index: 0
+      hour24: true
+      name: Wohnzimmer
+      points_per_hour: 1
+      type: custom:mini-graph-card
+    - entities:
+      - entity: sensor.wohnzimmer_luftfeuchte
+        index: 0
+      hour24: true
+      name: Wohnzimmer
+      points_per_hour: 1
+      type: custom:mini-graph-card
+    type: horizontal-stack
+  icon: mdi:home-thermometer-outline
+  path: heizung
+  title: Heizung
+- badges:
+  - entity: sensor.fritz_netmonitor
+  - entity: sensor.speedtest_download
+  - entity: sensor.speedtest_upload
+  - entity: sensor.speedtest_ping
+  cards:
+  - entities:
+    - entity: sensor.fritzbox_download
+      index: 0
+      name: Download
+      show_fill: false
+    - entity: sensor.fritzbox_upload
+      index: 1
+      name: Upload
+      show_fill: false
+    hour24: true
+    hours_to_show: 24
+    icon: mdi:wan
+    name: Internet-Traffic
+    points_per_hour: 2
+    type: custom:mini-graph-card
+  - cards:
+    - entities:
+      - entity: sensor.pi_hole_ads_blocked_today
+        index: 0
+        name: Ads blockiert
+        show_fill: false
+      - entity: sensor.pi_hole_dns_queries_cached
+        index: 1
+        name: Anfragen gecached
+        show_fill: false
+      hour24: true
+      hours_to_show: 24
+      icon: mdi:pi-hole
+      name: Anfragen
+      points_per_hour: 1
+      type: custom:mini-graph-card
+    - entities:
+      - entity: sensor.pi_hole_ads_percentage_blocked_today
+        index: 0
+        name: Prozent blockiert
+      hour24: true
+      hours_to_show: 24
+      icon: mdi:pi-hole
+      name: Blockiert
+      points_per_hour: 1
+      type: custom:mini-graph-card
+    type: vertical-stack
+  - entities:
+    - sensor.pi_hole_dns_unique_clients
+    - sensor.pi_hole_seen_clients
+    - sensor.pi_hole_dns_unique_domains
+    type: glance
+  - cards:
+    - entities:
+      - entity: sensor.speedtest_download
+        index: 0
+        name: Download
+        show_fill: false
+      - entity: sensor.speedtest_upload
+        index: 1
+        name: Upload
+        show_fill: false
+      hour24: true
+      hours_to_show: 72
+      icon: mdi:speedometer
+      lower_bound: 0
+      name: Speedtest
+      points_per_hour: 0.5
+      type: custom:mini-graph-card
+    - entities:
+      - entity: sensor.speedtest_ping
+        index: 0
+        name: Ping
+        show_fill: false
+      hour24: true
+      hours_to_show: 72
+      icon: mdi:speedometer
+      lower_bound: 0
+      points_per_hour: 0.5
+      type: custom:mini-graph-card
+    type: vertical-stack
+  - entities:
+    - entity: sensor.homeassistant_zertifikat_p_ca
+    - entity: sensor.p_storage_zertifikat_p_ca
+    - entity: sensor.nextcloud_zertifikat_let_s_encrypt
+    show_header_toggle: false
+    title: Zertifikatablaufdatum
+    type: entities
+  icon: mdi:lan
+  path: network
+  title: Network
+- badges:
+  - entity: person.markus
+  cards:
+  - entities:
+    - entity: person.markus
+    - entity: device_tracker.p_android
+    - entity: device_tracker.p_watch
+    - entity: device_tracker.desktop_markus
+    - entity: device_tracker.laptop_markus_wifi
+    - entity: device_tracker.p_switch
+    hours_to_show: 24
+    refresh_interval: 0
+    title: "Verf\xFCgbarkeit"
+    type: history-graph
+  - entities:
+    - entity: input_boolean.holiday_mode
+    show_header_toggle: false
+    type: entities
+  icon: mdi:home-account
+  path: anwesenheit
+  title: Anwesenheit
+- badges:
+  - entity: binary_sensor.updater
+  - entity: sensor.hacs
+  cards:
+  - entities:
+    - entity: sensor.load_5m
+    - entity: sensor.disk_use_percent_home
+      name: /home
+    - entity: sensor.last_boot
+    - entity: sensor.rpi_power_status
+    show_icon: true
+    show_name: true
+    show_state: true
+    title: System
+    type: glance
+  - entities:
+    - entity: sensor.memory_use
+    - entity: sensor.swap_use
+    - entity: sensor.processor_use
+    title: System Load
+    type: history-graph
+  - entities:
+    - entity: sensor.cpu_raspi
+      name: CPU Temp
+    title: System Temperatur
+    type: history-graph
+  - card:
+      title: Alle Automatisierungen
+      type: entities
+    filter:
+      include:
+      - domain: automation
+    type: custom:auto-entities
+  - entities:
+    - entity: input_boolean.winter_mode
+    show_header_toggle: false
+    title: Modi
+    type: entities
+  - card:
+      show_header_toggle: false
+      title: Restart
+      type: entities
+    filter:
+      include:
+      - entity_id: '*neustart'
+    type: custom:auto-entities
+  icon: mdi:settings
+  path: automation
+  title: Automation

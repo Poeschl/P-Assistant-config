@@ -1,0 +1,8 @@
+databases:
+- homeassistant
+logins:
+- password: '!secret maria_pass'
+  username: '!secret maria_user'
+rights:
+- database: homeassistant
+  username: hass
