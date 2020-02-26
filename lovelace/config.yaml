@@ -73,12 +73,22 @@ views:
   - entity: weather.dark_sky
     icons: /local/custom_ui/weather-icons/
     type: custom:weather-card
-  - entities:
+  - color_thresholds:
+    - color: '#d32f2f'
+      value: 30
+    - color: '#ffbf00'
+      value: 28
+    - color: '#04d900'
+      value: 20
+    - color: '#0089d9'
+      value: 13
+    entities:
     - entity: sensor.wohnzimmer_temperatur
       index: 0
     hour24: true
-    hours_to_show: 24
+    hours_to_show: 3
     name: Wohnzimmer
+    points_per_hour: 6
     type: custom:mini-graph-card
   icon: mdi:home
   path: home
@@ -201,19 +211,41 @@ views:
       state: 'off'
     type: conditional
   - cards:
-    - entities:
+    - color_thresholds:
+      - color: '#d32f2f'
+        value: 30
+      - color: '#ffbf00'
+        value: 28
+      - color: '#04d900'
+        value: 20
+      - color: '#0089d9'
+        value: 13
+      entities:
       - entity: sensor.wohnzimmer_temperatur
         index: 0
       hour24: true
+      hours_to_show: 24
       name: Wohnzimmer
-      points_per_hour: 1
+      points_per_hour: 4
       type: custom:mini-graph-card
-    - entities:
+    - color_thresholds:
+      - color: '#d32f2f'
+        value: 60
+      - color: '#04d900'
+        value: 55
+      - color: '#04d900'
+        value: 35
+      - color: '#ffbf00'
+        value: 30
+      - color: '#d32f2f'
+        value: 25
+      entities:
       - entity: sensor.wohnzimmer_luftfeuchte
         index: 0
       hour24: true
+      hours_to_show: 24
       name: Wohnzimmer
-      points_per_hour: 1
+      points_per_hour: 4
       type: custom:mini-graph-card
     type: horizontal-stack
   icon: mdi:home-thermometer-outline
@@ -282,12 +314,12 @@ views:
         index: 1
         name: Upload
         show_fill: false
+      group_by: date
       hour24: true
-      hours_to_show: 72
+      hours_to_show: 168
       icon: mdi:speedometer
       lower_bound: 0
       name: Speedtest
-      points_per_hour: 0.5
       type: custom:mini-graph-card
     - entities:
       - entity: sensor.speedtest_ping
@@ -295,10 +327,10 @@ views:
         name: Ping
         show_fill: false
       hour24: true
-      hours_to_show: 72
+      hours_to_show: 168
       icon: mdi:speedometer
       lower_bound: 0
-      points_per_hour: 0.5
+      points_per_hour: 0.25
       type: custom:mini-graph-card
     type: vertical-stack
   - entities:
