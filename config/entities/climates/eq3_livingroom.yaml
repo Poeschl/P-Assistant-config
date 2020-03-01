@@ -1,7 +1,0 @@
----
-# Setup the eq3 thermostat I'm using on my radiator in the living room.
-#
-platform: eq3btsmart
-devices:
-  livingroom:
-    mac: !secret mac_eq3_livingroom

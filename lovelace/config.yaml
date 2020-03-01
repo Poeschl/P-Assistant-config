@@ -150,15 +150,9 @@ views:
   title: Devices
 - badges: []
   cards:
-  - entity: climate.livingroom
+  - entity: climate.thermostat_living_room_climate
     name: Wohnzimmer
     type: thermostat
-  - entities:
-    - entity: sensor.livingroom_climate_valve
-      index: 0
-    hour24: true
-    points_per_hour: 1
-    type: custom:mini-graph-card
   - card:
       cards:
       - aspect_ratio: 15/1
@@ -364,14 +358,14 @@ views:
   - cards:
     - cards:
       - entities:
-        - sensor.cpu_raspi
+        - sensor.processor_use
         hours_to_show: 24
         icon: mdi:memory
         line_width: 2
         name: CPU
         type: custom:mini-graph-card
       - entities:
-        - sensor.p_dicetemperature
+        - sensor.cpu_raspi
         hours_to_show: 24
         line_width: 2
         name: Temp
@@ -445,28 +439,6 @@ views:
   - entity: binary_sensor.updater
   - entity: sensor.hacs
   cards:
-  - entities:
-    - entity: sensor.load_5m
-    - entity: sensor.disk_use_percent_home
-      name: /home
-    - entity: sensor.last_boot
-    - entity: sensor.rpi_power_status
-    show_icon: true
-    show_name: true
-    show_state: true
-    title: System
-    type: glance
-  - entities:
-    - entity: sensor.memory_use
-    - entity: sensor.swap_use
-    - entity: sensor.processor_use
-    title: System Load
-    type: history-graph
-  - entities:
-    - entity: sensor.cpu_raspi
-      name: CPU Temp
-    title: System Temperatur
-    type: history-graph
   - card:
       title: Alle Automatisierungen
       type: entities

@@ -1,9 +1,0 @@
----
-# Presents the valve value a different value for better display.
-#
-platform: template
-sensors:
-  livingroom_climate_valve:
-    friendly_name: "Wohnzimmer Heizungsventil"
-    unit_of_measurement: '%'
-    value_template: "{{ state_attr('climate.livingroom', 'valve') }}"

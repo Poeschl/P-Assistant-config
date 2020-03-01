@@ -1,0 +1,2 @@
+sensor.p_dicewifistrength:
+  unit_of_measurement: dbm
