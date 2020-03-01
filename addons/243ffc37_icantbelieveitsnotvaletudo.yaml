@@ -1,14 +1,15 @@
-autoconfPrefix: homeassistant
-broker_url: '!secret roborock_mqtt_url'
-caPath: ''
-identifier: P-Dusty
-mapDataTopic: valetudo/P-Dusty/map_data
+mapColors: {}
 mapSettings:
-  border: 2
   drawCharger: true
   drawPath: true
   drawRobot: true
   scale: 3
-minMillisecondsBetweenMapUpdates: 5000
-publishMapImage: true
-topicPrefix: valetudo
+mqtt:
+  autoconfPrefix: homeassistant
+  broker_url: '!secret roborock_mqtt_url'
+  caPath: ''
+  identifier: P-Dusty
+  mapDataTopic: valetudo/P-Dusty/map_data
+  minMillisecondsBetweenMapUpdates: 10000
+  publishMapImage: true
+  topicPrefix: valetudo

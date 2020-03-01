@@ -7,6 +7,10 @@ resources:
   url: /community_plugin/button-card/button-card.js
 - type: module
   url: /community_plugin/weather-card/weather-card.js
+- type: module
+  url: /community_plugin/vertical-stack-in-card/vertical-stack-in-card.js
+- type: module
+  url: /community_plugin/bar-card/bar-card.js
 title: P-Assistant
 views:
 - badges: []
@@ -97,16 +101,7 @@ views:
   cards:
   - entity: media_player.sony_bravia_tv
     type: media-control
-  - card:
-      entity: media_player.p_tv
-      type: media-control
-    conditions:
-    - entity: media_player.sony_bravia_tv
-      state: 'on'
-    type: conditional
   - entity: media_player.p_radio
-    type: media-control
-  - entity: media_player.dlna_digital_media_renderer
     type: media-control
   - entities:
     - entity: media_player.dlna_digital_media_renderer
@@ -364,6 +359,88 @@ views:
   icon: mdi:home-account
   path: anwesenheit
   title: Anwesenheit
+- badges: []
+  cards:
+  - cards:
+    - cards:
+      - entities:
+        - sensor.cpu_raspi
+        hours_to_show: 24
+        icon: mdi:memory
+        line_width: 2
+        name: CPU
+        type: custom:mini-graph-card
+      - entities:
+        - sensor.p_dicetemperature
+        hours_to_show: 24
+        line_width: 2
+        name: Temp
+        type: custom:mini-graph-card
+      type: horizontal-stack
+    - cards:
+      - align: split
+        entity: sensor.disk_use_percent_home
+        show_icon: true
+        title: Disk space
+        title_position: inside
+        type: custom:bar-card
+      - align: split
+        entity: sensor.memory_use
+        max: 2048
+        show_icon: true
+        title: RAM
+        title_position: inside
+        type: custom:bar-card
+      type: horizontal-stack
+    - entities:
+      - sensor.last_boot
+      - sensor.rpi_power_status
+      type: entities
+    title: P-Assistant
+    type: custom:vertical-stack-in-card
+  - cards:
+    - cards:
+      - entities:
+        - sensor.p_dicecpuusage
+        hours_to_show: 24
+        icon: mdi:memory
+        line_width: 2
+        name: CPU
+        type: custom:mini-graph-card
+      - entities:
+        - sensor.p_dicetemperature
+        hours_to_show: 24
+        line_width: 2
+        name: Temp
+        type: custom:mini-graph-card
+      type: horizontal-stack
+    - cards:
+      - align: split
+        entity: sensor.p_dicediskuse
+        show_icon: true
+        title: Disk space
+        title_position: inside
+        type: custom:bar-card
+      - align: split
+        entity: sensor.p_dicememoryuse
+        show_icon: true
+        title: RAM
+        title_position: inside
+        type: custom:bar-card
+      type: horizontal-stack
+    - entities:
+      - entity: sensor.p_dicelastboot
+        name: Last boot
+      - entity: sensor.p_dicepowerstatus
+        name: Power status
+      - entity: sensor.p_dicewifistrength
+        name: Wifi strength
+      type: entities
+    title: P-Dice
+    type: custom:vertical-stack-in-card
+  icon: mdi:raspberry-pi
+  path: raspberrys
+  title: Raspberrys
 - badges:
   - entity: binary_sensor.updater
   - entity: sensor.hacs

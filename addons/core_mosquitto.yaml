@@ -5,7 +5,7 @@ customize:
   folder: mosquitto
 keyfile: p-assist.key
 logins:
-- password: '!secret debug_mqtt_user'
+- password: '!secret debug_mqtt_pass'
   username: '!secret debug_mqtt_user'
 - password: '!secret roborock_mqtt_password'
   username: '!secret roborock_mqtt_user'
@@ -15,4 +15,6 @@ logins:
   username: '!secret shelly_plug_mqtt_user'
 - password: '!secret node-red_mqtt_password'
   username: '!secret node-red_mqtt_user'
+- password: '!secret p-dice_mqtt_password'
+  username: '!secret p-dice_mqtt_user'
 require_certificate: false

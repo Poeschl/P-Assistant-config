@@ -17,7 +17,7 @@ export:
   esphome: true
   lovelace: true
 repository:
-  commit_message: Before 106.0 Update
+  commit_message: Raspi Status cards + P-dice
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/home-assistant-config.git
