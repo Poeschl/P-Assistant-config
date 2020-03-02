@@ -1,8 +1,0 @@
----
-#
-# The pi_hole integration allows you to retrieve statistics and interact with a Pi-hole system.
-#
-pi_hole:
-  host: p-assist.fritz.box:4865
-  ssl: false
-  verify_ssl: false

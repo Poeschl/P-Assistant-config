@@ -91,6 +91,7 @@ views:
       index: 0
     hour24: true
     hours_to_show: 3
+    line_width: 4
     name: Wohnzimmer
     points_per_hour: 6
     type: custom:mini-graph-card
@@ -132,16 +133,17 @@ views:
       title: Steckdosen
       type: entities
     filter:
-      exclude:
-      - entity_id: '*neustart'
       include:
-      - domain: switch
+      - entity_id: '*steckdose'
+      - entity_id: '*relay_0'
+    sort: name
     type: custom:auto-entities
   - entities:
     - entity: sensor.shelly_plug_s_nintendo_switch_power_0
       index: 0
     hour24: true
     hours_to_show: 6
+    line_width: 4
     name: Switch Leistungsaufnahme
     points_per_hour: 3
     type: custom:mini-graph-card
@@ -258,41 +260,41 @@ views:
     hour24: true
     hours_to_show: 24
     icon: mdi:wan
+    line_width: 4
     name: Internet-Traffic
     points_per_hour: 2
     type: custom:mini-graph-card
   - cards:
-    - entities:
-      - entity: sensor.pi_hole_ads_blocked_today
-        index: 0
-        name: Ads blockiert
-        show_fill: false
-      - entity: sensor.pi_hole_dns_queries_cached
-        index: 1
-        name: Anfragen gecached
-        show_fill: false
-      hour24: true
-      hours_to_show: 24
-      icon: mdi:pi-hole
+    - cards:
+      - entities:
+        - entity: sensor.adguard_dns_queries_blocked
+          name: Geblockt
+          show_fill: false
+        - entity: sensor.adguard_dns_queries
+          name: Queries
+          show_fill: false
+        hour24: true
+        hours_to_show: 24
+        line_width: 6
+        name: Requests
+        points_per_hour: 1
+        type: custom:mini-graph-card
+      - entities:
+        - sensor.adguard_dns_queries_blocked_ratio
+        hour24: true
+        hours_to_show: 24
+        line_width: 6
+        name: Blockiert
+        points_per_hour: 1
+        type: custom:mini-graph-card
       name: Anfragen
-      points_per_hour: 1
-      type: custom:mini-graph-card
+      type: horizontal-stack
     - entities:
-      - entity: sensor.pi_hole_ads_percentage_blocked_today
-        index: 0
-        name: Prozent blockiert
-      hour24: true
-      hours_to_show: 24
-      icon: mdi:pi-hole
-      name: Blockiert
-      points_per_hour: 1
-      type: custom:mini-graph-card
-    type: vertical-stack
-  - entities:
-    - sensor.pi_hole_dns_unique_clients
-    - sensor.pi_hole_seen_clients
-    - sensor.pi_hole_dns_unique_domains
-    type: glance
+      - switch.adguard_protection
+      - switch.adguard_filtering
+      type: entities
+    title: AdGuard
+    type: custom:vertical-stack-in-card
   - cards:
     - entities:
       - entity: sensor.speedtest_download
@@ -307,6 +309,7 @@ views:
       hour24: true
       hours_to_show: 168
       icon: mdi:speedometer
+      line_width: 4
       lower_bound: 0
       name: Speedtest
       type: custom:mini-graph-card
@@ -318,6 +321,7 @@ views:
       hour24: true
       hours_to_show: 168
       icon: mdi:speedometer
+      line_width: 4
       lower_bound: 0
       points_per_hour: 0.25
       type: custom:mini-graph-card
@@ -361,13 +365,13 @@ views:
         - sensor.processor_use
         hours_to_show: 24
         icon: mdi:memory
-        line_width: 2
+        line_width: 4
         name: CPU
         type: custom:mini-graph-card
       - entities:
         - sensor.cpu_raspi
         hours_to_show: 24
-        line_width: 2
+        line_width: 4
         name: Temp
         type: custom:mini-graph-card
       type: horizontal-stack
@@ -398,13 +402,13 @@ views:
         - sensor.p_dicecpuusage
         hours_to_show: 24
         icon: mdi:memory
-        line_width: 2
+        line_width: 4
         name: CPU
         type: custom:mini-graph-card
       - entities:
         - sensor.p_dicetemperature
         hours_to_show: 24
-        line_width: 2
+        line_width: 4
         name: Temp
         type: custom:mini-graph-card
       type: horizontal-stack
