@@ -7,3 +7,7 @@
 homeassistant:
   # All integration at the integration folder will be loaded with that.
   packages: !include_dir_named integrations
+  
+  unit_system: metric
+  time_zone: Europe/Berlin
+  customize: !include_dir_merge_named ../customizations/entities
