@@ -1,0 +1,5 @@
+---
+# The lovelace config. One or more lovelace dashboards can be configured here.
+#
+lovelace:
+  mode: storage

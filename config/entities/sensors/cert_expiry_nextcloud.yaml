@@ -6,4 +6,3 @@
 #
 platform: cert_expiry
 host: !secret cloud_domain
-name: NextCloud Zertifikat (Let's Encrypt)

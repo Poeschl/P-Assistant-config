@@ -7,4 +7,3 @@
 platform: cert_expiry
 host: p-assist.fritz.box
 port: 8123
-name: Homeassistant Zertifikat (P-CA)

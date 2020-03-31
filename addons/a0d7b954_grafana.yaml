@@ -1,0 +1,5 @@
+certfile: p-assist.crt
+env_vars: []
+keyfile: p-assist.key
+plugins: []
+ssl: true

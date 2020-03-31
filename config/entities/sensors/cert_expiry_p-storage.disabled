@@ -7,4 +7,3 @@
 platform: cert_expiry
 host: p-storage.fritz.box
 port: 5001
-name: P-Storage Zertifikat (P-CA)

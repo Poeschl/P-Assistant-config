@@ -2,6 +2,7 @@ check:
   check_for_ips: true
   check_for_secrets: false
   enabled: true
+dry_run: false
 exclude:
 - '*.db'
 - '*.log'
@@ -17,8 +18,8 @@ export:
   esphome: true
   lovelace: true
 repository:
-  commit_message: Timezone fixes
+  commit_message: Update online state after broken exporter
   password: '!secret github_api_token'
   pull_before_push: true
-  url: https://gitdhub.com/Poeschl/home-assistant-config.git
+  url: https://github.com/Poeschl/home-assistant-config.git
   username: Poeschl

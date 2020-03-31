@@ -1,0 +1,11 @@
+---
+# Configuration for the influxdb integration. All measured data will be also send to influx.
+#
+influxdb:
+  host: a0d7b954-influxdb
+  database: home_assistant
+  username: homeassistant
+  password: !secret influxDB_password
+  default_measurement: no_unit
+  tags:
+    source: homeassistant

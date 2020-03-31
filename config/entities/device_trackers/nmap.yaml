@@ -11,8 +11,8 @@ hosts:
   - !secret ip_markus_desktop
   - !secret ip_markus_laptop_wifi
   - !secret ip_markus_laptop_lan
-#  - !secret ip_markus_switch
-#  - !secret ip_sony_tv
+  - !secret ip_work_laptop_wifi
+  - !secret ip_work_laptop_lan
 consider_home: 0:04
 home_interval: 4
 interval_seconds: 15

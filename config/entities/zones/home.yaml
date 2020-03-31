@@ -2,7 +2,7 @@
 #
 # Defines my Home Zone
 #
-name: home
+name: Home
 latitude: !secret home_latitude
 longitude: !secret home_longitude
 icon: mdi:home

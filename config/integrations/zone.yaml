@@ -1,4 +1,11 @@
 ---
 # Zones allow you to specify certain regions on earth (for now).
 #
-zone: !include_dir_list ../entities/zones
+#zone: !include_dir_list ../entities/zones
+
+#TEMP FIX TODO:REMOVE ME
+zone:
+  name: Home
+  latitude: !secret home_latitude
+  longitude: !secret home_longitude
+  icon: mdi:home

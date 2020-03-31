@@ -11,6 +11,7 @@ init_commands: []
 keyfile: p-assist.key
 npm_packages:
 - node-red-contrib-weekday
+- node-red-contrib-cron-plus
 require_ssl: true
 ssl: true
 system_packages: []
