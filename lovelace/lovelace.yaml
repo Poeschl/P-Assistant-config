@@ -48,20 +48,6 @@ config:
       - entity: input_boolean.winter_mode
         state: 'off'
       type: conditional
-    - card:
-        entity: switch.schlafzimmer_lufter
-        hold_action:
-          action: more-info
-        icon: mdi:fan
-        show_icon: true
-        show_name: true
-        tap_action:
-          action: toggle
-        type: entity-button
-      conditions:
-      - entity: input_boolean.winter_mode
-        state: 'off'
-      type: conditional
     - entity: weather.dark_sky
       icons: /local/custom_ui/weather-icons/
       type: custom:weather-card
@@ -405,9 +391,9 @@ config:
         type: custom:mini-graph-card
       type: vertical-stack
     - entities:
-      - entity: sensor.homeassistant_zertifikat_p_ca
-      - entity: sensor.p_storage_zertifikat_p_ca
       - entity: sensor.nextcloud_zertifikat_let_s_encrypt
+      - entity: sensor.cert_expiry_p_assist_fritz_box_8123
+      - entity: sensor.cert_expiry_p_storage_fritz_box_5001
       show_header_toggle: false
       title: Zertifikatablaufdatum
       type: entities

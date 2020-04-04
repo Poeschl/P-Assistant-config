@@ -1,9 +1,9 @@
---
+---
 #
 # The cert_expiry sensor fetches information from a configured URL and displays the certificate expiry in days.
 #
-# This one is for the Home Assistant itself.
+# This one is for my NAS itself.
 #
 platform: cert_expiry
-host: p-assist.fritz.box
-port: 8123
+host: !secret nas_domain
+port: 5001

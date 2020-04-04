@@ -5,5 +5,5 @@
 
 # I also use TLS in the internal network, so also HA gets it own certificate
 http:
-  ssl_certificate: /ssl/p-assist.crt
-  ssl_key: /ssl/p-assist.key
+  ssl_certificate: /ssl/p-assist.cert.pem
+  ssl_key: /ssl/p-assist.key.pem
