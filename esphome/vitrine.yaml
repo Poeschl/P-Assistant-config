@@ -1,0 +1,63 @@
+esphome:
+  name: vitrine
+  platform: ESP8266
+  board: nodemcuv2
+
+<<: !include includes/common.yaml
+
+globals:
+  - id: segment_size
+    type: int
+    restore_value: no
+    initial_value: '4'
+
+light:
+  - platform: fastled_clockless
+    id: led
+    rgb_order: GRB
+    chipset: WS2812B
+    pin: D1
+    num_leds: 16
+    color_correct: [100%, 90%, 100%]
+    name: "Vitrine LEDs"
+    effects:
+      - random:
+          update_interval: 5s
+      - addressable_lambda:
+          name: Ebene Random
+          update_interval: 5s
+          lambda: |-
+            uint8_t end_pixel;
+            for( int pixel = 0; pixel <= it.size(); pixel = pixel + id(segment_size)) {
+              end_pixel = pixel + id(segment_size);
+              it.range(pixel, end_pixel) = ESPColor(random(255), random(255), random(255));
+            }
+      - strobe:
+      - addressable_rainbow:    
+      - addressable_lambda:
+          name: Ebene Rainbow
+          lambda: |-
+            static uint8_t speed = 10;
+            static uint8_t width = 16;
+
+            ESPHSVColor hsv;
+            hsv.value = 255;
+            hsv.saturation = 240;
+            uint16_t hue = (millis() * speed) % 0xFFFF;
+            const uint16_t add = 0xFFFF / width;
+            const uint8_t block_size =  id(segment_size);
+            uint8_t end_pixel;
+            for( int pixel = 0; pixel <= it.size(); pixel = pixel + block_size) {
+              hsv.hue = hue >> 8;
+              end_pixel = pixel + block_size;
+              it.range(pixel, end_pixel) = hsv;
+              hue += add;
+            }
+      - addressable_scan:
+          name: Ebenen Scan
+          scan_width: 4
+          move_interval: 100ms
+      
+switch:
+  - platform: restart
+    name: ESP Vitrine Neustart

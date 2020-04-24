@@ -11,6 +11,7 @@ config:
         tap_action:
           action: toggle
       - entity: light.sideboard_leds
+      - entity: light.vitrine_leds
       show_icon: true
       show_name: true
       show_state: true
@@ -48,7 +49,7 @@ config:
       - entity: input_boolean.winter_mode
         state: 'off'
       type: conditional
-    - entity: weather.dark_sky
+    - entity: weather.openweathermap
       icons: /local/custom_ui/weather-icons/
       type: custom:weather-card
     - color_thresholds:
@@ -92,6 +93,17 @@ config:
     icon: mdi:play-network
     path: media
     title: Media
+  - badges: []
+    cards:
+    - entities:
+      - entity: light.sideboard_leds
+      - entity: light.tv_lampe
+      - entity: switch.shelly_plug_s_monitor_light_relay_0
+      - entity: light.vitrine_leds
+      type: glance
+    icon: mdi:lightbulb-multiple
+    path: lichter
+    title: Lichter
   - badges:
     - entity: vacuum.p_dusty
     - entity: binary_sensor.valetudo_aktiv
@@ -110,6 +122,10 @@ config:
         - entity_id: '*relay_0'
       sort: name
       type: custom:auto-entities
+    - entities:
+      - sensor.folding_at_home
+      hours_to_show: 48
+      type: custom:mini-graph-card
     icon: mdi:router-wireless
     path: devices
     title: Devices
@@ -392,8 +408,8 @@ config:
       type: vertical-stack
     - entities:
       - entity: sensor.nextcloud_zertifikat_let_s_encrypt
-      - entity: sensor.cert_expiry_p_assist_fritz_box_8123
       - entity: sensor.cert_expiry_p_storage_fritz_box_5001
+      - entity: sensor.cert_expiry_localhost_8123
       show_header_toggle: false
       title: Zertifikatablaufdatum
       type: entities
@@ -449,21 +465,22 @@ config:
           type: custom:mini-graph-card
         type: horizontal-stack
       - cards:
-        - align: split
-          entity: sensor.disk_use_percent_home
-          show_icon: true
-          title: Disk space
-          title_position: inside
+        - entity: sensor.disk_use_percent_home
+          name: Disk space
+          positions:
+            icon: inside
+            indicator: inside
           type: custom:bar-card
-        - align: split
-          entity: sensor.memory_use
+        - entity: sensor.memory_use
           max: 2048
-          show_icon: true
-          title: RAM
-          title_position: inside
+          name: RAM
+          positions:
+            icon: inside
+            indicator: inside
           type: custom:bar-card
         type: horizontal-stack
       - entities:
+        - sensor.swap_use
         - sensor.last_boot
         - sensor.rpi_power_status
         type: entities
@@ -486,20 +503,22 @@ config:
           type: custom:mini-graph-card
         type: horizontal-stack
       - cards:
-        - align: split
-          entity: sensor.p_dice_diskuse
-          show_icon: true
-          title: Disk space
-          title_position: inside
+        - entity: sensor.p_dice_diskuse
+          name: Disk space
+          positions:
+            icon: inside
+            indicator: inside
           type: custom:bar-card
-        - align: split
-          entity: sensor.p_dice_memoryuse
-          show_icon: true
-          title: RAM
-          title_position: inside
+        - entity: sensor.p_dice_memoryuse
+          name: RAM
+          positions:
+            icon: inside
+            indicator: inside
           type: custom:bar-card
         type: horizontal-stack
       - entities:
+        - entity: sensor.p_dice_swapusage
+          name: Swap
         - entity: sensor.p_dice_lastboot
           name: Last boot
         - entity: sensor.p_dice_powerstatus

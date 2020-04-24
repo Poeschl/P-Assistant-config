@@ -2,3 +2,5 @@ switch.adguard_protection:
   friendly_name: 'AdGuard Protection (Master) '
 person.markus:
   entity_picture: https://www.gravatar.com/avatar/680042d1b126b40e9fcbd47929b61d8a.png?s=100
+sensor.folding_at_home:
+  icon: mdi:memory

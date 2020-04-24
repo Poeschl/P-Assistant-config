@@ -1,5 +1,5 @@
-certfile: p-assist.crt
+certfile: p-assist.cert.pem
 env_vars: []
-keyfile: p-assist.key
+keyfile: p-assist.key.pem
 plugins: []
 ssl: true

@@ -3,9 +3,9 @@
 #
 towerfan_power_off:
   sequence:
-    - condition: state
-      entity_id: input_boolean.livingroom_fan_power
-      state: 'on'
+    # - condition: state
+    #   entity_id: input_boolean.livingroom_fan_power
+    #   state: 'on'
     - service: switch.turn_off
       data:
         entity_id: switch.shelly_plug_s_fan_livingroom_relay_0

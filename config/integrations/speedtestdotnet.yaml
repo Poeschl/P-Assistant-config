@@ -6,4 +6,8 @@
 speedtestdotnet:
   # The speedtest is scheduled over node-red
   manual: true
-  server_id: 23414
+  server_id: 24495
+
+
+
+

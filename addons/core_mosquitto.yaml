@@ -1,9 +1,9 @@
 anonymous: false
-certfile: p-assist.crt
+certfile: p-assist.cert.pem
 customize:
   active: false
   folder: mosquitto
-keyfile: p-assist.key
+keyfile: p-assist.key.pem
 logins:
 - password: '!secret debug_mqtt_pass'
   username: '!secret debug_mqtt_user'

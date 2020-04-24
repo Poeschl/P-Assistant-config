@@ -1,4 +1,4 @@
-certfile: p-assist.crt
+certfile: p-assist.cert.pem
 credential_secret: '!secret node_red_credential_secret'
 dark_mode: true
 http_node:
@@ -8,10 +8,11 @@ http_static:
   password: ''
   username: ''
 init_commands: []
-keyfile: p-assist.key
+keyfile: p-assist.key.pem
 npm_packages:
 - node-red-contrib-weekday
 - node-red-contrib-cron-plus
+- node-red-contrib-credentials
 require_ssl: true
 ssl: true
 system_packages: []

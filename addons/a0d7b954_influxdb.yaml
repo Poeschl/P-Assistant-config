@@ -1,6 +1,6 @@
 auth: true
-certfile: p-assist.crt
+certfile: p-assist.cert.pem
 envvars: []
-keyfile: p-assist.key
+keyfile: p-assist.key.pem
 reporting: false
 ssl: true
