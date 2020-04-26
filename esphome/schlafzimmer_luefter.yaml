@@ -3,3 +3,19 @@ substitutions:
   upper_devicename: Schlafzimmer Lüfter
 
 <<: !include includes/alfawise_plug.yaml
+
+binary_sensor:
+  - platform: gpio
+    id: input_switch
+    pin:
+      number: GPIO13
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - fan.toggle: fanout
+
+fan:
+  - platform: binary
+    id: fanout
+    name: ${upper_devicename}
+    output: relay

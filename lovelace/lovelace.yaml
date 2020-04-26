@@ -18,33 +18,27 @@ config:
       title: Schnellzugriff
       type: glance
     - card:
-        cards:
-        - aspect_ratio: 15/1
-          name: "Wohnzimmer L\xFCfter"
-          type: custom:button-card
-        - cards:
+        entities:
+        - align_icons: top
+          buttons:
           - entity: script.towerfan_power_on
             icon: mdi:power
-            name: 'On'
-            type: custom:button-card
+            name: Ein
           - entity: script.towerfan_power_off
             icon: mdi:power-off
-            name: 'Off'
-            type: custom:button-card
+            name: Aus
           - entity: script.towerfan_speed
             icon: mdi:gauge
             name: Speed
-            type: custom:button-card
           - entity: script.towerfan_oscillate
             icon: mdi:backup-restore
-            name: Oscillate
-            type: custom:button-card
+            name: Drehen
           - entity: script.towerfan_timer
             icon: mdi:timer
             name: Timer
-            type: custom:button-card
-          type: horizontal-stack
-        type: vertical-stack
+          type: custom:paper-buttons-row
+        title: "Wohnzimmer L\xFCfter"
+        type: entities
       conditions:
       - entity: input_boolean.winter_mode
         state: 'off'
@@ -95,11 +89,48 @@ config:
     title: Media
   - badges: []
     cards:
+    - brightness: true
+      brightness_icon: weather-sunny
+      color_picker: true
+      color_temp: false
+      color_wheel: false
+      effects_list: true
+      entity: light.sideboard_leds
+      full_width_sliders: true
+      group: false
+      header: Sideboard Leds
+      persist_features: true
+      show_slider_percent: false
+      smooth_color_wheel: false
+      temperature_icon: thermometer
+      type: custom:light-entity-card
+      white_icon: file-word-box
+      white_value: false
+    - brightness: true
+      brightness_icon: weather-sunny
+      color_picker: true
+      color_temp: false
+      color_wheel: false
+      effects_list: true
+      entity: light.vitrine_leds
+      full_width_sliders: true
+      group: false
+      header: Vitrine
+      persist_features: true
+      show_slider_percent: true
+      smooth_color_wheel: false
+      temperature_icon: thermometer
+      type: custom:light-entity-card
+      white_icon: file-word-box
+      white_value: true
     - entities:
-      - entity: light.sideboard_leds
       - entity: light.tv_lampe
+        tap_action:
+          action: toggle
       - entity: switch.shelly_plug_s_monitor_light_relay_0
-      - entity: light.vitrine_leds
+        tap_action:
+          action: toggle
+      title: "Bin\xE4re Lampen"
       type: glance
     icon: mdi:lightbulb-multiple
     path: lichter
@@ -131,63 +162,53 @@ config:
     title: Devices
   - badges: []
     cards:
-    - card:
-        entity: light.schlafzimmer_lufter
-        hold_action:
-          action: more-info
-        icon: mdi:fan
-        show_icon: true
-        show_name: true
-        tap_action:
-          action: toggle
-        type: entity-button
-      conditions:
-      - entity: input_boolean.winter_mode
-        state: 'off'
-      type: conditional
-    - card:
-        cards:
-        - aspect_ratio: 15/1
-          name: "Wohnzimmer L\xFCfter"
-          type: custom:button-card
-        - cards:
-          - entity: script.towerfan_power_on
-            icon: mdi:power
-            name: 'On'
-            type: custom:button-card
-          - entity: script.towerfan_power_off
-            icon: mdi:power-off
-            name: 'Off'
-            type: custom:button-card
-          - entity: script.towerfan_speed
-            icon: mdi:gauge
-            name: Speed
-            type: custom:button-card
-          - entity: script.towerfan_oscillate
-            icon: mdi:backup-restore
-            name: Oscillate
-            type: custom:button-card
-          - entity: script.towerfan_timer
-            icon: mdi:timer
-            name: Timer
-            type: custom:button-card
-          type: horizontal-stack
-        type: vertical-stack
-      conditions:
-      - entity: input_boolean.winter_mode
-        state: 'off'
-      type: conditional
     - cards:
-      - entity: climate.thermostat_living_room_climate
-        name: Heizung
-        type: thermostat
-      - entities:
-        - entity: sensor.thermostat_living_room_valve_state
-          icon: mdi:valve
-          name: Heizungsventil
-        - entity: binary_sensor.thermostat_living_room_window_open
-          name: Fenster auf erkannt
-        type: entities
+      - card:
+          entity: climate.thermostat_living_room_climate
+          name: Heizung
+          type: thermostat
+        conditions:
+        - entity: input_boolean.winter_mode
+          state: 'on'
+        type: conditional
+      - card:
+          entities:
+          - entity: sensor.thermostat_living_room_valve_state
+            icon: mdi:valve
+            name: Heizungsventil
+          - entity: binary_sensor.thermostat_living_room_window_open
+            name: Fenster auf erkannt
+          type: entities
+        conditions:
+        - entity: input_boolean.winter_mode
+          state: 'on'
+        type: conditional
+      - card:
+          entities:
+          - align_icons: top
+            buttons:
+            - entity: script.towerfan_power_on
+              icon: mdi:power
+              name: Ein
+            - entity: script.towerfan_power_off
+              icon: mdi:power-off
+              name: Aus
+            - entity: script.towerfan_speed
+              icon: mdi:gauge
+              name: Speed
+            - entity: script.towerfan_oscillate
+              icon: mdi:backup-restore
+              name: Drehen
+            - entity: script.towerfan_timer
+              icon: mdi:timer
+              name: Timer
+            type: custom:paper-buttons-row
+          title: "L\xFCfter"
+          type: entities
+        conditions:
+        - entity: input_boolean.winter_mode
+          state: 'off'
+        type: conditional
       - cards:
         - color_thresholds:
           - color: '#d32f2f'
@@ -231,6 +252,19 @@ config:
       title: Wohnzimmer
       type: custom:stack-in-card
     - cards:
+      - card:
+          entities:
+          - entity: fan.schlafzimmer_lufter
+            tap_action:
+              action: toggle
+          show_name: false
+          show_state: false
+          title: "L\xFCfter"
+          type: glance
+        conditions:
+        - entity: input_boolean.winter_mode
+          state: 'off'
+        type: conditional
       - cards:
         - color_thresholds:
           - color: '#d32f2f'
@@ -317,8 +351,8 @@ config:
       title: Balkon
       type: custom:stack-in-card
     icon: mdi:home-thermometer-outline
-    path: heizung
-    title: Heizung
+    path: klima
+    title: Klima
   - badges:
     - entity: sensor.fritz_netmonitor
     - entity: sensor.speedtest_download

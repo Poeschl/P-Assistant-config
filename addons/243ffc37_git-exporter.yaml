@@ -18,8 +18,8 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Update after some time
+  commit_message: Sunday update
   password: '!secret github_api_token'
   pull_before_push: true
-  url: https://github.com/Poeschl/home-assistant-config.git
+  url: https://github.com/Poeschl/P-Assistant-config.git
   username: Poeschl

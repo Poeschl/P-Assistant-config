@@ -5,9 +5,6 @@ items:
 - id: e357f7a8de65472e901cb552e7b96ea1
   type: module
   url: /hacsfiles/mini-graph-card/mini-graph-card-bundle.js
-- id: 4b890fdf268044bf8b11227ef80dd9b4
-  type: module
-  url: /hacsfiles/button-card/button-card.js
 - id: 900f96825c224f0e9d1deb3bbc1a5369
   type: module
   url: /hacsfiles/weather-card/weather-card.js
@@ -17,3 +14,9 @@ items:
 - id: e42bb5dee2b74a6c9dc0b82a14d78c5a
   type: module
   url: /hacsfiles/stack-in-card/stack-in-card.js
+- id: c32a5b3d0eb04fba9ac07365febc621c
+  type: module
+  url: /hacsfiles/lovelace-paper-buttons-row/paper-buttons-row.js
+- id: cc04721f32f3488595e4fe9965d30281
+  type: module
+  url: /hacsfiles/light-entity-card/light-entity-card.js

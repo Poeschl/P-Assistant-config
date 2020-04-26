@@ -3,3 +3,19 @@ substitutions:
   upper_devicename: TV-Lampe
 
 <<: !include includes/alfawise_plug.yaml
+
+binary_sensor:
+  - platform: gpio
+    id: input_switch
+    pin:
+      number: GPIO13
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - light.toggle: lightout
+
+light:
+  - platform: binary
+    id: lightout
+    name: ${upper_devicename}
+    output: relay

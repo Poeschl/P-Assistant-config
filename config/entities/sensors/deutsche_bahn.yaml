@@ -1,0 +1,8 @@
+---
+# A sensor for the trains of the Deutsche Bahn. Recieving my way to the office an the delay.
+#
+platform: deutsche_bahn
+from: Augsburg Hauptbahnhof
+to: München-Pasing
+offset: 00:10
+only_direct: true
