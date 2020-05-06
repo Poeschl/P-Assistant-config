@@ -169,17 +169,28 @@ sensor:
     temperature:
       name: "Wohnzimmer Temperatur"
       filters:
-        - offset: -0.5
-        - sliding_window_moving_average:
-            window_size: 5
-            send_every: 5
+        # - calibrate_linear:
+        #   # Map 0.0 (from sensor) to 0.0 (true value)
+        #   - 22.4 -> 19.9
+        #   - 23 -> 23
+        #   - 24.2 -> 22.1
+        #   - 25.4 -> 23.4
+        #   - 26.1 -> 24.3
+        - median:
+            window_size: 7
     humidity:
       name: "Wohnzimmer Luftfeuchte"
       filters:
-        - sliding_window_moving_average:
-            window_size: 10
-            send_every: 10
-    update_interval: 60s
+        # - calibrate_linear:
+        #   # Map 0.0 (from sensor) to 0.0 (true value)
+        #   - 33 -> 34
+        #   - 34 -> 31
+        #   - 37 -> 39
+        #   - 43 -> 42
+        #   - 48 -> 50
+        - median:
+            window_size: 7
+    update_interval: 120s
 
 switch:
   - platform: restart

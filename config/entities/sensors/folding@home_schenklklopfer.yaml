@@ -2,8 +2,8 @@
 # Get donor statistics of folding@home.
 #
 platform: rest
-resource: https://stats.foldingathome.org/api/donor/68720193
-name: Folding at Home
+resource: https://stats.foldingathome.org/api/donor/218834
+name: Folding at Home - schenklklopfer
 value_template: '{{ value_json.credit }}'
 scan_interval: 1800
 unit_of_measurement: credits

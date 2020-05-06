@@ -1,6 +1,6 @@
 allow_hosts:
 - '!secret ip_home_range'
-compatibility_mode: false
+compatibility_mode: true
 interface: ''
 password: '!secret samba_pass'
 username: '!secret samba_user'

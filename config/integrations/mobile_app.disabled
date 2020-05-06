@@ -1,0 +1,4 @@
+---
+# Enables the mobile app integration to use the app for precence detection, sensor input etc.
+#
+mobile_app:

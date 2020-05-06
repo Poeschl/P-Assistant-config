@@ -3,6 +3,9 @@ config:
   views:
   - badges: []
     cards:
+    - entity: weather.openweathermap
+      icons: /local/custom_ui/weather-icons/
+      type: custom:weather-card
     - entities:
       - entity: switch.multimedia_steckdose
         tap_action:
@@ -43,50 +46,9 @@ config:
       - entity: input_boolean.winter_mode
         state: 'off'
       type: conditional
-    - entity: weather.openweathermap
-      icons: /local/custom_ui/weather-icons/
-      type: custom:weather-card
-    - color_thresholds:
-      - color: '#d32f2f'
-        value: 30
-      - color: '#ffbf00'
-        value: 28
-      - color: '#04d900'
-        value: 20
-      - color: '#0089d9'
-        value: 13
-      entities:
-      - entity: sensor.wohnzimmer_temperatur
-        index: 0
-      hour24: true
-      hours_to_show: 3
-      line_width: 4
-      name: Wohnzimmer
-      points_per_hour: 6
-      type: custom:mini-graph-card
     icon: mdi:home
     path: home
     title: Home
-  - badges: []
-    cards:
-    - cards:
-      - entity: media_player.sony_bravia_tv
-        name: Sony TV
-        type: media-control
-      - entity: media_player.p_tv
-        name: Chromecast
-        type: media-control
-      title: Fernseher
-      type: custom:stack-in-card
-    - cards:
-      - entity: media_player.p_radio
-        name: P-Radio
-        type: media-control
-      title: Radio
-      type: custom:stack-in-card
-    icon: mdi:play-network
-    path: media
-    title: Media
   - badges: []
     cards:
     - brightness: true
@@ -135,31 +97,6 @@ config:
     icon: mdi:lightbulb-multiple
     path: lichter
     title: Lichter
-  - badges:
-    - entity: vacuum.p_dusty
-    - entity: binary_sensor.valetudo_aktiv
-    cards:
-    - camera_image: camera.p_dusty_map
-      entities:
-      - vacuum.p_dusty
-      title: Dusty
-      type: picture-glance
-    - card:
-        title: Steckdosen
-        type: entities
-      filter:
-        include:
-        - entity_id: '*steckdose'
-        - entity_id: '*relay_0'
-      sort: name
-      type: custom:auto-entities
-    - entities:
-      - sensor.folding_at_home
-      hours_to_show: 48
-      type: custom:mini-graph-card
-    icon: mdi:router-wireless
-    path: devices
-    title: Devices
   - badges: []
     cards:
     - cards:
@@ -276,7 +213,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mithermometer_sleeping_room_temperature
+          - entity: sensor.mitemp_sleeping_temp
             index: 0
           hour24: true
           hours_to_show: 24
@@ -296,7 +233,7 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.mithermometer_sleeping_room_humidity
+          - entity: sensor.mitemp_sleeping_hum
             index: 0
           hour24: true
           hours_to_show: 24
@@ -319,11 +256,10 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mithermometer_balcony_temperature
+          - entity: sensor.mitemp_balcony_temp
             index: 0
           hour24: true
           hours_to_show: 24
-          lower_bound: 18
           name: Temperatur
           points_per_hour: 4
           type: custom:mini-graph-card
@@ -339,7 +275,7 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.mithermometer_balcony_humidity
+          - entity: sensor.mitemp_balcony_hum
             index: 0
           hour24: true
           hours_to_show: 24
@@ -350,9 +286,54 @@ config:
         type: horizontal-stack
       title: Balkon
       type: custom:stack-in-card
-    icon: mdi:home-thermometer-outline
+    icon: mdi:home-thermometer
     path: klima
     title: Klima
+  - badges:
+    - entity: vacuum.p_dusty
+    - entity: binary_sensor.valetudo_aktiv
+    cards:
+    - camera_image: camera.p_dusty_map
+      entities:
+      - vacuum.p_dusty
+      title: Dusty
+      type: picture-glance
+    - card:
+        title: Steckdosen
+        type: entities
+      filter:
+        include:
+        - entity_id: '*steckdose'
+        - entity_id: '*relay_0'
+      sort: name
+      type: custom:auto-entities
+    - entities:
+      - sensor.folding_at_home
+      hours_to_show: 48
+      type: custom:mini-graph-card
+    icon: mdi:devices
+    path: devices
+    title: Devices
+  - badges: []
+    cards:
+    - cards:
+      - entity: media_player.sony_bravia_tv
+        name: Sony TV
+        type: media-control
+      - entity: media_player.p_tv
+        name: Chromecast
+        type: media-control
+      title: Fernseher
+      type: custom:stack-in-card
+    - cards:
+      - entity: media_player.p_radio
+        name: P-Radio
+        type: media-control
+      title: Radio
+      type: custom:stack-in-card
+    icon: mdi:play-circle
+    path: media
+    title: Media
   - badges:
     - entity: sensor.fritz_netmonitor
     - entity: sensor.speedtest_download
@@ -593,9 +574,8 @@ config:
     - entities:
       - entity: binary_sensor.thermostat_living_room_low_battery
         name: Heizungsthermostat Wohnzimmer
-      - entity: sensor.mithermometer_sleeping_room_battery
-        name: Thermostat Schlafzimmer
-      - entity: sensor.mithermometer_balcony_battery
+      - entity: sensor.mitemp_sleeping_batt
+      - entity: sensor.mitemp_balcony_batt
       show_header_toggle: false
       title: Batterien
       type: entities

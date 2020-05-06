@@ -18,7 +18,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Sunday update
+  commit_message: Some more xiomi temperatures
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git

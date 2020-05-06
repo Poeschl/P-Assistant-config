@@ -1,0 +1,10 @@
+---
+# The config for the Xiaomi LYWSD03MMC sensors.
+# Uses the custom integration: https://github.com/custom-components/sensor.mitemp_bt
+#
+platform: mitemp_bt
+batt_entities: true
+encryptors: !secret mitemp_encryptors
+whitelist:
+  - !secret mac_mitemp_balcony
+  - !secret mac_mitemp_sleeping

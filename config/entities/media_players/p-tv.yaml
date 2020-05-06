@@ -1,8 +1,0 @@
----
-# Setup my sony tv.
-# To setup it up completely a `bravia.conf` must be generated from home assistant on first connect.
-#
-# https://www.home-assistant.io/integrations/braviatv/
-#
-platform: braviatv
-host: !secret ip_sony_tv
