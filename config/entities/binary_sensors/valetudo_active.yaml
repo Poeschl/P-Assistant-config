@@ -3,7 +3,7 @@
 #
 platform: command_line
 name: Valetudo aktiv
-command: response=$(curl -LIk http://p-dusty.fritz.box -o /dev/null -w '%{http_code}\n' -s); test "$response" -ge 200 && echo "on" || echo "off"
+command: response=$(curl -LIk http://dusty.fritz.box -o /dev/null -w '%{http_code}\n' -s); test "$response" -ge 200 && echo "on" || echo "off"
 scan_interval: 600
 payload_on: "on"
 payload_off: "off"

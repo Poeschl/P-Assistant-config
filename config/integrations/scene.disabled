@@ -1,0 +1,7 @@
+---
+# Add support for scenes
+# Disabled because scenes don't support attributes of lights. No effects, brightness... 
+#
+
+#This include is for the scene editor/UI
+scene: !include ../scenes.yaml

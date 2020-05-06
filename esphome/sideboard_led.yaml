@@ -32,9 +32,6 @@ light:
               it.range(pixel, end_pixel) = ESPColor(random(255), random(255), random(255));
             }
       - strobe:
-      - flicker:
-          alpha: 80%
-          intensity: 5%
       - addressable_rainbow:    
       - addressable_lambda:
           name: Block Rainbow
@@ -132,12 +129,6 @@ light:
           lambda: |-
             it.all().fade_to_black(10);
             it.range(18, 22) = ESPColor::WHITE;
-      - addressable_lambda:
-          name: PS2 Announce
-          update_interval: 1s
-          lambda: |-
-            it.all().fade_to_black(10);
-            it.range(40, 54) = ESPColor::WHITE;
       # - addressable_color_wipe:
       #     name: Progress
       #     colors:

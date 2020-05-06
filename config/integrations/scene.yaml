@@ -1,6 +1,0 @@
----
-# Add support for scenes
-#
-
-#This include is for the scene editor/UI
-scene: !include ../scenes.yaml

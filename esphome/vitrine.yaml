@@ -21,8 +21,6 @@ light:
     color_correct: [100%, 90%, 100%]
     name: "Vitrine LEDs"
     effects:
-      - random:
-          update_interval: 5s
       - addressable_lambda:
           name: Ebene Random
           update_interval: 5s
@@ -32,7 +30,6 @@ light:
               end_pixel = pixel + id(segment_size);
               it.range(pixel, end_pixel) = ESPColor(random(255), random(255), random(255));
             }
-      - strobe:
       - addressable_rainbow:    
       - addressable_lambda:
           name: Ebene Rainbow
@@ -57,6 +54,9 @@ light:
           name: Ebenen Scan
           scan_width: 4
           move_interval: 100ms
+      - addressable_twinkle:
+          twinkle_probability: 15%
+          progress_interval: 15ms
       
 switch:
   - platform: restart

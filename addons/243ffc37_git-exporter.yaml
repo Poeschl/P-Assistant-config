@@ -10,7 +10,6 @@ exclude:
 - deps/
 - known_devices.yaml
 - tts/
-- bravia.conf
 - .stignore
 export:
   addons: true
@@ -18,7 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Some more xiomi temperatures
+  commit_message: Removed scenes and fixed dusty availibility
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git
