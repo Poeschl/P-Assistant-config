@@ -17,7 +17,8 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Removed scenes and fixed dusty availibility
+  commit_message: Add last temp sensor, setup smeagol folding sensor and enabled hue
+    emulation
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git

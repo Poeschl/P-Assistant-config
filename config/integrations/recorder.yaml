@@ -4,10 +4,9 @@
 #
 recorder:
   db_url: !secret recorder_url
-  purge_keep_days: 30
+  purge_keep_days: 14
   exclude:
     domains:
       - weblink
-      - updater
     entities:
-      - binary_sensor.remote_ui
+      - sensor.augsburg_hauptbahnhof_to_munchen_pasing

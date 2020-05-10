@@ -1,0 +1,10 @@
+---
+# Enables an emulated Phillips Hue bridge. I use it for the Sleep with Android Wakeup light. 
+#
+
+emulated_hue:
+  expose_by_default: true  
+  listen_port: 80
+  exposed_domains:
+    - light
+    - input_boolean 

@@ -1,0 +1,9 @@
+{
+    "1": "input_boolean.holiday_mode",
+    "2": "input_boolean.livingroom_fan_power",
+    "3": "input_boolean.winter_mode",
+    "4": "light.sideboard_leds",
+    "5": "light.tv_lampe",
+    "6": "light.vitrine_leds",
+    "7": "light.test_streamlight"
+}

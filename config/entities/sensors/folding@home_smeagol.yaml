@@ -1,0 +1,14 @@
+---
+# Get donor statistics of folding@home.
+#
+platform: rest
+resource: https://stats.foldingathome.org/api/donor/64779
+name: Folding at Home - smeagol
+value_template: '{{ value_json.credit }}'
+scan_interval: 1800
+unit_of_measurement: credits
+json_attributes:
+  - last
+  - rank
+  - wus
+  - name

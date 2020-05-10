@@ -8,3 +8,4 @@ encryptors: !secret mitemp_encryptors
 whitelist:
   - !secret mac_mitemp_balcony
   - !secret mac_mitemp_sleeping
+  - !secret mac_mitemp_bath

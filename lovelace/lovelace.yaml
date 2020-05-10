@@ -256,6 +256,48 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
+          - entity: sensor.mitemp_bath_temp
+            index: 0
+          hour24: true
+          hours_to_show: 24
+          name: Temperatur
+          points_per_hour: 4
+          type: custom:mini-graph-card
+        - color_thresholds:
+          - color: '#d32f2f'
+            value: 60
+          - color: '#04d900'
+            value: 55
+          - color: '#04d900'
+            value: 35
+          - color: '#ffbf00'
+            value: 30
+          - color: '#d32f2f'
+            value: 25
+          entities:
+          - entity: sensor.mitemp_bath_hum
+            index: 0
+          hour24: true
+          hours_to_show: 24
+          lower_bound: 20
+          name: Luftfeuchte
+          points_per_hour: 4
+          type: custom:mini-graph-card
+        type: horizontal-stack
+      title: Bad
+      type: custom:stack-in-card
+    - cards:
+      - cards:
+        - color_thresholds:
+          - color: '#d32f2f'
+            value: 30
+          - color: '#ffbf00'
+            value: 28
+          - color: '#04d900'
+            value: 20
+          - color: '#0089d9'
+            value: 13
+          entities:
           - entity: sensor.mitemp_balcony_temp
             index: 0
           hour24: true
@@ -576,6 +618,7 @@ config:
         name: Heizungsthermostat Wohnzimmer
       - entity: sensor.mitemp_sleeping_batt
       - entity: sensor.mitemp_balcony_batt
+      - entity: sensor.mitemp_bath_batt
       show_header_toggle: false
       title: Batterien
       type: entities
