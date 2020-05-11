@@ -1,0 +1,12 @@
+---
+# Twitch sensors for some of my friends
+#
+platform: twitch
+client_id: !secret twitch_client_id
+token: !secret twitch_oauth_token
+channels:
+  - izzyletsplays
+  - nerdweib
+  - playsouls
+  - horrgy
+  - saabii_

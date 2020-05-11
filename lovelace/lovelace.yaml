@@ -370,6 +370,14 @@ config:
     title: Devices
   - badges: []
     cards:
+    - entities:
+      - entity: sensor.izzyletsplays
+      - entity: sensor.nerdweib
+      - entity: sensor.playsouls
+      - entity: sensor.horrgy
+      - entity: sensor.saabii
+      title: Twitch
+      type: glance
     - cards:
       - entity: media_player.sony_bravia_tv
         name: Sony TV
