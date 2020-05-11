@@ -1,0 +1,5 @@
+---
+# Set the folding@home sensors icon
+#
+sensor.folding_at_home:
+  icon: mdi:memory

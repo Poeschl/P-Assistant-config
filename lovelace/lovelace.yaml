@@ -89,7 +89,7 @@ config:
       - entity: light.tv_lampe
         tap_action:
           action: toggle
-      - entity: switch.shelly_plug_s_monitor_light_relay_0
+      - entity: switch.monitor_licht
         tap_action:
           action: toggle
       title: "Bin\xE4re Lampen"
@@ -245,6 +245,14 @@ config:
       title: Schlafzimmer
       type: custom:stack-in-card
     - cards:
+      - entities:
+        - entity: fan.bad_lufter
+          tap_action:
+            action: toggle
+        show_name: false
+        show_state: false
+        title: "L\xFCfter"
+        type: glance
       - cards:
         - color_thresholds:
           - color: '#d32f2f'
@@ -260,6 +268,7 @@ config:
             index: 0
           hour24: true
           hours_to_show: 24
+          lower_bound: 18
           name: Temperatur
           points_per_hour: 4
           type: custom:mini-graph-card
@@ -345,8 +354,7 @@ config:
         type: entities
       filter:
         include:
-        - entity_id: '*steckdose'
-        - entity_id: '*relay_0'
+        - entity_id: '*relay'
       sort: name
       type: custom:auto-entities
     - entities:

@@ -1,0 +1,38 @@
+esphome:
+  name: bad_luefter
+  platform: ESP8266
+  board: esp01_1m
+
+<<: !include includes/common.yaml
+
+binary_sensor:
+  - platform: gpio
+    id: input_switch
+    pin: GPIO5
+    filters:
+      - delayed_off: 1min
+    on_press:
+      - fan.turn_on: bath_fan
+    on_release:
+      - fan.turn_off: bath_fan
+    on_double_click:
+      then:
+        - fan.turn_on: bath_fan
+        - delay: 10min
+        - fan.turn_off: bath_fan
+
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: relay
+
+fan:
+  - platform: binary
+    id: bath_fan
+    output: relay
+    name: "Bad Lüfter"
+
+switch:
+  - platform: restart
+    name: "Bad Shelly Neustart"
+

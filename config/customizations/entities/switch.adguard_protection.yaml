@@ -1,0 +1,5 @@
+---
+# Mark the adguard master switch as master
+#
+switch.adguard_protection:
+  friendly_name: 'AdGuard Protection (Master) '
