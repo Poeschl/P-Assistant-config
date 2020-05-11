@@ -7,7 +7,7 @@ config:
       icons: /local/custom_ui/weather-icons/
       type: custom:weather-card
     - entities:
-      - entity: switch.multimedia_steckdose
+      - entity: switch.multimedia_steckdose_relay
         tap_action:
           action: toggle
       - entity: light.tv_lampe
@@ -360,6 +360,10 @@ config:
     - entities:
       - sensor.folding_at_home
       hours_to_show: 48
+      type: custom:mini-graph-card
+    - entities:
+      - sensor.multimedia_steckdose_power
+      hours_to_show: 24
       type: custom:mini-graph-card
     icon: mdi:devices
     path: devices

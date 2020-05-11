@@ -17,7 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Shelly Discovery update and bath fan
+  commit_message: Shelly energy measure on multimedia
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git
