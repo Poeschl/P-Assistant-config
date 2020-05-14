@@ -26,3 +26,11 @@ time:
     id: sntp_time
     servers:
       - fritz.box 
+
+sensor:
+  - platform: wifi_signal
+    name: "${human_devicename} Signalstärke"
+
+switch:
+  - platform: restart
+    name: ${human_devicename} Neustart

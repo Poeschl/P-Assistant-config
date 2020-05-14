@@ -1,5 +1,9 @@
+substitutions:
+  devicename: sideboard_led
+  human_devicename: Sideboard ESP
+
 esphome:
-  name: sideboard_led
+  name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
 
@@ -184,7 +188,6 @@ sensor:
         - median:
             window_size: 7
     update_interval: 120s
-
-switch:
-  - platform: restart
-    name: ESP Sideboard Led Neustart
+    
+  - platform: wifi_signal
+    name: "${human_devicename} Signalstärke"

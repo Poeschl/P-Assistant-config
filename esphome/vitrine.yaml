@@ -1,5 +1,9 @@
+substitutions:
+  devicename: vitrine
+  human_devicename: Vitrine
+
 esphome:
-  name: vitrine
+  name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
 
@@ -56,8 +60,4 @@ light:
           move_interval: 100ms
       - addressable_twinkle:
           twinkle_probability: 15%
-          progress_interval: 15ms
-      
-switch:
-  - platform: restart
-    name: ESP Vitrine Neustart
+          progress_interval: 15ms    

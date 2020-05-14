@@ -1,0 +1,28 @@
+substitutions:
+  devicename: schlafzimmer_bett
+  human_devicename: Bettbeleuchtung
+
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: nodemcuv2
+
+<<: !include includes/common.yaml
+
+light:
+  - platform: fastled_clockless
+    id: led
+    rgb_order: GRB
+    chipset: WS2812B
+    pin: D1
+    num_leds: 156
+    name: "Bettbeleuchtung LEDs"
+    effects:
+      - addressable_rainbow:    
+      - addressable_scan:
+          name: Ebenen Scan
+          scan_width: 4
+          move_interval: 100ms
+      - addressable_twinkle:
+          twinkle_probability: 15%
+          progress_interval: 15ms    

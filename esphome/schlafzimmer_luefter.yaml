@@ -1,6 +1,6 @@
 substitutions:
   devicename: schlafzimmer_luefter
-  upper_devicename: Schlafzimmer Lüfter
+  human_devicename: Schlafzimmer Lüfter
 
 <<: !include includes/alfawise_plug.yaml
 
@@ -17,5 +17,5 @@ binary_sensor:
 fan:
   - platform: binary
     id: fanout
-    name: ${upper_devicename}
+    name: ${human_devicename}
     output: relay

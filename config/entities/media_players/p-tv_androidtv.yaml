@@ -1,0 +1,17 @@
+---
+# Setups the android tv integration for the tv.
+# It allows me to control apps and get the status better then the bravia integration.
+#
+platform: androidtv
+name: Fernseher Wohnzimmer
+host: !secret ip_sony_tv
+exclude_unnamed_apps: true
+apps:
+  tv.twitch.android.app: "Twitch"
+  com.google.android.music:main: "Google Music"
+  de.swr.avp.ard.tv: "ARD Mediathek"
+  com.zdf.android.mediathek: "ZDF Mediathek"
+  com.amazon.amazonvideo.livingroom: "Amazon Prime"
+  com.valvesoftware.steamlink: "Steam Link"
+  org.videolan.vlc: "VLC"
+  com.sony.dtv.tvx: "Externes Gerät"

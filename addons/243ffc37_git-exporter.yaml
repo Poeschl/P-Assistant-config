@@ -17,7 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Add twitch sensor
+  commit_message: Replace Bravia media player with android tv integration
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git

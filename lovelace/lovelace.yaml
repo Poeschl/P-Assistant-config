@@ -62,7 +62,7 @@ config:
       group: false
       header: Sideboard Leds
       persist_features: true
-      show_slider_percent: false
+      show_slider_percent: true
       smooth_color_wheel: false
       temperature_icon: thermometer
       type: custom:light-entity-card
@@ -379,7 +379,7 @@ config:
       title: Twitch
       type: glance
     - cards:
-      - entity: media_player.sony_bravia_tv
+      - entity: media_player.fernseher_wohnzimmer
         name: Sony TV
         type: media-control
       - entity: media_player.p_tv

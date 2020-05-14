@@ -1,6 +1,6 @@
 substitutions:
   devicename: tv_leuchte
-  upper_devicename: TV-Lampe
+  human_devicename: TV-Lampe
 
 <<: !include includes/alfawise_plug.yaml
 
@@ -17,5 +17,5 @@ binary_sensor:
 light:
   - platform: binary
     id: lightout
-    name: ${upper_devicename}
+    name: ${human_devicename}
     output: relay

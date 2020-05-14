@@ -13,7 +13,3 @@ light:
     pin: 12
     num_leds: 14
     name: "Test Streamlight"
-      
-switch:
-  - platform: restart
-    name: "Test Streamlight Neustart"

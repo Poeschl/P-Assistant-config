@@ -7,7 +7,7 @@ esphome:
 
 switch:
   - platform: restart
-    name: Steckdose ${upper_devicename} Neustart
+    name: Steckdose ${human_devicename} Neustart
 
 output:
   - platform: esp8266_pwm
