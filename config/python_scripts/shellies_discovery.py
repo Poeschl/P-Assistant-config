@@ -20,6 +20,7 @@ ATTR_MODEL_SHELLYPLUG_S = "Shelly Plug S"
 ATTR_MODEL_SHELLYRGBW2 = "Shelly RGBW2"
 ATTR_MODEL_SHELLYSENSE = "Shelly Sense"
 ATTR_MODEL_SHELLYSMOKE = "Shelly Smoke"
+ATTR_MODEL_SHELLYVINTAGE = "Shelly Vintage"
 ATTR_MODEL_SHELLY_3EM = "Shelly 3EM"
 ATTR_MODEL_SHELLY_EM = "Shelly EM"
 
@@ -141,8 +142,8 @@ VALUE_STOP = "stop"
 VALUE_TRUE = "true"
 
 PL_1_0 = {VALUE_ON: "1", VALUE_OFF: "0"}
-PL_OPEN_CLOSE = {VALUE_ON: "open", VALUE_OFF: "close"}
-PL_TRUE_FALSE = {VALUE_ON: "true", VALUE_OFF: "false"}
+PL_OPEN_CLOSE = {VALUE_ON: VALUE_OPEN, VALUE_OFF: VALUE_CLOSE}
+PL_TRUE_FALSE = {VALUE_ON: VALUE_TRUE, VALUE_OFF: VALUE_FALSE}
 
 expire_after = 43200
 off_delay = 3
@@ -408,6 +409,14 @@ if id.rsplit("-", 1)[0] == "shellybulb":
 
 if id.rsplit("-", 1)[0].lower() == "shellybulbduo":
     model = ATTR_MODEL_SHELLYDUO
+    white_lights = 1
+    lights_sensors = [ATTR_ENERGY, ATTR_POWER]
+    lights_sensors_units = [UNIT_KWH, UNIT_WATT]
+    lights_sensors_classes = [ATTR_POWER, ATTR_POWER]
+    lights_sensors_tpls = [TPL_ENERGY_WMIN, TPL_POWER]
+
+if id.rsplit("-", 1)[0].lower() == "shellyvintage":
+    model = ATTR_MODEL_SHELLYVINTAGE
     white_lights = 1
     lights_sensors = [ATTR_ENERGY, ATTR_POWER]
     lights_sensors_units = [UNIT_KWH, UNIT_WATT]
@@ -865,7 +874,7 @@ for bin_sensor_id in range(0, len(bin_sensors)):
         payload[KEY_AVAILABILITY_TOPIC] = availability_topic
         payload[KEY_PAYLOAD_AVAILABLE] = VALUE_TRUE
         payload[KEY_PAYLOAD_NOT_AVAILABLE] = VALUE_FALSE
-    if bin_sensors_classes[bin_sensor_id]:
+    if bin_sensors_classes and bin_sensors_classes[bin_sensor_id]:
         payload[KEY_DEVICE_CLASS] = bin_sensors_classes[bin_sensor_id]
     if (
         bin_sensors[bin_sensor_id] in [ATTR_LONGPUSH_0, ATTR_LONGPUSH_1]
@@ -981,9 +990,9 @@ for light_id in range(0, rgbw_lights):
                 },
                 "~": default_topic,
             }
-            if lights_bin_sensors_classes[bin_sensor_id]:
+            if lights_bin_sensors_classes and lights_bin_sensors_classes[bin_sensor_id]:
                 payload[KEY_DEVICE_CLASS] = lights_bin_sensors_classes[bin_sensor_id]
-            if lights_bin_sensors_tpls[bin_sensor_id]:
+            if lights_bin_sensors_tpls and lights_bin_sensors_tpls[bin_sensor_id]:
                 payload[KEY_VALUE_TEMPLATE] = lights_bin_sensors_tpls[bin_sensor_id]
             else:
                 payload[KEY_PAYLOAD_ON] = lights_bin_sensors_pl[bin_sensor_id][VALUE_ON]
@@ -1041,7 +1050,11 @@ for light_id in range(0, white_lights):
     device_name = f"{model} {id.split('-')[-1]}"
     light_name = f"{device_name} Light {light_id}"
     default_topic = f"shellies/{id}/"
-    if model == ATTR_MODEL_SHELLYDIMMER or model == ATTR_MODEL_SHELLYDUO:
+    if model in [
+        ATTR_MODEL_SHELLYDIMMER,
+        ATTR_MODEL_SHELLYDUO,
+        ATTR_MODEL_SHELLYVINTAGE,
+    ]:
         state_topic = f"~light/{light_id}/status"
         command_topic = f"~light/{light_id}/set"
         unique_id = f"{id}-light-{light_id}".lower()
@@ -1123,6 +1136,28 @@ for light_id in range(0, white_lights):
             '"mf":"' + ATTR_MANUFACTURER + '"},'
             '"~":"' + default_topic + '"}'
         )
+    elif model == ATTR_MODEL_SHELLYVINTAGE:
+        payload = (
+            '{"schema":"template",'
+            '"name":"' + light_name + '",'
+            '"cmd_t":"' + command_topic + '",'
+            '"stat_t":"' + state_topic + '",'
+            '"avty_t":"' + availability_topic + '",'
+            '"pl_avail":"true",'
+            '"pl_not_avail":"false",'
+            '"cmd_on_tpl":"{\\"turn\\":\\"on\\"{% if brightness is defined %},\\"brightness\\":{{brightness|float|multiply(0.3922)|round}}{% endif %}}",'
+            '"cmd_off_tpl":"{\\"turn\\":\\"off\\"}",'
+            '"stat_tpl":"{% if value_json.ison %}on{% else %}off{% endif %}",'
+            '"bri_tpl":"{{value_json.brightness|float|multiply(2.55)|round}}",'
+            '"uniq_id":"' + unique_id + '",'
+            '"qos":"' + str(qos) + '",'
+            '"dev": {"ids": ["' + mac + '"],'
+            '"name":"' + device_name + '",'
+            '"mdl":"' + model + '",'
+            '"sw":"' + fw_ver + '",'
+            '"mf":"' + ATTR_MANUFACTURER + '"},'
+            '"~":"' + default_topic + '"}'
+        )
     else:
         payload = ""
     if id.lower() in ignored:
@@ -1162,11 +1197,14 @@ for light_id in range(0, white_lights):
                     },
                     "~": default_topic,
                 }
-                if lights_bin_sensors_classes[bin_sensor_id]:
+                if (
+                    lights_bin_sensors_classes
+                    and lights_bin_sensors_classes[bin_sensor_id]
+                ):
                     payload[KEY_DEVICE_CLASS] = lights_bin_sensors_classes[
                         bin_sensor_id
                     ]
-                if lights_bin_sensors_tpls[bin_sensor_id]:
+                if lights_bin_sensors_tpls and lights_bin_sensors_tpls[bin_sensor_id]:
                     payload[KEY_VALUE_TEMPLATE] = lights_bin_sensors_tpls[bin_sensor_id]
                 else:
                     payload[KEY_PAYLOAD_ON] = lights_bin_sensors_pl[bin_sensor_id][
@@ -1193,7 +1231,11 @@ for light_id in range(0, white_lights):
         sensor_name = (
             f"{device_name} {lights_sensors[sensor_id].capitalize()} {light_id}"
         )
-        if model == ATTR_MODEL_SHELLYDIMMER or model == ATTR_MODEL_SHELLYDUO:
+        if model in [
+            ATTR_MODEL_SHELLYDIMMER,
+            ATTR_MODEL_SHELLYDUO,
+            ATTR_MODEL_SHELLYVINTAGE,
+        ]:
             state_topic = f"~light/{light_id}/{lights_sensors[sensor_id]}"
         else:
             state_topic = f"~white/{light_id}/status"
@@ -1201,6 +1243,7 @@ for light_id in range(0, white_lights):
             config_mode != ATTR_RGBW
             or model == ATTR_MODEL_SHELLYDIMMER
             or model == ATTR_MODEL_SHELLYDUO
+            or model == ATTR_MODEL_SHELLYVINTAGE
         ):
             payload = {
                 KEY_NAME: sensor_name,
@@ -1265,7 +1308,7 @@ for meter_id in range(0, meters):
             },
             "~": default_topic,
         }
-        if meters_sensors_classes[sensor_id]:
+        if meters_sensors_classes and meters_sensors_classes[sensor_id]:
             payload[KEY_DEVICE_CLASS] = meters_sensors_classes[sensor_id]
         if id.lower() in ignored:
             payload = ""

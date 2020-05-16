@@ -5,5 +5,6 @@
     "4": "light.sideboard_leds",
     "5": "light.tv_lampe",
     "6": "light.vitrine_leds",
-    "7": "light.test_streamlight"
+    "7": "light.test_streamlight",
+    "8": "light.bettbeleuchtung_leds"
 }

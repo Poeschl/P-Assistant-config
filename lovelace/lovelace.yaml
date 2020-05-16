@@ -14,7 +14,14 @@ config:
         tap_action:
           action: toggle
       - entity: light.sideboard_leds
-      - entity: light.vitrine_leds
+        tap_action:
+          action: toggle
+      - entity: switch.monitor_licht
+        tap_action:
+          action: toggle
+      - entity: light.bettbeleuchtung_leds
+        tap_action:
+          action: toggle
       show_icon: true
       show_name: true
       show_state: true
@@ -78,6 +85,23 @@ config:
       full_width_sliders: true
       group: false
       header: Vitrine
+      persist_features: true
+      show_slider_percent: true
+      smooth_color_wheel: false
+      temperature_icon: thermometer
+      type: custom:light-entity-card
+      white_icon: file-word-box
+      white_value: true
+    - brightness: true
+      brightness_icon: weather-sunny
+      color_picker: true
+      color_temp: false
+      color_wheel: false
+      effects_list: true
+      entity: light.bettbeleuchtung_leds
+      full_width_sliders: true
+      group: false
+      header: Bett
       persist_features: true
       show_slider_percent: true
       smooth_color_wheel: false
@@ -378,21 +402,30 @@ config:
       - entity: sensor.saabii
       title: Twitch
       type: glance
-    - cards:
-      - entity: media_player.fernseher_wohnzimmer
-        name: Sony TV
-        type: media-control
-      - entity: media_player.p_tv
-        name: Chromecast
-        type: media-control
-      title: Fernseher
-      type: custom:stack-in-card
-    - cards:
-      - entity: media_player.p_radio
-        name: P-Radio
-        type: media-control
-      title: Radio
-      type: custom:stack-in-card
+    - artwork: cover
+      entity: media_player.fernseher_wohnzimmer
+      shortcuts:
+        buttons:
+        - icon: mdi:youtube
+          id: com.google.android.youtube.tv
+          type: source
+        - icon: mdi:netflix
+          id: com.netflix.ninja
+          type: source
+        - icon: mdi:amazon
+          id: Amazon Prime
+          type: source
+        - icon: mdi:twitch
+          id: tv.twitch.android.app
+          type: source
+        - icon: mdi:steam
+          id: com.valvesoftware.steamlink
+          type: source
+        columns: 5
+      type: custom:mini-media-player
+    - artwork: cover
+      entity: media_player.p_radio
+      type: custom:mini-media-player
     icon: mdi:play-circle
     path: media
     title: Media
@@ -520,6 +553,8 @@ config:
       refresh_interval: 0
       title: "Aktivit\xE4t"
       type: history-graph
+    - entity: sensor.next_alarm_markus
+      type: entity
     icon: mdi:home-account
     path: anwesenheit
     title: Anwesenheit

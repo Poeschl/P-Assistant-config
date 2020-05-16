@@ -20,9 +20,36 @@ light:
     effects:
       - addressable_rainbow:    
       - addressable_scan:
-          name: Ebenen Scan
-          scan_width: 4
-          move_interval: 100ms
+          name: Scan
+          scan_width: 8
+          move_interval: 50ms
+      - addressable_color_wipe:
+          name: White color
+          colors:
+            - red: 100%
+              green: 86%
+              blue: 71%
+              num_leds: 1
+          add_led_interval: 50ms
       - addressable_twinkle:
           twinkle_probability: 15%
-          progress_interval: 15ms    
+          progress_interval: 15ms
+      - lambda:
+           name: Breathing
+           update_interval: 2s
+           lambda: |-
+            static int state = 0;
+            static int color = 1;
+            auto call = id(led).turn_on();
+            call.set_transition_length(3000);
+            if (state == 0) {
+              call.set_brightness(1.0);
+            } else if (state == 1) {
+              call.set_brightness(0.01);
+            }
+            call.perform();
+            state ++;
+            if (state == 2) {
+              state = 0;
+            }
+            
