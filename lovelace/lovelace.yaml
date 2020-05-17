@@ -29,26 +29,14 @@ config:
       type: glance
     - card:
         entities:
-        - align_icons: top
-          buttons:
-          - entity: script.towerfan_power_on
-            icon: mdi:power
-            name: Ein
-          - entity: script.towerfan_power_off
-            icon: mdi:power-off
-            name: Aus
-          - entity: script.towerfan_speed
-            icon: mdi:gauge
-            name: Speed
-          - entity: script.towerfan_oscillate
-            icon: mdi:backup-restore
-            name: Drehen
-          - entity: script.towerfan_timer
-            icon: mdi:timer
-            name: Timer
-          type: custom:paper-buttons-row
-        title: "Wohnzimmer L\xFCfter"
-        type: entities
+        - entity: fan.wohnzimmer_lufter
+          tap_action:
+            action: toggle
+        - entity: fan.schlafzimmer_lufter
+          tap_action:
+            action: toggle
+        title: "L\xFCfter"
+        type: glance
       conditions:
       - entity: input_boolean.winter_mode
         state: 'off'
@@ -146,26 +134,13 @@ config:
         type: conditional
       - card:
           entities:
-          - align_icons: top
-            buttons:
-            - entity: script.towerfan_power_on
-              icon: mdi:power
-              name: Ein
-            - entity: script.towerfan_power_off
-              icon: mdi:power-off
-              name: Aus
-            - entity: script.towerfan_speed
-              icon: mdi:gauge
-              name: Speed
-            - entity: script.towerfan_oscillate
-              icon: mdi:backup-restore
-              name: Drehen
-            - entity: script.towerfan_timer
-              icon: mdi:timer
-              name: Timer
-            type: custom:paper-buttons-row
+          - entity: fan.wohnzimmer_lufter
+            tap_action:
+              action: toggle
+          show_name: false
+          show_state: false
           title: "L\xFCfter"
-          type: entities
+          type: glance
         conditions:
         - entity: input_boolean.winter_mode
           state: 'off'

@@ -1,9 +1,0 @@
----
-# One of the scripts to control my living room fan.
-#
-towerfan_speed:
-  sequence:
-    - service: broadlink.send
-      data:
-        host: !secret ip_rm_mini
-        packet: JgCEAAgAB+IMAAbbDTEIAAYJLAssCxAnLAssCw8oECcQJxAlESgqDQ8AAQMrDCsMDygrDCsMDygPKA8oDygPKCsMDwABAysMKwwPKCsMKwwPKA8oDygPKA8oKgwQAAEDKwwrDA8oKwwrDA8oDycQJxAnECcrDBAAAzEQAAdcEHIJAAejEQANBQAAAAA=

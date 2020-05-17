@@ -17,7 +17,8 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Added bed lights and some more media control stuff
+  commit_message: Changed climatic nodered flows and replaced towerfan scripts with
+    smartir
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git

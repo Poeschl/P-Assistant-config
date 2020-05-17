@@ -1,0 +1,7 @@
+---
+# Enables the SmartIR component which makes controlling IR devices more comfortable.
+# See https://github.com/smartHomeHub/SmartIR
+#
+# For the integrated devices take a look at the fans integration.
+#
+smartir:

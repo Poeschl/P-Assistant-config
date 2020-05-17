@@ -1,7 +1,0 @@
----
-# Indicates the state of the fan in the living room.
-# Used for getting the on/off state over the energy measurement of a smart plug.
-#
-livingroom_fan_power:
-  name: Wohnzimmer Lüfter Läuft
-  icon: 'mdi:power'
