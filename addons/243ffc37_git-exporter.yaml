@@ -17,8 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Changed climatic nodered flows and replaced towerfan scripts with
-    smartir
+  commit_message: Fixed small issues with bath fan flow
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git
