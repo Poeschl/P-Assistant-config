@@ -17,7 +17,8 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Fixed small issues with bath fan flow
+  commit_message: Update to 110.0
+  email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true
   url: https://github.com/Poeschl/P-Assistant-config.git

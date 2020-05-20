@@ -2,9 +2,7 @@
 # The rules for home assistant auto discovery.
 #
 # Since I don't use apple devices I'm ignoring the apple_tv.
-# Also UPNP devices are ignored.
 #
 discovery:
   ignore:
     - apple_tv
-    - igd

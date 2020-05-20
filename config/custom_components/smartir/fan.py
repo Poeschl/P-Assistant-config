@@ -6,10 +6,10 @@ import os.path
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    FanEntity, PLATFORM_SCHEMA, ATTR_SPEED,
-    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
+    FanEntity, PLATFORM_SCHEMA, ATTR_SPEED, 
+    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, 
     DIRECTION_REVERSE, DIRECTION_FORWARD,
-    SUPPORT_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE, ATTR_OSCILLATING)
+    SUPPORT_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE, ATTR_OSCILLATING )
 from homeassistant.const import (
     CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.core import callback
@@ -35,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CONTROLLER_DATA): cv.string,
     vol.Optional(CONF_POWER_SENSOR): cv.entity_id
 })
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the IR Fan platform."""
@@ -73,11 +72,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.error("The device JSON file is invalid")
             return
 
-    if ATTR_SPEED in device_data['commands']:
-        async_add_entities([SmartOneSpeedButtonIRFan(hass, config, device_data)])
-    else:
-        async_add_entities([SmartIRFan(hass, config, device_data)])
-
+    async_add_entities([SmartIRFan(
+        hass, config, device_data
+    )])
 
 class SmartIRFan(FanEntity, RestoreEntity):
     def __init__(self, hass, config, device_data):
@@ -94,7 +91,7 @@ class SmartIRFan(FanEntity, RestoreEntity):
         self._commands_encoding = device_data['commandsEncoding']
         self._speed_list = [SPEED_OFF] + device_data['speed']
         self._commands = device_data['commands']
-
+        
         self._speed = SPEED_OFF
         self._direction = None
         self._last_on_speed = None
@@ -102,46 +99,47 @@ class SmartIRFan(FanEntity, RestoreEntity):
         self._support_flags = SUPPORT_SET_SPEED
 
         if (DIRECTION_REVERSE in self._commands and \
-                DIRECTION_FORWARD in self._commands):
+            DIRECTION_FORWARD in self._commands):
             self._direction = DIRECTION_REVERSE
             self._support_flags = (
-                    self._support_flags | SUPPORT_DIRECTION)
+                self._support_flags | SUPPORT_DIRECTION)
         if ('oscillate' in self._commands):
             self._oscillating = False
             self._support_flags = (
-                    self._support_flags | SUPPORT_OSCILLATE)
+                self._support_flags | SUPPORT_OSCILLATE)
+
 
         self._temp_lock = asyncio.Lock()
         self._on_by_remote = False
 
-        # Init the IR/RF controller
+        #Init the IR/RF controller
         self._controller = Controller(
             self.hass,
-            self._supported_controller,
+            self._supported_controller, 
             self._commands_encoding,
             self._controller_data)
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-
+    
         last_state = await self.async_get_last_state()
 
         if last_state is not None:
             if 'speed' in last_state.attributes:
                 self._speed = last_state.attributes['speed']
 
-            # If _direction has a value the direction controls appears
-            # in UI even if SUPPORT_DIRECTION is not provided in the flags
+            #If _direction has a value the direction controls appears 
+            #in UI even if SUPPORT_DIRECTION is not provided in the flags
             if ('direction' in last_state.attributes and \
-                    self._support_flags & SUPPORT_DIRECTION):
+                self._support_flags & SUPPORT_DIRECTION):
                 self._direction = last_state.attributes['direction']
 
             if 'last_on_speed' in last_state.attributes:
                 self._last_on_speed = last_state.attributes['last_on_speed']
 
             if self._power_sensor:
-                async_track_state_change(self.hass, self._power_sensor,
+                async_track_state_change(self.hass, self._power_sensor, 
                                          self._async_power_sensor_changed)
 
     @property
@@ -158,7 +156,7 @@ class SmartIRFan(FanEntity, RestoreEntity):
     def state(self):
         """Return the current state."""
         if (self._on_by_remote or \
-                self.speed != SPEED_OFF):
+            self.speed != SPEED_OFF):
             return STATE_ON
         return SPEED_OFF
 
@@ -253,7 +251,7 @@ class SmartIRFan(FanEntity, RestoreEntity):
             elif oscillating:
                 command = self._commands['oscillate']
             else:
-                command = self._commands[direction][speed]
+                command = self._commands[direction][speed] 
 
             try:
                 await self._controller.send(command)
@@ -275,60 +273,3 @@ class SmartIRFan(FanEntity, RestoreEntity):
             if self._speed != SPEED_OFF:
                 self._speed = SPEED_OFF
             await self.async_update_ha_state()
-
-
-class SmartOneSpeedButtonIRFan(SmartIRFan):
-
-    def __init__(self, hass, config, device_data):
-        super().__init__(hass, config, device_data)
-        self._current_speed = SPEED_LOW
-        self._current_oscillating = False
-        self._current_on = self.state == STATE_ON
-
-    async def async_added_to_hass(self):
-        """Run when entity about to be added. Uses the data from the super class."""
-        await super().async_added_to_hass()
-
-        self._current_speed = self._last_on_speed
-        self._current_oscillating = self._oscillating
-
-    async def send_command(self):
-        async with self._temp_lock:
-            speed = self._speed.lower()
-            last_speed = self._current_speed
-            oscillating = self._oscillating
-            last_oscillating = self._current_oscillating
-            currently_on = self._current_on
-
-            if speed == SPEED_OFF:
-                if currently_on:
-                    await self.__send(self._commands['off'])
-                self._current_on = False
-                return
-
-            if self._speed_list.index(speed) > self._speed_list.index(last_speed):
-                speed_command_times = self._speed_list.index(speed) - self._speed_list.index(last_speed)
-            elif self._speed_list.index(speed) < self._speed_list.index(last_speed):
-                # Go around the speed wheel by adding 3 to the wanted speed
-                speed_command_times = self._speed_list.index(speed) + 3 - self._speed_list.index(last_speed)
-            else:
-                speed_command_times = 0
-
-            if not currently_on:
-                await self.__send(self._commands['off'])
-                self._current_on = True
-                self._on_by_remote = False
-
-        for _ in range(speed_command_times):
-            await self.__send(self._commands['speed'])
-        self._current_speed = speed
-
-        if oscillating != last_oscillating:
-            await self.__send(self._commands['oscillate'])
-            self._current_oscillating = oscillating
-
-    async def __send(self, command):
-        try:
-            await self._controller.send(command)
-        except Exception as e:
-            _LOGGER.exception(e)

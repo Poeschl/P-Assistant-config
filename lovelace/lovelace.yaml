@@ -3,8 +3,12 @@ config:
   views:
   - badges: []
     cards:
-    - entity: weather.openweathermap
+    - current: true
+      details: true
+      entity: weather.openweathermap
+      forecast: true
       icons: /local/custom_ui/weather-icons/
+      name: Aux
       type: custom:weather-card
     - entities:
       - entity: switch.multimedia_steckdose_relay
@@ -25,7 +29,7 @@ config:
       show_icon: true
       show_name: true
       show_state: true
-      title: Schnellzugriff
+      title: Leuchten und Schalter
       type: glance
     - card:
         entities:
@@ -453,6 +457,7 @@ config:
         type: horizontal-stack
       - entities:
         - sensor.adguard_average_processing_speed
+        - sensor.adguard_rules_count
         - switch.adguard_protection
         - switch.adguard_filtering
         show_header_toggle: false
