@@ -1,0 +1,9 @@
+certfile: p-assist.cert.pem
+cloudflare: false
+customize:
+  active: false
+  default: nginx_proxy_default*.conf
+  servers: nginx_proxy/*.conf
+domain: '!secret homeassistant_domain'
+hsts: ''
+keyfile: p-assist.key.pem

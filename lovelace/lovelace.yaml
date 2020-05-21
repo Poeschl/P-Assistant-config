@@ -405,6 +405,9 @@ config:
     - artwork: cover
       entity: media_player.p_radio
       type: custom:mini-media-player
+    - artwork: cover
+      entity: media_player.cc_audio
+      type: custom:mini-media-player
     icon: mdi:play-circle
     path: media
     title: Media

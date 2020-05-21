@@ -1,8 +1,6 @@
 ---
 # The http component serves all files and data required for the
 # Home Assistant frontend.
-# I also use TLS in the internal network, so also HA gets it own certificate
+# TLS is used over a nginx reverse proxy.
 #
 http:
-  ssl_certificate: /ssl/p-assist.cert.pem
-  ssl_key: /ssl/p-assist.key.pem
