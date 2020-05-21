@@ -1,8 +1,0 @@
----
-# The setup for the Home Assistant Community Store.
-#
-# https://hacs.xyz/
-#
-hacs:
-  token: !secret github_api_token
-  sidepanel_title: HACS
