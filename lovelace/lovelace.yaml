@@ -406,7 +406,7 @@ config:
       entity: media_player.p_radio
       type: custom:mini-media-player
     - artwork: cover
-      entity: media_player.cc_audio
+      entity: media_player.chromecast_radio
       type: custom:mini-media-player
     icon: mdi:play-circle
     path: media
