@@ -17,7 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Update to 110.0
+  commit_message: Make vacuum triggering aware of holidays
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true
