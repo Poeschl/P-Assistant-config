@@ -5,5 +5,5 @@
 # This one is for the Home Assistant itself.
 #
 platform: cert_expiry
-host: localhost
-port: 8123
+host: !secret homeassistant_domain
+port: 443

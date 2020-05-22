@@ -19,18 +19,7 @@ binary_sensor:
       - delay: 3min
       - fan.turn_off: bath_fan
     on_double_click:
-      then:
-        - fan.turn_on: bath_fan
-        - delay: 500ms
-        - fan.turn_off: bath_fan
-        - delay: 500ms
-        - fan.turn_on: bath_fan
-        - delay: 500ms
-        - fan.turn_off: bath_fan
-        - delay: 500ms
-        - fan.turn_on: bath_fan
-        - delay: 10min
-        - fan.turn_off: bath_fan
+      - fan.turn_off: bath_fan
 
 output:
   - platform: gpio

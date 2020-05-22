@@ -17,7 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Update HACS and remove yaml config for it
+  commit_message: Use multiclick on bath fan switch to turn it off
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

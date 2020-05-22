@@ -502,7 +502,7 @@ config:
     - entities:
       - entity: sensor.nextcloud_zertifikat_let_s_encrypt
       - entity: sensor.cert_expiry_p_storage_fritz_box_5001
-      - entity: sensor.cert_expiry_localhost_8123
+      - entity: sensor.cert_expiry_p_assist_fritz_box
       show_header_toggle: false
       title: Zertifikatablaufdatum
       type: entities
