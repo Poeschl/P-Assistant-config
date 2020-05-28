@@ -318,15 +318,13 @@ config:
           points_per_hour: 4
           type: custom:mini-graph-card
         - color_thresholds:
-          - color: '#d32f2f'
-            value: 60
+          - color: '#0089d9'
+            value: 65
           - color: '#04d900'
             value: 55
           - color: '#04d900'
-            value: 35
+            value: 40
           - color: '#ffbf00'
-            value: 30
-          - color: '#d32f2f'
             value: 25
           entities:
           - entity: sensor.mitemp_balcony_hum
@@ -345,7 +343,6 @@ config:
     title: Klima
   - badges:
     - entity: vacuum.p_dusty
-    - entity: binary_sensor.valetudo_aktiv
     cards:
     - camera_image: camera.p_dusty_map
       entities:
@@ -433,6 +430,36 @@ config:
       name: Internet-Traffic
       points_per_hour: 2
       type: custom:mini-graph-card
+    - entities:
+      - entity: sensor.speedtest_download
+        index: 0
+        name: Download
+        show_fill: false
+      - entity: sensor.speedtest_upload
+        index: 1
+        name: Upload
+        show_fill: false
+      group_by: date
+      hour24: true
+      hours_to_show: 168
+      icon: mdi:speedometer
+      line_width: 4
+      lower_bound: 0
+      name: Speedtest
+      type: custom:mini-graph-card
+    - entities:
+      - entity: sensor.speedtest_ping
+        index: 0
+        name: Ping
+        show_fill: false
+      group_by: date
+      hour24: true
+      hours_to_show: 168
+      icon: mdi:speedometer
+      line_width: 4
+      lower_bound: 0
+      points_per_hour: 0.25
+      type: custom:mini-graph-card
     - cards:
       - cards:
         - entities:
@@ -467,38 +494,6 @@ config:
         type: entities
       title: AdGuard
       type: custom:stack-in-card
-    - cards:
-      - entities:
-        - entity: sensor.speedtest_download
-          index: 0
-          name: Download
-          show_fill: false
-        - entity: sensor.speedtest_upload
-          index: 1
-          name: Upload
-          show_fill: false
-        group_by: date
-        hour24: true
-        hours_to_show: 168
-        icon: mdi:speedometer
-        line_width: 4
-        lower_bound: 0
-        name: Speedtest
-        type: custom:mini-graph-card
-      - entities:
-        - entity: sensor.speedtest_ping
-          index: 0
-          name: Ping
-          show_fill: false
-        group_by: date
-        hour24: true
-        hours_to_show: 168
-        icon: mdi:speedometer
-        line_width: 4
-        lower_bound: 0
-        points_per_hour: 0.25
-        type: custom:mini-graph-card
-      type: vertical-stack
     - entities:
       - entity: sensor.nextcloud_zertifikat_let_s_encrypt
       - entity: sensor.cert_expiry_p_storage_fritz_box_5001

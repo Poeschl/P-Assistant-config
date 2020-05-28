@@ -13,8 +13,8 @@ hosts:
   - !secret ip_markus_laptop_lan
   - !secret ip_work_laptop_wifi
   - !secret ip_work_laptop_lan
-consider_home: 0:04
-home_interval: 4
+consider_home: 0:02
+home_interval: 2
 interval_seconds: 15
 scan_options: " --privileged -sP "
 new_device_defaults:

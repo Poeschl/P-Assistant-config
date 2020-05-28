@@ -1,0 +1,7 @@
+---
+# The fritz platform offers presence detection by looking at connected devices to a AVM FRITZ!Box based router.
+#
+platform: fritz
+consider_home: 0:01
+new_device_defaults:
+  track_new_devices: false

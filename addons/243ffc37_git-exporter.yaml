@@ -17,7 +17,8 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Use multiclick on bath fan switch to turn it off
+  commit_message: Network tracker switched to fritz. Several updates and small fixes
+    on node red.
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true
