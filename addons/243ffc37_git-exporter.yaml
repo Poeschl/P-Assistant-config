@@ -17,8 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Network tracker switched to fritz. Several updates and small fixes
-    on node red.
+  commit_message: Several changes and custom cert_expiry integration
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

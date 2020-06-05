@@ -141,6 +141,9 @@ config:
           - entity: fan.wohnzimmer_lufter
             tap_action:
               action: toggle
+          - entity: input_boolean.fan_wohnzimmer_60min
+            tap_action:
+              action: toggle
           show_name: false
           show_state: false
           title: "L\xFCfter"
@@ -195,6 +198,9 @@ config:
       - card:
           entities:
           - entity: fan.schlafzimmer_lufter
+            tap_action:
+              action: toggle
+          - entity: input_boolean.fan_schlafzimmer_30min
             tap_action:
               action: toggle
           show_name: false

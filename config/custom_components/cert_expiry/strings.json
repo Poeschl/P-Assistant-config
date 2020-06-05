@@ -1,0 +1,26 @@
+{
+  "title": "Certificate Expiry",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Define the certificate to test",
+        "data": {
+          "name": "The name of the certificate",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ca_certfile": "[%key:common::config_flow::data::ca_certfile%]"
+        }
+      }
+    },
+    "error": {
+      "resolve_failed": "This host can not be resolved",
+      "connection_timeout": "Timeout when connecting to this host",
+      "connection_refused": "Connection refused when connecting to host",
+      "ca_certificate_not_found": "CA certificate not found"
+    },
+    "abort": {
+      "already_configured": "This host and port combination is already configured",
+      "import_failed": "Import from config failed"
+    }
+  }
+}

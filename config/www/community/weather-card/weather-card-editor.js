@@ -4,7 +4,7 @@ const fireEvent = (node, type, detail, options) => {
   const event = new Event(type, {
     bubbles: options.bubbles === undefined ? true : options.bubbles,
     cancelable: Boolean(options.cancelable),
-    composed: options.composed === undefined ? true : options.composed,
+    composed: options.composed === undefined ? true : options.composed
   });
   event.detail = detail;
   node.dispatchEvent(event);
@@ -24,7 +24,7 @@ const css = LitElement.prototype.css;
 
 export class WeatherCardEditor extends LitElement {
   setConfig(config) {
-    this._config = config;
+    this._config = { ...config };
   }
 
   static get properties() {
@@ -55,13 +55,21 @@ export class WeatherCardEditor extends LitElement {
     return this._config.forecast !== false;
   }
 
+  get _hourly_forecast() {
+    return this._config.hourly_forecast !== false;
+  }
+
+  get _number_of_forecasts() {
+    return this._config.number_of_forecasts || 5;
+  }
+
   render() {
     if (!this.hass) {
       return html``;
     }
 
     const entities = Object.keys(this.hass.states).filter(
-      (eid) => eid.substr(0, eid.indexOf(".")) === "weather"
+      eid => eid.substr(0, eid.indexOf(".")) === "weather"
     );
 
     return html`
@@ -100,7 +108,7 @@ export class WeatherCardEditor extends LitElement {
                     slot="dropdown-content"
                     .selected="${entities.indexOf(this._entity)}"
                   >
-                    ${entities.map((entity) => {
+                    ${entities.map(entity => {
                       return html`
                         <paper-item>${entity}</paper-item>
                       `;
@@ -126,6 +134,18 @@ export class WeatherCardEditor extends LitElement {
             @change="${this._valueChanged}"
             >Show forecast</ha-switch
           >
+          <ha-switch
+          .checked=${this._hourly_forecast}
+          .configValue="${"hourly_forecast"}"
+          @change="${this._valueChanged}"
+          >Show hourly forecast</ha-switch
+          >
+          <paper-input
+          label="Number of future forcasts"
+          type="number" min="1" max="8" value=${this._number_of_forecasts}
+          .configValue="${"number_of_forecasts"}"
+          @value-changed="${this._valueChanged}"
+          ></paper-input>
         </div>
       </div>
     `;
@@ -146,7 +166,7 @@ export class WeatherCardEditor extends LitElement {
         this._config = {
           ...this._config,
           [target.configValue]:
-            target.checked !== undefined ? target.checked : target.value,
+            target.checked !== undefined ? target.checked : target.value
         };
       }
     }

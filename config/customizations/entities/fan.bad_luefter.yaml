@@ -1,7 +1,0 @@
----
-# Set binary fan with only two speeds
-#
-fan.bad_lufter:
-  speed_list:
-  - 'off'
-  - high

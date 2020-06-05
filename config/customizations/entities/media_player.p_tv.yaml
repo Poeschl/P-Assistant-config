@@ -1,5 +1,0 @@
----
-# Sets a better name for the chromecast inside the sony tv
-#
-media_player.p_tv:
-  friendly_name: P-TV (Chromecast)

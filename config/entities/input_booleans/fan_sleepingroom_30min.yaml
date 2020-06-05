@@ -1,0 +1,6 @@
+---
+# A boolean which triggers the fan in the sleeping room on for half an hour.
+#
+fan_schlafzimmer_30min:
+  name: Lüfter Schlafzimmer 30min
+  icon: mdi:fast-forward-30

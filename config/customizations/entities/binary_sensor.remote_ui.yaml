@@ -1,5 +1,0 @@
----
-# Hides the remote_ui boolean, since not used at all
-#
-binary_sensor.remote_ui:
-  hidden: true

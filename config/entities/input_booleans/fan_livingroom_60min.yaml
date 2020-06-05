@@ -1,0 +1,6 @@
+---
+# A boolean which triggers the fan in the living room on for an hour.
+#
+fan_wohnzimmer_60min:
+  name: Lüfter Wohnzimmer 1h
+  icon: mdi:timer-sand

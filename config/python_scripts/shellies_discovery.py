@@ -9,6 +9,7 @@ ATTR_MODEL_SHELLY1PM = "Shelly1PM"
 ATTR_MODEL_SHELLY2 = "Shelly2"
 ATTR_MODEL_SHELLY25 = "Shelly2.5"
 ATTR_MODEL_SHELLY4PRO = "Shelly4Pro"
+ATTR_MODEL_SHELLYAIR = "Shelly Air"
 ATTR_MODEL_SHELLYBULB = "Shelly Bulb"
 ATTR_MODEL_SHELLYDIMMER = "Shelly Dimmer"
 ATTR_MODEL_SHELLYDUO = "Shelly DUO"
@@ -28,6 +29,7 @@ ATTR_BATTERY = "battery"
 ATTR_CHARGER = "charger"
 ATTR_CURRENT = "current"
 ATTR_ENERGY = "energy"
+ATTR_EXT_TEMPERATURE = "ext_temperature"
 ATTR_FAN = "fan"
 ATTR_FLOOD = "flood"
 ATTR_HEAT = "heat"
@@ -61,6 +63,7 @@ ATTR_SWITCH = "switch"
 ATTR_TEMPERATURE = "temperature"
 ATTR_TILT = "tilt"
 ATTR_TOTAL = "total"
+ATTR_TOTALWORKTIME = "totalworktime"
 ATTR_TOTAL_RETURNED = "total_returned"
 ATTR_VOLTAGE = "voltage"
 ATTR_VIBRATION = "vibration"
@@ -133,6 +136,7 @@ UNIT_DEGREE = "°"
 UNIT_KWH = "kWh"
 UNIT_LUX = "lx"
 UNIT_PERCENT = "%"
+UNIT_SECONDS = "s"
 UNIT_VAR = "VAR"
 UNIT_VOLT = "V"
 UNIT_WATT = "W"
@@ -176,7 +180,7 @@ def mqtt_publish(topic, payload, retain, qos):
         KEY_RETAIN: retain,
         KEY_QOS: qos,
     }
-    logger.debug("Send to MQTT broker: %s %s", topic, payload)
+    logger.debug("Sending to MQTT broker: %s %s", topic, payload)
     hass.services.call("mqtt", "publish", service_data, False)
 
 
@@ -269,6 +273,24 @@ if id.rsplit("-", 1)[0] == "shelly1pm":
     bin_sensors_classes = [ATTR_HEAT]
     bin_sensors_pl = [PL_1_0]
     ext_sensors = 3
+
+if id.rsplit("-", 1)[0] == "shellyair":
+    model = ATTR_MODEL_SHELLYAIR
+    relays = 1
+    relays_sensors = [ATTR_POWER, ATTR_ENERGY]
+    relays_sensors_units = [UNIT_WATT, UNIT_KWH]
+    relays_sensors_classes = [ATTR_POWER, ATTR_POWER]
+    relays_sensors_tpls = [TPL_POWER, TPL_ENERGY_WMIN]
+    relays_bin_sensors = [ATTR_INPUT]
+    relays_bin_sensors_pl = [PL_1_0]
+    sensors = [ATTR_TEMPERATURE, ATTR_TOTALWORKTIME]
+    sensors_classes = [ATTR_TEMPERATURE, None]
+    sensors_units = [UNIT_CELSIUS, UNIT_SECONDS]
+    sensors_tpls = [TPL_TEMPERATURE, None]
+    bin_sensors = [ATTR_OVERTEMPERATURE]
+    bin_sensors_classes = [ATTR_HEAT]
+    bin_sensors_pl = [PL_1_0]
+    ext_sensors = 1
 
 if id.rsplit("-", 1)[0] == "shellyswitch":
     model = ATTR_MODEL_SHELLY2
@@ -768,7 +790,6 @@ for sensor_id in range(0, len(sensors)):
         KEY_NAME: sensor_name,
         KEY_STATE_TOPIC: state_topic,
         KEY_UNIT: sensors_units[sensor_id],
-        KEY_VALUE_TEMPLATE: sensors_tpls[sensor_id],
         KEY_EXPIRE_AFTER: expire_after,
         KEY_FORCE_UPDATE: str(force_update),
         KEY_UNIQUE_ID: unique_id,
@@ -788,6 +809,8 @@ for sensor_id in range(0, len(sensors)):
         payload[KEY_AVAILABILITY_TOPIC] = availability_topic
         payload[KEY_PAYLOAD_AVAILABLE] = VALUE_TRUE
         payload[KEY_PAYLOAD_NOT_AVAILABLE] = VALUE_FALSE
+    if sensors_tpls[sensor_id]:
+        payload[KEY_VALUE_TEMPLATE] = sensors_tpls[sensor_id]
     if no_battery_sensor and sensors[sensor_id] == ATTR_BATTERY:
         payload = ""
     if id.lower() in ignored:
@@ -802,7 +825,10 @@ for sensor_id in range(0, ext_sensors):
         force_update = device_config.get(CONF_FORCE_UPDATE_SENSORS)
     device_name = f"{model} {id.split('-')[-1]}"
     unique_id = f"{id}-ext-{sensor_id}".lower()
-    ext_sensor_type = device_config.get(f"ext-{sensor_id}")
+    if model == ATTR_MODEL_SHELLYAIR:
+        ext_sensor_type = ATTR_TEMPERATURE
+    else:
+        ext_sensor_type = device_config.get(f"ext-{sensor_id}")
     if ext_sensor_type:
         config_topic = f"{disc_prefix}/sensor/{id}-ext-{sensor_id}/config"
         default_topic = f"shellies/{id}/"
