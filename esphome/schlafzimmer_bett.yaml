@@ -9,6 +9,10 @@ esphome:
 
 <<: !include includes/common.yaml
 
+globals:
+  - id: middle_double_click_status
+    type: bool
+
 light:
   - platform: fastled_clockless
     id: led
@@ -55,23 +59,39 @@ light:
             
 binary_sensor:
   - platform: gpio
+    name: Bett Taste rechts
     pin:
       number: D5
       mode: INPUT_PULLUP
       inverted: true
-    name: Bett Taste rechts
     internal: true
     on_click:
       - light.toggle: led
+
   - platform: gpio
+    name: Bett Taste mitte
     pin:
       number: D6
       mode: INPUT_PULLUP
       inverted: true
-    name: Bett Taste mitte
+    on_double_click:
+      then:
+        - lambda: id(middle_double_click_status) = true;
+        - delay: 300ms
+        - lambda: id(middle_double_click_status) = false;
+
   - platform: gpio
     pin:
       number: D7
       mode: INPUT_PULLUP
       inverted: true
     name: Bett Taste links
+
+  - platform: template
+    name: Bett Taste mitte Doppelklick
+    lambda: |-
+      if (id(middle_double_click_status)) {
+        return true;
+      } else {
+        return false;
+      }
