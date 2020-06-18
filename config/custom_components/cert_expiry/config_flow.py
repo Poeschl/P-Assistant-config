@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN, CONF_CAFILE  # pylint: disable=unused-import
+from .const import CONF_CAFILE, DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
@@ -35,7 +35,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
-                user_input.get(CONF_CAFILE, "")
+                user_input.get(CONF_CAFILE, ""),
             )
             return True
         except ResolveFailed:
@@ -64,7 +64,8 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title_port = f":{port}" if port != DEFAULT_PORT else ""
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
-                    title=title, data={CONF_HOST: host, CONF_PORT: port, CONF_CAFILE: cafile},
+                    title=title,
+                    data={CONF_HOST: host, CONF_PORT: port, CONF_CAFILE: cafile},
                 )
             if (  # pylint: disable=no-member
                 self.context["source"] == config_entries.SOURCE_IMPORT

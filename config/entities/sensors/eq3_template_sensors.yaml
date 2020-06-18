@@ -1,0 +1,18 @@
+---
+#
+# Getting more from the eq3 climate
+#
+platform: template
+sensors:
+  eq3_living_room_valve_state:
+    friendly_name: "Wohnzimmer Heizkörper Ventil geschlossen"
+    unit_of_measurement: '%'
+    value_template: "{{ state_attr('climate.living_room', 'valve') }}"
+    icon_template: >-
+      {% if states("sensor.eq3_living_room_valve_state")|int == 0 %}
+        mdi:valve-closed
+      {% elif states("sensor.eq3_living_room_valve_state")|int > 80 %}
+        mdi:valve-open
+      {% else %}
+        mdi:valve
+      {% endif %}

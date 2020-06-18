@@ -1,0 +1,9 @@
+---
+# Integration for the eq3 climate valve. It is communicating over Bluetooth.
+#
+# https://www.home-assistant.io/integrations/eq3btsmart/
+#
+platform: eq3btsmart
+devices:
+  living_room:
+    mac: !secret mac_eq3_livingroom

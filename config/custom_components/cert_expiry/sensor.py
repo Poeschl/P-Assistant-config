@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
-from .const import DEFAULT_PORT, DOMAIN, CONF_CAFILE
+from .const import CONF_CAFILE, DEFAULT_PORT, DOMAIN
 from .errors import TemporaryFailure, ValidationFailure
 from .helper import get_cert_time_to_expiry
 
@@ -130,7 +130,7 @@ class SSLCertificate(Entity):
         """Fetch the certificate information."""
         try:
             days_to_expiry = await get_cert_time_to_expiry(
-                self.hass, self.server_name, self.server_port
+                self.hass, self.server_name, self.server_port, self._cafile
             )
         except TemporaryFailure as err:
             _LOGGER.error(err.args[0])
@@ -146,10 +146,9 @@ class SSLCertificate(Entity):
             self._valid = False
             return
         except FileNotFoundError:
-            _LOGGER.exception(
-                "CA certificate file %s not found", self._cafile
-            )
+            _LOGGER.exception("CA certificate file %s not found", self._cafile)
             self._available = False
+            return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error checking %s:%s", self.server_name, self.server_port

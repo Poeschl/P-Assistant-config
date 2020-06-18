@@ -8,7 +8,7 @@
           "name": "The name of the certificate",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "ca_certfile": "[%key:common::config_flow::data::ca_certfile%]"
+          "ca_certfile": "Path of CA certificate"
         }
       }
     },

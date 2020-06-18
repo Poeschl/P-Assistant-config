@@ -1,8 +1,0 @@
----
-#
-# The cert_expiry sensor fetches information from a configured URL and displays the certificate expiry in days.
-#
-# This one is for the Nextcloud running on the NAS.
-#
-platform: cert_expiry
-host: !secret cloud_domain

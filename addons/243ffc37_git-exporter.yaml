@@ -17,7 +17,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Several changes and custom cert_expiry integration
+  commit_message: Update github
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

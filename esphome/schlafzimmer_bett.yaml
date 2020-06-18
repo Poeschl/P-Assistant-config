@@ -53,3 +53,25 @@ light:
               state = 0;
             }
             
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D5
+      mode: INPUT_PULLUP
+      inverted: true
+    name: Bett Taste rechts
+    internal: true
+    on_click:
+      - light.toggle: led
+  - platform: gpio
+    pin:
+      number: D6
+      mode: INPUT_PULLUP
+      inverted: true
+    name: Bett Taste mitte
+  - platform: gpio
+    pin:
+      number: D7
+      mode: INPUT_PULLUP
+      inverted: true
+    name: Bett Taste links

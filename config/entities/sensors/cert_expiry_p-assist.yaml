@@ -1,9 +1,0 @@
----
-#
-# The cert_expiry sensor fetches information from a configured URL and displays the certificate expiry in days.
-#
-# This one is for the Home Assistant itself.
-#
-platform: cert_expiry
-host: !secret homeassistant_domain
-port: 443

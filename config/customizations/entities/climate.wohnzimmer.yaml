@@ -1,6 +1,6 @@
 ---
 # Limit the modes of the living room thermostat to just boost.
 #
-climate.wohnzimmer:
+climate.living_room:
   preset_modes:
   - boost

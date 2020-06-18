@@ -1,0 +1,8 @@
+---
+# The date and time of the next alarm. Its getting set via a automation which recieves it from the Hassalarm Android App (https://github.com/Johboh/hassalarm).
+#
+next_alarm_markus:
+  name: Nächster Alarm für Markus
+  has_date: true
+  has_time: true
+  icon: mdi:alarm

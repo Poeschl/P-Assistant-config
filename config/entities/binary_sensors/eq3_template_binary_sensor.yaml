@@ -1,0 +1,24 @@
+---
+#
+# Getting more from the eq3 climate
+#
+platform: template
+sensors:
+  eq3_living_room_window_open:
+    friendly_name: "Wohnzimmer Heizkörper Fenster offen"
+    value_template: "{{ state_attr('climate.living_room', 'window_open') }}"
+    icon_template: >-
+      {% if is_state("binary_sensor.eq3_living_room_window_open", "on") %}
+        mdi:window-open-variant
+      {% else %}
+        mdi:window-closed-variant
+      {% endif %}
+  eq3_living_room_low_battery:
+    friendly_name: "Wohnzimmer Heizkörper Battery niedrig"
+    value_template: "{{ state_attr('climate.living_room', 'low_battery') }}"
+    icon_template: >-
+      {% if is_state("binary_sensor.eq3_living_room_low_battery", "on") %}
+        mdi:battery-10
+      {% else %}
+        mdi:battery
+      {% endif %}

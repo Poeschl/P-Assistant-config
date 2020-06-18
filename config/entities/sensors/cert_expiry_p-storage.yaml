@@ -1,9 +1,0 @@
----
-#
-# The cert_expiry sensor fetches information from a configured URL and displays the certificate expiry in days.
-#
-# This one is for my NAS itself.
-#
-platform: cert_expiry
-host: !secret nas_domain
-port: 5001

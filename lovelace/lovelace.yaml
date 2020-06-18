@@ -5,10 +5,11 @@ config:
     cards:
     - current: true
       details: true
-      entity: weather.openweathermap
+      entity: weather.met_no
       forecast: true
       icons: /local/custom_ui/weather-icons/
       name: Aux
+      number_of_forecasts: '5'
       type: custom:weather-card
     - entities:
       - entity: switch.multimedia_steckdose_relay
@@ -117,7 +118,7 @@ config:
     cards:
     - cards:
       - card:
-          entity: climate.thermostat_living_room_climate
+          entity: climate.living_room
           name: Heizung
           type: thermostat
         conditions:
@@ -126,11 +127,11 @@ config:
         type: conditional
       - card:
           entities:
-          - entity: sensor.thermostat_living_room_valve_state
-            icon: mdi:valve
-            name: Heizungsventil
-          - entity: binary_sensor.thermostat_living_room_window_open
-            name: Fenster auf erkannt
+          - entity: binary_sensor.eq3_living_room_window_open
+            name: Fenster offen erkannt
+          - entity: sensor.eq3_living_room_valve_state
+            name: Ventil geschlossen
+          name: Heizung
           type: entities
         conditions:
         - entity: input_boolean.winter_mode
@@ -537,7 +538,7 @@ config:
       refresh_interval: 0
       title: "Aktivit\xE4t"
       type: history-graph
-    - entity: sensor.next_alarm_markus
+    - entity: input_datetime.next_alarm_markus
       type: entity
     icon: mdi:home-account
     path: anwesenheit
@@ -615,12 +616,14 @@ config:
       - entities:
         - entity: sensor.p_dice_swapusage
           name: Swap
+        - entity: sensor.p_dice_updates
+          name: Pending Updates
+        - entity: sensor.p_dice_wifistrength
+          name: Wifi strength
         - entity: sensor.p_dice_lastboot
           name: Last boot
         - entity: sensor.p_dice_powerstatus
           name: Power status
-        - entity: sensor.p_dice_wifistrength
-          name: Wifi strength
         type: entities
       title: P-Dice
       type: custom:stack-in-card
@@ -653,8 +656,7 @@ config:
         - entity_id: '*neustart'
       type: custom:auto-entities
     - entities:
-      - entity: binary_sensor.thermostat_living_room_low_battery
-        name: Heizungsthermostat Wohnzimmer
+      - entity: binary_sensor.eq3_living_room_low_battery
       - entity: sensor.mitemp_sleeping_batt
       - entity: sensor.mitemp_balcony_batt
       - entity: sensor.mitemp_bath_batt
