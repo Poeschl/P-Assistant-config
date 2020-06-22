@@ -19,7 +19,7 @@ light:
     rgb_order: GRB
     chipset: WS2812B
     pin: D1
-    num_leds: 156
+    num_leds: 155
     name: "Bettbeleuchtung LEDs"
     effects:
       - addressable_rainbow:    
@@ -67,6 +67,11 @@ binary_sensor:
     internal: true
     on_click:
       - light.toggle: led
+    on_double_click:
+      then:
+        - light.control:
+            id: led
+            brightness: 1.0
 
   - platform: gpio
     name: Bett Taste mitte
