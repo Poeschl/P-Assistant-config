@@ -12,9 +12,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "ca_cert": "Path of CA certificate",
+                    "host": "[%key:common::config_flow::data::host%]",
                     "name": "The name of the certificate",
-                    "port": "Port"
+                    "port": "[%key:common::config_flow::data::port%]"
                 },
                 "title": "Define the certificate to test"
             }

@@ -50,6 +50,10 @@ ATTR_LOADERROR = "loaderror"
 ATTR_LONGPUSH = "longpush"
 ATTR_LONGPUSH_0 = "longpush/0"
 ATTR_LONGPUSH_1 = "longpush/1"
+ATTR_LONGPUSH_2 = "longpush/2"
+ATTR_LONGPUSH_SHORTPUSH_0 = "longpush shortpush 0"
+ATTR_LONGPUSH_SHORTPUSH_1 = "longpush shortpush 1"
+ATTR_LONGPUSH_SHORTPUSH_2 = "longpush shortpush 2"
 ATTR_LUX = "lux"
 ATTR_MOISTURE = "moisture"
 ATTR_MOTION = "motion"
@@ -67,11 +71,21 @@ ATTR_RETURNED_ENERGY = "returned_energy"
 ATTR_RGBW = "rgbw"
 ATTR_ROLLER = "roller"
 ATTR_SELF_TEST = "self_test"
+ATTR_DOUBLE_SHORTPUSH_0 = "double shortpush 0"
+ATTR_DOUBLE_SHORTPUSH_1 = "double shortpush 1"
+ATTR_DOUBLE_SHORTPUSH_2 = "double shortpush 2"
 ATTR_DOUBLE_SHORTPUSH = "double shortpush"
 ATTR_TRIPLE_SHORTPUSH = "triple shortpush"
+ATTR_TRIPLE_SHORTPUSH_0 = "triple shortpush 0"
+ATTR_TRIPLE_SHORTPUSH_1 = "triple shortpush 1"
+ATTR_TRIPLE_SHORTPUSH_2 = "triple shortpush 2"
 ATTR_SHORTPUSH = "shortpush"
 ATTR_SHORTPUSH_0 = "shortpush/0"
 ATTR_SHORTPUSH_1 = "shortpush/1"
+ATTR_SHORTPUSH_2 = "shortpush/2"
+ATTR_SHORTPUSH_LONGPUSH_0 = "shortpush longpush 0"
+ATTR_SHORTPUSH_LONGPUSH_1 = "shortpush longpush 1"
+ATTR_SHORTPUSH_LONGPUSH_2 = "shortpush longpush 2"
 ATTR_SMOKE = "smoke"
 ATTR_SWITCH = "switch"
 ATTR_TEMPERATURE = "temperature"
@@ -131,24 +145,31 @@ KEY_UNIQUE_ID = "uniq_id"
 KEY_UNIT = "unit_of_meas"
 KEY_VALUE_TEMPLATE = "val_tpl"
 
+TOPIC_INPUT_0 = "input/0"
+TOPIC_INPUT_1 = "input/1"
+TOPIC_INPUT_2 = "input/2"
 TOPIC_INPUT_EVENT_0 = "input_event/0"
+TOPIC_INPUT_EVENT_1 = "input_event/1"
+TOPIC_INPUT_EVENT_2 = "input_event/2"
 
 TPL_BATTERY = "{{value|float|round}}"
 TPL_CURRENT = "{{value|float|round(2)}}"
-TPL_DOUBLE_SHORTPUSH = "{{value_json.event == ^SS^}}"
+TPL_DOUBLE_SHORTPUSH = "{% if value_json.event == ^SS^ %}ON{% else %}OFF{% endif %}"
 TPL_ENERGY_WH = "{{(value|float/1000)|round(2)}}"
 TPL_ENERGY_WMIN = "{{(value|float/60/1000)|round(2)}}"
 TPL_HUMIDITY = "{{value|float|round(1)}}"
-TPL_LONGPUSH = "{{value_json.event == ^L^}}"
+TPL_LONGPUSH = "{% if value_json.event == ^L^ %}ON{% else %}OFF{% endif %}"
+TPL_LONGPUSH_SHORTPUSH = "{% if value_json.event == ^LS^ %}ON{% else %}OFF{% endif %}"
 TPL_LUX = "{{value|float|round}}"
 TPL_OVERPOWER = "{% if value_json.overpower == true %}ON{% else %}OFF{% endif %}"
 TPL_OVERPOWER_RELAY = "{% if value == ^overpower^ %}ON{% else %}OFF{% endif %}"
 TPL_POWER = "{{value|float|round(1)}}"
 TPL_POWER_FACTOR = "{{value|float*100|round}}"
-TPL_SHORTPUSH = "{{value_json.event == ^S^}}"
+TPL_SHORTPUSH = "{% if value_json.event == ^S^ %}ON{% else %}OFF{% endif %}"
+TPL_SHORTPUSH_LONGPUSH = "{% if value_json.event == ^SL^ %}ON{% else %}OFF{% endif %}"
 TPL_TEMPERATURE = "{{value|float|round(1)}}"
 TPL_TILT = "{{value|float}}"
-TPL_TRIPLE_SHORTPUSH = "{{value_json.event == ^SSS^}}"
+TPL_TRIPLE_SHORTPUSH = "{% if value_json.event == ^SSS^ %}ON{% else %}OFF{% endif %}"
 TPL_VOLTAGE = "{{value|float|round(1)}}"
 
 UNIT_AMPERE = "A"
@@ -157,6 +178,7 @@ UNIT_DEGREE = "°"
 UNIT_KWH = "kWh"
 UNIT_LUX = "lx"
 UNIT_PERCENT = "%"
+UNIT_PPM = "ppm"
 UNIT_SECONDS = "s"
 UNIT_VAR = "VAR"
 UNIT_VOLT = "V"
@@ -420,7 +442,7 @@ if id.rsplit("-", 1)[0] == "shellygas":
     sensors = [ATTR_OPERATION, ATTR_GAS, ATTR_SELF_TEST, ATTR_CONCENTRATION]
     sensors_classes = [None, None, None, None]
     sensors_tpls = [None, None, None, None]
-    sensors_units = [None, None, None, None]
+    sensors_units = [None, None, None, UNIT_PPM]
 
 if id.rsplit("-", 1)[0] == "shellybutton1":
     model = ATTR_MODEL_SHELLYBUTTON1
@@ -698,10 +720,121 @@ if id.rsplit("-", 1)[0] == "shellyflood":
 
 if id.rsplit("-", 1)[0] == "shellyix3":
     model = ATTR_MODEL_SHELLYI3
-    bin_sensors = [ATTR_INPUT_0, ATTR_INPUT_1, ATTR_INPUT_2]
-    bin_sensors_classes = [None, None, None]
-    bin_sensors_tpls = [None, None, None]
-    bin_sensors_pl = [PL_1_0, PL_1_0, PL_0_1]
+    bin_sensors = [
+        ATTR_INPUT_0,
+        ATTR_INPUT_1,
+        ATTR_INPUT_2,
+        ATTR_SHORTPUSH_0,
+        ATTR_DOUBLE_SHORTPUSH_0,
+        ATTR_TRIPLE_SHORTPUSH_0,
+        ATTR_LONGPUSH_0,
+        ATTR_SHORTPUSH_1,
+        ATTR_DOUBLE_SHORTPUSH_1,
+        ATTR_TRIPLE_SHORTPUSH_1,
+        ATTR_LONGPUSH_1,
+        ATTR_SHORTPUSH_2,
+        ATTR_DOUBLE_SHORTPUSH_2,
+        ATTR_TRIPLE_SHORTPUSH_2,
+        ATTR_LONGPUSH_2,
+        ATTR_SHORTPUSH_LONGPUSH_0,
+        ATTR_SHORTPUSH_LONGPUSH_1,
+        ATTR_SHORTPUSH_LONGPUSH_2,
+        ATTR_LONGPUSH_SHORTPUSH_0,
+        ATTR_LONGPUSH_SHORTPUSH_1,
+        ATTR_LONGPUSH_SHORTPUSH_2,
+    ]
+    bin_sensors_classes = [
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ]
+    bin_sensors_tpls = [
+        None,
+        None,
+        None,
+        TPL_SHORTPUSH,
+        TPL_DOUBLE_SHORTPUSH,
+        TPL_TRIPLE_SHORTPUSH,
+        TPL_LONGPUSH,
+        TPL_SHORTPUSH,
+        TPL_DOUBLE_SHORTPUSH,
+        TPL_TRIPLE_SHORTPUSH,
+        TPL_LONGPUSH,
+        TPL_SHORTPUSH,
+        TPL_DOUBLE_SHORTPUSH,
+        TPL_TRIPLE_SHORTPUSH,
+        TPL_LONGPUSH,
+        TPL_SHORTPUSH_LONGPUSH,
+        TPL_SHORTPUSH_LONGPUSH,
+        TPL_SHORTPUSH_LONGPUSH,
+        TPL_LONGPUSH_SHORTPUSH,
+        TPL_LONGPUSH_SHORTPUSH,
+        TPL_LONGPUSH_SHORTPUSH,
+    ]
+    bin_sensors_topics = [
+        TOPIC_INPUT_0,
+        TOPIC_INPUT_1,
+        TOPIC_INPUT_2,
+        TOPIC_INPUT_EVENT_0,
+        TOPIC_INPUT_EVENT_0,
+        TOPIC_INPUT_EVENT_0,
+        TOPIC_INPUT_EVENT_0,
+        TOPIC_INPUT_EVENT_1,
+        TOPIC_INPUT_EVENT_1,
+        TOPIC_INPUT_EVENT_1,
+        TOPIC_INPUT_EVENT_1,
+        TOPIC_INPUT_EVENT_2,
+        TOPIC_INPUT_EVENT_2,
+        TOPIC_INPUT_EVENT_2,
+        TOPIC_INPUT_EVENT_2,
+        TOPIC_INPUT_EVENT_0,
+        TOPIC_INPUT_EVENT_1,
+        TOPIC_INPUT_EVENT_2,
+        TOPIC_INPUT_EVENT_0,
+        TOPIC_INPUT_EVENT_1,
+        TOPIC_INPUT_EVENT_2,
+    ]
+    bin_sensors_pl = [
+        PL_1_0,
+        PL_1_0,
+        PL_0_1,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ]
 
 # rollers
 for roller_id in range(0, rollers):

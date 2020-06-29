@@ -65,6 +65,8 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     internal: true
+    filters:
+      - delayed_on: 10ms
     on_click:
       - light.toggle: led
     on_double_click:
@@ -79,6 +81,8 @@ binary_sensor:
       number: D6
       mode: INPUT_PULLUP
       inverted: true
+    filters:
+      - delayed_on: 10ms
     on_double_click:
       then:
         - lambda: id(middle_double_click_status) = true;
@@ -90,6 +94,8 @@ binary_sensor:
       number: D7
       mode: INPUT_PULLUP
       inverted: true
+    filters:
+      - delayed_on: 10ms
     name: Bett Taste links
 
   - platform: template

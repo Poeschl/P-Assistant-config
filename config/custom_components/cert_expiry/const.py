@@ -3,4 +3,4 @@
 DOMAIN = "cert_expiry"
 DEFAULT_PORT = 443
 TIMEOUT = 10.0
-CONF_CAFILE = "ca_certfile"
+CONF_CA_CERT = "ca_cert"

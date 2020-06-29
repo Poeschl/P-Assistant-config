@@ -7,17 +7,19 @@ exclude:
 - '*.db'
 - '*.log'
 - __pycache__
+- ._*
+- .DS_Store
 - deps/
 - known_devices.yaml
 - tts/
-- .stignore
+- haus_fenster_prot.yaml
 export:
   addons: true
   esphome: true
   lovelace: true
   node_red: true
 repository:
-  commit_message: Small updates and led correction
+  commit_message: Empty secret file and hacs update
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

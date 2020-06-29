@@ -6,14 +6,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import CONF_CAFILE, DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
     ResolveFailed,
     ValidationFailure,
 )
-from .helper import get_cert_time_to_expiry
+from .helper import get_cert_expiry_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,11 +31,11 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certificate."""
         try:
-            await get_cert_time_to_expiry(
+            await get_cert_expiry_timestamp(
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
-                user_input.get(CONF_CAFILE, ""),
+                user_input.get(CONF_CA_CERT, None),
             )
             return True
         except ResolveFailed:
@@ -44,8 +44,6 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors[CONF_HOST] = "connection_timeout"
         except ConnectionRefused:
             self._errors[CONF_HOST] = "connection_refused"
-        except FileNotFoundError:
-            self._errors[CONF_HOST] = "ca_certificate_not_found"
         except ValidationFailure:
             return True
         return False
@@ -56,7 +54,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            cafile = user_input.get(CONF_CAFILE, "")
+            ca_cert = user_input.get(CONF_CA_CERT, "")
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
@@ -65,7 +63,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
                     title=title,
-                    data={CONF_HOST: host, CONF_PORT: port, CONF_CAFILE: cafile},
+                    data={CONF_HOST: host, CONF_PORT: port, CONF_CA_CERT: ca_cert},
                 )
             if (  # pylint: disable=no-member
                 self.context["source"] == config_entries.SOURCE_IMPORT
@@ -76,7 +74,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {}
             user_input[CONF_HOST] = ""
             user_input[CONF_PORT] = DEFAULT_PORT
-            user_input[CONF_CAFILE] = ""
+            user_input[CONF_CA_CERT] = ""
 
         return self.async_show_form(
             step_id="user",
@@ -86,7 +84,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,
-                    vol.Optional(CONF_CAFILE, default=user_input[CONF_CAFILE]): str,
+                    vol.Optional(CONF_CA_CERT, default=user_input[CONF_CA_CERT]): str,
                 }
             ),
             errors=self._errors,
