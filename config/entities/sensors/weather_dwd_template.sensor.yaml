@@ -1,0 +1,9 @@
+---
+# Get the forecast temperature as sensor 
+#
+platform: template
+sensors:
+  dwd_weather_augsburg_temperature:
+    friendly_name: "Temperatur Vorhersage"
+    unit_of_measurement: '°C'
+    value_template: "{{ state_attr('weather.dwd_weather_augsburg', 'temperature') }}"

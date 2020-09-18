@@ -16,7 +16,7 @@ binary_sensor:
     on_press:
       - fan.turn_on: bath_fan
     on_release:
-      - delay: 3min
+      - delay: 5min
       - fan.turn_off: bath_fan
     on_double_click:
       - fan.turn_off: bath_fan

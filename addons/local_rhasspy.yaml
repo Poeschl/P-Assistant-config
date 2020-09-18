@@ -1,6 +1,0 @@
-asoundrc: ''
-certfile: p-assist.cert.pem
-keyfile: p-assist.key.pem
-profile_dir: /share/rhasspy/profiles
-profile_name: de
-ssl: true

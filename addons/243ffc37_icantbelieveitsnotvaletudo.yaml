@@ -1,9 +1,5 @@
 mapColors: {}
 mapSettings:
-  crop_x1: 102
-  crop_x2: 293
-  crop_y1: 88
-  crop_y2: 259
   drawCharger: true
   drawPath: true
   drawRobot: true

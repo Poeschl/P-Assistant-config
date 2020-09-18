@@ -1,9 +1,0 @@
----
-# The darksky platform uses the Dark Sky web service as a source for
-# meteorological data for your location.
-#
-platform: darksky
-api_key: !secret dark_sky_api_key
-mode: daily
-latitude: !secret home_latitude
-longitude: !secret home_longitude

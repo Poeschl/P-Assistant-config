@@ -1,0 +1,8 @@
+---
+# The circadian switch for the living room showcase
+#
+platform: circadian_lighting
+name: Circadian Lighting Vitrine
+min_brightness: 30
+lights_rgb:
+  - light.vitrine_leds

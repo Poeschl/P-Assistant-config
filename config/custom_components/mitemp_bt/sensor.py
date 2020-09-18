@@ -467,8 +467,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # formaldehyde decimals workaround
         if fdec > 0:
             rdecimals = fdec
-        # LYWSD03MMC "jagged" humidity workaround
-        if stype == "LYWSD03MMC":
+        # LYWSD03MMC / MHO-C401 "jagged" humidity workaround
+        if stype == "LYWSD03MMC" or stype == "MHO-C401":
             measurements = [int(item) for item in measurements_list]
         else:
             measurements = measurements_list
@@ -498,7 +498,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             getattr(entity_to_update, "_device_state_attributes")["mean"] = state_mean
             entity_to_update.schedule_update_ha_state()
             success = True
-        except AttributeError:
+        except (AttributeError, AssertionError):
             _LOGGER.debug("Sensor %s not yet ready for update", sensor_mac)
             success = True
         except ZeroDivisionError as err:
@@ -667,7 +667,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     setattr(sensors[b_i], "_state", batt[mac])
                     try:
                         sensors[b_i].schedule_update_ha_state()
-                    except AttributeError:
+                    except (AttributeError, AssertionError):
                         _LOGGER.debug(
                             "Sensor %s (%s, batt.) not yet ready for update",
                             mac,
@@ -734,7 +734,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 setattr(sensors[cn_i], "_state", cons_m_data[mac])
                 try:
                     sensors[cn_i].schedule_update_ha_state()
-                except AttributeError:
+                except (AttributeError, AssertionError):
                     _LOGGER.debug(
                         "Sensor %s (%s, cons.) not yet ready for update",
                         mac,
@@ -749,7 +749,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 setattr(sensors[sw_i], "_state", switch_m_data[mac])
                 try:
                     sensors[sw_i].schedule_update_ha_state()
-                except AttributeError:
+                except (AttributeError, AssertionError):
                     _LOGGER.debug(
                         "Sensor %s (%s, switch) not yet ready for update",
                         mac,

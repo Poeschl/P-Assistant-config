@@ -1,5 +1,6 @@
 certfile: p-assist.cert.pem
 env_vars: []
 keyfile: p-assist.key.pem
-plugins: []
+plugins:
+- grafana-influxdb-flux-datasource
 ssl: true

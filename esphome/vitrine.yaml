@@ -22,7 +22,7 @@ light:
     chipset: WS2812B
     pin: D1
     num_leds: 16
-    color_correct: [100%, 90%, 100%]
+    color_correct: [100%, 60%, 65%]
     name: "Vitrine LEDs"
     effects:
       - addressable_lambda:

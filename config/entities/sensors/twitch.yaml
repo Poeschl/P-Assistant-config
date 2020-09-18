@@ -7,6 +7,4 @@ token: !secret twitch_oauth_token
 channels:
   - izzyletsplays
   - nerdweib
-  - playsouls
-  - horrgy
   - saabii_

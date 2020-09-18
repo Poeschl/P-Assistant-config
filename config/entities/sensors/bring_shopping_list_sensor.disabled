@@ -1,0 +1,11 @@
+---
+# Configuration of the Bring! Shopping List sensor
+# https://github.com/Poeschl/Bring-shoping-list-component
+#
+platform: bring_shopping_list
+username: !secret bring_username
+password: !secret bring_password
+lists:
+- id: !secret bring_homelist_id
+  name: Home
+  locale: de-DE

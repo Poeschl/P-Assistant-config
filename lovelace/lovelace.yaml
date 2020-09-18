@@ -5,14 +5,15 @@ config:
     cards:
     - current: true
       details: true
-      entity: weather.met_no
+      entity: weather.dwd_weather_augsburg
       forecast: true
+      hourly_forecast: false
       icons: /local/custom_ui/weather-icons/
       name: Aux
       number_of_forecasts: '5'
       type: custom:weather-card
     - entities:
-      - entity: switch.multimedia_steckdose_relay
+      - entity: switch.multimedia_dose_relay_0
         tap_action:
           action: toggle
       - entity: light.tv_lampe
@@ -21,7 +22,7 @@ config:
       - entity: light.sideboard_leds
         tap_action:
           action: toggle
-      - entity: switch.monitor_licht
+      - entity: switch.shellyplug_s_7a2ce6_relay_0
         tap_action:
           action: toggle
       - entity: light.bettbeleuchtung_leds
@@ -106,11 +107,19 @@ config:
       - entity: light.tv_lampe
         tap_action:
           action: toggle
-      - entity: switch.monitor_licht
+      - entity: switch.shellyplug_s_7a2ce6_relay_0
         tap_action:
           action: toggle
       title: "Bin\xE4re Lampen"
       type: glance
+    - card:
+        show_header_toggle: false
+        title: Circadian Lighting
+        type: entities
+      filter:
+        include:
+        - entity_id: switch.circadian_lighting*
+      type: custom:auto-entities
     icon: mdi:lightbulb-multiple
     path: lichter
     title: Lichter
@@ -348,8 +357,7 @@ config:
     icon: mdi:home-thermometer
     path: klima
     title: Klima
-  - badges:
-    - entity: vacuum.p_dusty
+  - badges: []
     cards:
     - camera_image: camera.p_dusty_map
       entities:
@@ -361,15 +369,11 @@ config:
         type: entities
       filter:
         include:
-        - entity_id: '*relay'
+        - entity_id: '*relay_.'
       sort: name
       type: custom:auto-entities
     - entities:
-      - sensor.folding_at_home
-      hours_to_show: 48
-      type: custom:mini-graph-card
-    - entities:
-      - sensor.multimedia_steckdose_power
+      - sensor.multimedia_dose_power
       hours_to_show: 24
       type: custom:mini-graph-card
     icon: mdi:devices
@@ -380,8 +384,6 @@ config:
     - entities:
       - entity: sensor.izzyletsplays
       - entity: sensor.nerdweib
-      - entity: sensor.playsouls
-      - entity: sensor.horrgy
       - entity: sensor.saabii
       title: Twitch
       type: glance
@@ -404,7 +406,7 @@ config:
         - icon: mdi:steam
           id: com.valvesoftware.steamlink
           type: source
-        columns: 5
+        columns: 6
       type: custom:mini-media-player
     - artwork: cover
       entity: media_player.p_radio
@@ -415,11 +417,7 @@ config:
     icon: mdi:play-circle
     path: media
     title: Media
-  - badges:
-    - entity: sensor.fritz_netmonitor
-    - entity: sensor.speedtest_download
-    - entity: sensor.speedtest_upload
-    - entity: sensor.speedtest_ping
+  - badges: []
     cards:
     - entities:
       - entity: sensor.fritzbox_download
@@ -511,22 +509,16 @@ config:
     icon: mdi:lan
     path: network
     title: Network
-  - badges:
-    - entity: person.markus
+  - badges: []
     cards:
-    - cards:
-      - entities:
-        - entity: person.markus
-        hours_to_show: 24
-        refresh_interval: 0
-        type: history-graph
-      - entities:
-        - entity: input_boolean.holiday_mode
-        show_header_toggle: false
-        type: entities
-      title: Anwesenheit
-      type: custom:stack-in-card
     - entities:
+      - entity: person.markus
+      - entity: input_boolean.holiday_mode
+      show_header_toggle: false
+      title: Anwesenheit
+      type: entities
+    - entities:
+      - entity: person.markus
       - entity: device_tracker.p_android
       - entity: device_tracker.p_watch
       - entity: device_tracker.desktop_markus
@@ -579,64 +571,67 @@ config:
       - entities:
         - sensor.swap_use
         - sensor.last_boot
-        - sensor.rpi_power_status
+        - binary_sensor.cpu_temp_overheat
+        - binary_sensor.rpi_power_status
         type: entities
       title: P-Assistant
       type: custom:stack-in-card
-    - cards:
-      - cards:
+    - card:
+        cards:
+        - cards:
+          - entities:
+            - sensor.p_dice_cpuusage
+            hours_to_show: 24
+            icon: mdi:memory
+            line_width: 4
+            name: CPU
+            type: custom:mini-graph-card
+          - entities:
+            - sensor.p_dice_temperature
+            hours_to_show: 24
+            line_width: 4
+            name: Temp
+            type: custom:mini-graph-card
+          type: horizontal-stack
+        - cards:
+          - entity: sensor.p_dice_diskuse
+            name: Disk space
+            positions:
+              icon: inside
+              indicator: inside
+            type: custom:bar-card
+          - entity: sensor.p_dice_memoryuse
+            name: RAM
+            positions:
+              icon: inside
+              indicator: inside
+            type: custom:bar-card
+          type: horizontal-stack
         - entities:
-          - sensor.p_dice_cpuusage
-          hours_to_show: 24
-          icon: mdi:memory
-          line_width: 4
-          name: CPU
-          type: custom:mini-graph-card
-        - entities:
-          - sensor.p_dice_temperature
-          hours_to_show: 24
-          line_width: 4
-          name: Temp
-          type: custom:mini-graph-card
-        type: horizontal-stack
-      - cards:
-        - entity: sensor.p_dice_diskuse
-          name: Disk space
-          positions:
-            icon: inside
-            indicator: inside
-          type: custom:bar-card
-        - entity: sensor.p_dice_memoryuse
-          name: RAM
-          positions:
-            icon: inside
-            indicator: inside
-          type: custom:bar-card
-        type: horizontal-stack
-      - entities:
-        - entity: sensor.p_dice_swapusage
-          name: Swap
-        - entity: sensor.p_dice_updates
-          name: Pending Updates
-        - entity: sensor.p_dice_wifistrength
-          name: Wifi strength
-        - entity: sensor.p_dice_lastboot
-          name: Last boot
-        - entity: sensor.p_dice_powerstatus
-          name: Power status
-        type: entities
-      title: P-Dice
-      type: custom:stack-in-card
+          - entity: sensor.p_dice_swapusage
+            name: Swap
+          - entity: sensor.p_dice_updates
+            name: Pending Updates
+          - entity: sensor.p_dice_wifistrength
+            name: Wifi strength
+          - entity: sensor.p_dice_lastboot
+            name: Last boot
+          - entity: sensor.p_dice_powerstatus
+            name: Power status
+          type: entities
+        title: P-Dice
+        type: custom:stack-in-card
+      conditions:
+      - entity: sensor.p_dice_cpuusage
+        state_not: unavailable
+      type: conditional
     icon: mdi:raspberry-pi
     path: raspberrys
     title: Raspberrys
-  - badges:
-    - entity: binary_sensor.updater
-    - entity: sensor.hacs
-    - entity: sensor.auto_backup
+  - badges: []
     cards:
     - card:
-        title: Alle Automatisierungen
+        title: HA Automatisierungen
         type: entities
       filter:
         include:
@@ -663,6 +658,29 @@ config:
       show_header_toggle: false
       title: Batterien
       type: entities
-    icon: mdi:settings
+    - aggregate_func: max
+      animate: false
+      entities:
+      - entity: sensor.auto_backup_monitored_snapshots
+        name: Monitored
+        show_points: false
+      - entity: sensor.auto_backup
+        name: Pending
+        show_points: false
+      hour24: true
+      hours_to_show: 720
+      icon: mdi:package-variant-closed
+      line_width: 4
+      name: Auto-Backups
+      points_per_hour: 0.25
+      type: custom:mini-graph-card
+    - entities:
+      - entity: binary_sensor.updater
+        name: Home Assistant Update available
+      - entity: sensor.hacs
+        name: Available HACS Updates
+      title: Updates
+      type: entities
+    icon: mdi:cog
     path: automation
     title: Automation

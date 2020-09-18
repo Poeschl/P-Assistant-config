@@ -17,8 +17,6 @@ logins:
   username: '!secret node-red_mqtt_user'
 - password: '!secret p-dice_mqtt_password'
   username: '!secret p-dice_mqtt_user'
-- password: '!secret shelly_mqtt_password'
-  username: '!secret shelly_mqtt_user'
 - password: '!secret rhasspy_mqtt_password'
   username: '!secret rhasspy_mqtt_user'
 require_certificate: false

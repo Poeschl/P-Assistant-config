@@ -7,4 +7,4 @@ platform: smartir
 name: Wohnzimmer Lüfter
 unique_id: wohnzimmer_luefter
 device_code: 1140
-controller_data: !secret ip_rm_mini
+controller_data: remote.ir_livingroom_remote

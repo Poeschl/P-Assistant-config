@@ -1,0 +1,9 @@
+---
+# Overheating alarm for the home assistant pi
+#
+platform: template
+sensors:
+  cpu_temp_overheat:
+    friendly_name: "Pi CPU Overheating"
+    device_class: "safety"
+    value_template: "{{ states('sensor.cpu_raspi') | float > 70 }}"

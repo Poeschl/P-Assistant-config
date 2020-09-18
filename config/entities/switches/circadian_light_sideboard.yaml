@@ -1,0 +1,10 @@
+---
+# The circadian switch for the living room sideboard
+#
+platform: circadian_lighting
+name: Circadian Lighting Sideboard
+min_brightness: 30
+lights_rgb:
+  - light.sideboard_leds
+disable_entity: input_boolean.sideboard_leds_animating
+disable_state: "on"

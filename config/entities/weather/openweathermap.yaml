@@ -1,8 +1,0 @@
----
-# The openweathermap weather platform uses OpenWeatherMap as a source for current meteorological data for your location.
-#
-platform: openweathermap
-api_key: !secret openweathermap_api_key
-mode: freedaily
-latitude: !secret home_latitude
-longitude: !secret home_longitude

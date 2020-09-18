@@ -4,3 +4,4 @@
 #
 auto_backup:
   auto_purge: true
+  backup_timeout: 7200 # 2 hours

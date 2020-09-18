@@ -1,0 +1,11 @@
+---
+#
+# Template sensor for auto_backup to get monitored backups count
+#
+platform: template
+sensors:
+  auto_backup_monitored_snapshots:
+    friendly_name: "Auto Backup überwachte Snapshots"
+    unit_of_measurement: 'monitoring backup(s)'
+    value_template: "{{ state_attr('sensor.auto_backup', 'monitored_snapshots') }}"
+    icon_template: package-variant-closed

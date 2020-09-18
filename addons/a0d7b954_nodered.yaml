@@ -15,6 +15,7 @@ npm_packages:
 - node-red-contrib-credentials
 - node-red-contrib-schedex
 - node-red-contrib-function-npm
+- node-red-contrib-finite-statemachine
 require_ssl: true
 ssl: true
 system_packages: []

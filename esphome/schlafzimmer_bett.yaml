@@ -66,7 +66,7 @@ binary_sensor:
       inverted: true
     internal: true
     filters:
-      - delayed_on: 10ms
+      - delayed_on: 50ms
     on_click:
       - light.toggle: led
     on_double_click:
@@ -82,11 +82,11 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     filters:
-      - delayed_on: 10ms
+      - delayed_on: 50ms
     on_double_click:
       then:
         - lambda: id(middle_double_click_status) = true;
-        - delay: 300ms
+        - delay: 30min
         - lambda: id(middle_double_click_status) = false;
 
   - platform: gpio
@@ -95,7 +95,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     filters:
-      - delayed_on: 10ms
+      - delayed_on: 50ms
     name: Bett Taste links
 
   - platform: template

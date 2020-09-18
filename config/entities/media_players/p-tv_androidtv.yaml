@@ -15,3 +15,11 @@ apps:
   com.valvesoftware.steamlink: "Steam Link"
   org.videolan.vlc: "VLC"
   com.sony.dtv.tvx: "Externes Gerät"
+state_detection_rules:
+  'com.valvesoftware.steamlink':
+    - 'playing':
+        'wake_lock_size': 8
+    - 'playing':
+        'wake_lock_size': 7
+    - 'playing':
+        'wake_lock_size': 4

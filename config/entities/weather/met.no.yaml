@@ -1,6 +1,0 @@
----
-# The met platform uses the Met.no web service as a source for meteorological data for your location. The weather forecast is delivered by the Norwegian Meteorological Institute and the NRK.
-#
-platform: met
-latitude: !secret home_latitude
-longitude: !secret home_longitude
