@@ -12,13 +12,14 @@ exclude:
 - deps/
 - known_devices.yaml
 - tts/
+- zigbee2mqtt
 export:
   addons: true
   esphome: true
   lovelace: true
   node_red: true
 repository:
-  commit_message: Update to 0.115.0
+  commit_message: Removed light cards and replaced deconz with zigbee2mqtt
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

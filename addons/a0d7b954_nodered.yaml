@@ -13,7 +13,7 @@ npm_packages:
 - node-red-contrib-weekday
 - node-red-contrib-cron-plus
 - node-red-contrib-credentials
-- node-red-contrib-schedex
+- node-red-contrib-alarm-clock
 - node-red-contrib-function-npm
 - node-red-contrib-finite-statemachine
 require_ssl: true

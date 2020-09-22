@@ -1,0 +1,50 @@
+advanced:
+  availability_blocklist: []
+  availability_passlist: []
+  channel: 20
+  log_level: info
+  network_key:
+  - 1
+  - 3
+  - 5
+  - 7
+  - 9
+  - 15
+  - 13
+  - 11
+  - 0
+  - 8
+  - 4
+  - 6
+  - 2
+  - 10
+  - 12
+  - 13
+  pan_id: 4242
+blocklist: []
+data_path: /config/zigbee2mqtt
+device_options: {}
+devices: devices.yaml
+experimental: {}
+external_converters: []
+groups: groups.yaml
+homeassistant: true
+mqtt:
+  base_topic: zigbee2mqtt
+  password: '!secret zigbee2mqtt_mqtt_password'
+  server: mqtt://core-mosquitto
+  user: '!secret zigbee2mqtt_mqtt_user'
+passlist: []
+permit_join: true
+queue: {}
+serial:
+  adapter: deconz
+  port: /dev/ttyACM0
+socat:
+  enabled: false
+  initialdelay: 1
+  log: false
+  master: pty,raw,echo=0,link=/dev/ttyZ2M,mode=777
+  options: -d -d
+  restartdelay: 1
+  slave: tcp-listen:8485,keepalive,nodelay,reuseaddr,keepidle=1,keepintvl=1,keepcnt=5

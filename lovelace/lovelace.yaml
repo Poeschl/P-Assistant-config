@@ -47,71 +47,29 @@ config:
       - entity: input_boolean.winter_mode
         state: 'off'
       type: conditional
+    - entity: lock.wohnungstuer_lock
+      show_state: true
+      tap_action:
+        action: toggle
+      type: button
     icon: mdi:home
     path: home
     title: Home
   - badges: []
     cards:
-    - brightness: true
-      brightness_icon: weather-sunny
-      color_picker: true
-      color_temp: false
-      color_wheel: false
-      effects_list: true
-      entity: light.sideboard_leds
-      full_width_sliders: true
-      group: false
-      header: Sideboard Leds
-      persist_features: true
-      show_slider_percent: true
-      smooth_color_wheel: false
-      temperature_icon: thermometer
-      type: custom:light-entity-card
-      white_icon: file-word-box
-      white_value: false
-    - brightness: true
-      brightness_icon: weather-sunny
-      color_picker: true
-      color_temp: false
-      color_wheel: false
-      effects_list: true
-      entity: light.vitrine_leds
-      full_width_sliders: true
-      group: false
-      header: Vitrine
-      persist_features: true
-      show_slider_percent: true
-      smooth_color_wheel: false
-      temperature_icon: thermometer
-      type: custom:light-entity-card
-      white_icon: file-word-box
-      white_value: true
-    - brightness: true
-      brightness_icon: weather-sunny
-      color_picker: true
-      color_temp: false
-      color_wheel: false
-      effects_list: true
-      entity: light.bettbeleuchtung_leds
-      full_width_sliders: true
-      group: false
-      header: Bett
-      persist_features: true
-      show_slider_percent: true
-      smooth_color_wheel: false
-      temperature_icon: thermometer
-      type: custom:light-entity-card
-      white_icon: file-word-box
-      white_value: true
+    - entities:
+      - entity: light.sideboard_leds
+      - entity: light.vitrine_leds
+      - entity: light.bettbeleuchtung_leds
+      show_header_toggle: false
+      title: RGB Lampen
+      type: entities
     - entities:
       - entity: light.tv_lampe
-        tap_action:
-          action: toggle
       - entity: switch.shellyplug_s_7a2ce6_relay_0
-        tap_action:
-          action: toggle
+      show_header_toggle: false
       title: "Bin\xE4re Lampen"
-      type: glance
+      type: entities
     - card:
         show_header_toggle: false
         title: Circadian Lighting
@@ -376,6 +334,10 @@ config:
       - sensor.multimedia_dose_power
       hours_to_show: 24
       type: custom:mini-graph-card
+    - entities:
+      - entity: lock.wohnungstuer_lock
+      title: "Schl\xF6sser"
+      type: entities
     icon: mdi:devices
     path: devices
     title: Devices
@@ -630,13 +592,6 @@ config:
     title: Raspberrys
   - badges: []
     cards:
-    - card:
-        title: HA Automatisierungen
-        type: entities
-      filter:
-        include:
-        - domain: automation
-      type: custom:auto-entities
     - entities:
       - entity: input_boolean.winter_mode
       show_header_toggle: false
@@ -655,6 +610,7 @@ config:
       - entity: sensor.mitemp_sleeping_batt
       - entity: sensor.mitemp_balcony_batt
       - entity: sensor.mitemp_bath_batt
+      - entity: sensor.wohnungstuer_battery
       show_header_toggle: false
       title: Batterien
       type: entities

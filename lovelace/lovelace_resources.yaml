@@ -17,9 +17,6 @@ items:
 - id: c32a5b3d0eb04fba9ac07365febc621c
   type: module
   url: /hacsfiles/lovelace-paper-buttons-row/paper-buttons-row.js
-- id: cc04721f32f3488595e4fe9965d30281
-  type: module
-  url: /hacsfiles/light-entity-card/light-entity-card.js
 - id: afb5b8b810b2483f83feee4f58323987
   type: module
   url: /hacsfiles/mini-media-player/mini-media-player-bundle.js
