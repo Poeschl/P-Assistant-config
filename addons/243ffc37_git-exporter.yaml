@@ -19,7 +19,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Removed light cards and replaced deconz with zigbee2mqtt
+  commit_message: Replace thermostat with zigbee one
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

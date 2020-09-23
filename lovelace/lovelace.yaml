@@ -85,21 +85,9 @@ config:
     cards:
     - cards:
       - card:
-          entity: climate.living_room
+          entity: climate.thermostat_wohnzimmer_climate
           name: Heizung
           type: thermostat
-        conditions:
-        - entity: input_boolean.winter_mode
-          state: 'on'
-        type: conditional
-      - card:
-          entities:
-          - entity: binary_sensor.eq3_living_room_window_open
-            name: Fenster offen erkannt
-          - entity: sensor.eq3_living_room_valve_state
-            name: Ventil geschlossen
-          name: Heizung
-          type: entities
         conditions:
         - entity: input_boolean.winter_mode
           state: 'on'
@@ -606,11 +594,11 @@ config:
         - entity_id: '*neustart'
       type: custom:auto-entities
     - entities:
-      - entity: binary_sensor.eq3_living_room_low_battery
       - entity: sensor.mitemp_sleeping_batt
       - entity: sensor.mitemp_balcony_batt
       - entity: sensor.mitemp_bath_batt
       - entity: sensor.wohnungstuer_battery
+      - entity: sensor.thermostat_wohnzimmer_battery
       show_header_toggle: false
       title: Batterien
       type: entities

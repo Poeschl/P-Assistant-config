@@ -1,4 +1,0 @@
----
-# Configures all climate entities.
-#
-climate: !include_dir_list ../entities/climates
