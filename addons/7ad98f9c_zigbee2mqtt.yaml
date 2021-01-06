@@ -1,21 +1,25 @@
 advanced:
   availability_blocklist: []
   availability_passlist: []
+  availability_timeout: 60
   cache_state_persistent: true
   cache_state_send_on_startup: true
   channel: 20
   last_seen: ISO_8601_local
-  log_level: debug
+  log_level: info
   network_key: []
   network_key_string: '!secret zigbee_key_string'
-  pan_id: 4242
+  pan_id: 1111
   report: true
 blocklist: []
 data_path: /config/zigbee2mqtt
 device_options: {}
 devices: devices.yaml
-experimental: {}
+experimental:
+  new_api: true
 external_converters: []
+frontend:
+  port: 8099
 groups: groups.yaml
 homeassistant: true
 mqtt:
@@ -37,3 +41,4 @@ socat:
   options: -d -d
   restartdelay: 1
   slave: tcp-listen:8485,keepalive,nodelay,reuseaddr,keepidle=1,keepintvl=1,keepcnt=5
+zigbee_herdsman_debug: true

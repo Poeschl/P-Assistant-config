@@ -5,3 +5,4 @@
 # For the integrated devices take a look at the fans integration.
 #
 smartir:
+  check_updates: false

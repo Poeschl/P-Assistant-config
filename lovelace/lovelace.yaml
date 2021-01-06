@@ -1,5 +1,5 @@
 config:
-  title: P-Assistant
+  title: 'P-Assistant '
   views:
   - badges: []
     cards:
@@ -47,11 +47,27 @@ config:
       - entity: input_boolean.winter_mode
         state: 'off'
       type: conditional
-    - entity: lock.wohnungstuer_lock
-      show_state: true
-      tap_action:
-        action: toggle
-      type: button
+    - cards:
+      - entities:
+        - entity: lock.wohnungstuer
+          icon: mdi:door-open
+          name: "Aufschlie\xDFen"
+          tap_action:
+            action: call-service
+            service: lock.unlock
+            service_data:
+              entity_id: lock.wohnungstuer
+        - entity: lock.wohnungstuer
+          icon: mdi:door-closed-lock
+          name: "Abschlie\xDFen"
+          tap_action:
+            action: call-service
+            service: lock.lock
+            service_data:
+              entity_id: lock.wohnungstuer
+        type: glance
+      popup: timeout
+      type: custom:love-lock-card
     icon: mdi:home
     path: home
     title: Home
@@ -59,14 +75,18 @@ config:
     cards:
     - entities:
       - entity: light.sideboard_leds
+        secondary_info: brightness
       - entity: light.vitrine_leds
+        secondary_info: brightness
       - entity: light.bettbeleuchtung_leds
+        secondary_info: brightness
       show_header_toggle: false
       title: RGB Lampen
       type: entities
     - entities:
       - entity: light.tv_lampe
       - entity: switch.shellyplug_s_7a2ce6_relay_0
+      - entity: switch.shellyplug_s_26829b
       show_header_toggle: false
       title: "Bin\xE4re Lampen"
       type: entities
@@ -85,9 +105,15 @@ config:
     cards:
     - cards:
       - card:
-          entity: climate.thermostat_wohnzimmer_climate
-          name: Heizung
-          type: thermostat
+          cards:
+          - entity: climate.thermostat_wohnzimmer
+            type: thermostat
+          - entities:
+            - entity: sensor.thermostat_wohnzimmer_valve_postition
+              secondary_info: last-changed
+            - entity: binary_sensor.balkontur_contact
+            type: entities
+          type: vertical-stack
         conditions:
         - entity: input_boolean.winter_mode
           state: 'on'
@@ -108,6 +134,14 @@ config:
         - entity: input_boolean.winter_mode
           state: 'off'
         type: conditional
+      - entities:
+        - entity: fan.wohnzimmer_luftbefeuchter
+          tap_action:
+            action: toggle
+        show_name: false
+        show_state: false
+        title: Luftbefeuchter
+        type: glance
       - cards:
         - color_thresholds:
           - color: '#d32f2f'
@@ -119,7 +153,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.wohnzimmer_temperatur
+          - entity: sensor.mi_temperature_wohnzimmer
             index: 0
           hour24: true
           hours_to_show: 24
@@ -139,11 +173,11 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.wohnzimmer_luftfeuchte
+          - entity: sensor.mi_humidity_wohnzimmer
             index: 0
           hour24: true
           hours_to_show: 24
-          lower_bound: 20
+          lower_bound: 25
           name: Luftfeuchte
           points_per_hour: 4
           type: custom:mini-graph-card
@@ -178,7 +212,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mitemp_sleeping_temp
+          - entity: sensor.mi_temperature_schlafzimmer
             index: 0
           hour24: true
           hours_to_show: 24
@@ -198,11 +232,11 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.mitemp_sleeping_hum
+          - entity: sensor.mi_humidity_schlafzimmer
             index: 0
           hour24: true
           hours_to_show: 24
-          lower_bound: 20
+          lower_bound: 25
           name: Luftfeuchte
           points_per_hour: 4
           type: custom:mini-graph-card
@@ -229,7 +263,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mitemp_bath_temp
+          - entity: sensor.mi_temperature_bad
             index: 0
           hour24: true
           hours_to_show: 24
@@ -249,11 +283,11 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.mitemp_bath_hum
+          - entity: sensor.mi_humidity_bad
             index: 0
           hour24: true
           hours_to_show: 24
-          lower_bound: 20
+          lower_bound: 25
           name: Luftfeuchte
           points_per_hour: 4
           type: custom:mini-graph-card
@@ -272,7 +306,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mitemp_balcony_temp
+          - entity: sensor.mi_temperature_balkon
             index: 0
           hour24: true
           hours_to_show: 24
@@ -289,11 +323,11 @@ config:
           - color: '#ffbf00'
             value: 25
           entities:
-          - entity: sensor.mitemp_balcony_hum
+          - entity: sensor.mi_humidity_balkon
             index: 0
           hour24: true
           hours_to_show: 24
-          lower_bound: 20
+          lower_bound: 25
           name: Luftfeuchte
           points_per_hour: 4
           type: custom:mini-graph-card
@@ -322,21 +356,28 @@ config:
       - sensor.multimedia_dose_power
       hours_to_show: 24
       type: custom:mini-graph-card
-    - entities:
-      - entity: lock.wohnungstuer_lock
+    - cards:
+      - entities:
+        - entity: lock.wohnungstuer
+        show_last_changed: true
+        type: entities
+      popup: timeout
       title: "Schl\xF6sser"
-      type: entities
+      type: custom:love-lock-card
     icon: mdi:devices
     path: devices
     title: Devices
   - badges: []
     cards:
-    - entities:
-      - entity: sensor.izzyletsplays
-      - entity: sensor.nerdweib
-      - entity: sensor.saabii
-      title: Twitch
-      type: glance
+    - card:
+        title: Twitch
+        type: glance
+      filter:
+        include:
+        - attributes:
+            icon: mdi:twitch
+      sort: name
+      type: custom:auto-entities
     - artwork: cover
       entity: media_player.fernseher_wohnzimmer
       shortcuts:
@@ -480,7 +521,7 @@ config:
       refresh_interval: 0
       title: "Aktivit\xE4t"
       type: history-graph
-    - entity: input_datetime.next_alarm_markus
+    - entity: sensor.oneplus_a6003_nachster_wecker
       type: entity
     icon: mdi:home-account
     path: anwesenheit
@@ -492,7 +533,6 @@ config:
         - entities:
           - sensor.processor_use
           hours_to_show: 24
-          icon: mdi:memory
           line_width: 4
           name: CPU
           type: custom:mini-graph-card
@@ -522,8 +562,23 @@ config:
         - sensor.swap_use
         - sensor.last_boot
         - binary_sensor.cpu_temp_overheat
-        - binary_sensor.rpi_power_status
         type: entities
+      - text: Power
+        type: custom:text-divider-row
+      - entities:
+        - entity: binary_sensor.rpi_power_status
+          name: Status
+        - entity: sensor.home_assistant_switch_power
+          name: Power
+        type: entities
+      - cards:
+        - entities:
+          - entity: switch.home_assistant_switch
+            icon: mdi:skull
+            name: Power Switch
+          type: entities
+        popup: confirm
+        type: custom:love-lock-card
       title: P-Assistant
       type: custom:stack-in-card
     - card:
@@ -591,14 +646,20 @@ config:
         type: entities
       filter:
         include:
-        - entity_id: '*neustart'
+        - entity_id: switch*neustart
       type: custom:auto-entities
     - entities:
-      - entity: sensor.mitemp_sleeping_batt
-      - entity: sensor.mitemp_balcony_batt
-      - entity: sensor.mitemp_bath_batt
+      - entity: sensor.mi_battery_schlafzimmer
+      - entity: sensor.mi_battery_balkon
+      - entity: sensor.mi_battery_bad
+      - entity: sensor.mi_battery_wohnzimmer
       - entity: sensor.wohnungstuer_battery
+        name: "Wohnungst\xFCr Batterie"
       - entity: sensor.thermostat_wohnzimmer_battery
+        name: Heizung Wohnzimmer  Batterie
+      - entity: sensor.magiccube_battery
+        name: Magiccube Batterie
+      - entity: sensor.balkontur_battery
       show_header_toggle: false
       title: Batterien
       type: entities
@@ -623,6 +684,11 @@ config:
         name: Home Assistant Update available
       - entity: sensor.hacs
         name: Available HACS Updates
+      - entity: binary_sensor.thermostat_wohnzimmer_update_available
+      - entity: binary_sensor.shelly1pm_b1da7e_firmware_update
+      - entity: binary_sensor.shellyplug_s_7a2ce6_firmware_update
+      - entity: binary_sensor.shellyplug_s_26829b_firmware_update
+      - entity: binary_sensor.home_assistant_switch_firmware_update
       title: Updates
       type: entities
     icon: mdi:cog

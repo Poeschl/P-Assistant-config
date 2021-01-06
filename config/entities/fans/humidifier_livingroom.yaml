@@ -1,0 +1,9 @@
+---
+# The Humidifier control for the living room.
+#
+# https://github.com/syssi/xiaomi_airpurifier
+#
+platform: xiaomi_miio_airpurifier
+name: Wohnzimmer Luftbefeuchter
+host: humidifier.fritz.box
+token: !secret key_humidifier_livingroom

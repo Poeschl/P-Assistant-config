@@ -3,7 +3,7 @@
 #
 platform: circadian_lighting
 name: Circadian Lighting Sideboard
-min_brightness: 30
+min_brightness: 50
 lights_rgb:
   - light.sideboard_leds
 disable_entity: input_boolean.sideboard_leds_animating

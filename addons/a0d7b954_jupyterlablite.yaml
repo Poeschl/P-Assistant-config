@@ -1,0 +1,6 @@
+certfile: p-assist.cert.pem
+github_access_token: '!secret github_api_token'
+init_commands: []
+keyfile: p-assist.key.pem
+ssl: true
+system_packages: []

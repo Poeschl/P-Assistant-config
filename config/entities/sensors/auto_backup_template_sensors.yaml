@@ -8,4 +8,4 @@ sensors:
     friendly_name: "Auto Backup überwachte Snapshots"
     unit_of_measurement: 'monitoring backup(s)'
     value_template: "{{ state_attr('sensor.auto_backup', 'monitored_snapshots') }}"
-    icon_template: package-variant-closed
+    icon_template: mdi:package-variant-closed

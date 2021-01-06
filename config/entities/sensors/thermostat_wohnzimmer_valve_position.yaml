@@ -1,0 +1,18 @@
+---
+# Get the valve position of climatethermostat_wohnzimmer_climate.
+#
+platform: template
+sensors:
+  thermostat_wohnzimmer_valve_postition:
+    friendly_name: "Thermostat Wohnzimmer Öffnung"
+    unique_id: 'thermostat_wohnzimmer_valve_postition'
+    unit_of_measurement: '%'
+    value_template: "{{ state_attr('climate.thermostat_wohnzimmer', 'position') }}"
+    icon_template: >-
+      {% if state_attr('climate.thermostat_wohnzimmer', 'position')|int > 80 %}
+        mdi:valve-open
+      {% elif state_attr('climate.thermostat_wohnzimmer', 'position')|int < 10 %}
+        mdi:valve-closed
+      {% else %}
+        mdi:valve
+      {% endif %}

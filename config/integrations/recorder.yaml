@@ -10,3 +10,4 @@ recorder:
       - weblink
     entities:
       - sensor.augsburg_hauptbahnhof_to_munchen_pasing
+      - remote.ir_livingroom_remote

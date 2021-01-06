@@ -39,7 +39,7 @@ light:
           name: Ebene Rainbow
           lambda: |-
             static uint8_t speed = 10;
-            static uint8_t width = 16;
+            static uint8_t width = 10;
 
             ESPHSVColor hsv;
             hsv.value = 255;

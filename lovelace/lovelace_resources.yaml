@@ -20,3 +20,12 @@ items:
 - id: afb5b8b810b2483f83feee4f58323987
   type: module
   url: /hacsfiles/mini-media-player/mini-media-player-bundle.js
+- id: c49677f6c4e54789874b9cd5a5cd7648
+  type: module
+  url: /hacsfiles/love-lock-card/love-lock-card.js
+- id: fb018631847542beb6bb47d1cc1efc44
+  type: module
+  url: /hacsfiles/fan-control-entity-row/fan-control-entity-row.js
+- id: 4c3289f165e84afcbc93d95f0d766f9f
+  type: module
+  url: /hacsfiles/text-divider-row/text-divider-row.js

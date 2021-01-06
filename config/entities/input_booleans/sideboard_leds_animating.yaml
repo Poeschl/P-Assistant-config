@@ -1,6 +1,9 @@
 ---
-# A boolean which indicates the sideboard leds are animating or showing a notification.
+# Booleans which indicates animating or showing a notification on leds.
 # Used for the circadian lightning to not alter the color.
 #
 sideboard_leds_animating:
   name: Sideboard LEDs animating
+
+vitrine_leds_animating:
+  name: Vitrine LEDs animating

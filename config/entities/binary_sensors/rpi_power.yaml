@@ -1,6 +1,0 @@
----
-# A sensor for Home-Assistant that checks your power supply and reports back to your setup.
-#
-# https://github.com/custom-components/sensor.rpi_power
-#
-platform: rpi_power

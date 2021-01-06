@@ -1,5 +1,4 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -15,21 +14,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(hours=12)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_CA_CERT): cv.string,
     }
 )
 
@@ -66,37 +62,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class CertExpiryEntity(Entity):
+class CertExpiryEntity(CoordinatorEntity):
     """Defines a base Cert Expiry entity."""
-
-    def __init__(self, coordinator):
-        """Initialize the Cert Expiry entity."""
-        self.coordinator = coordinator
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update Cert Expiry entity."""
-        await self.coordinator.async_request_refresh()
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return "mdi:certificate"
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def device_state_attributes(self):
@@ -105,8 +77,9 @@ class CertExpiryEntity(Entity):
             "is_valid": self.coordinator.is_cert_valid,
             "error": str(self.coordinator.cert_error),
         }
-        if self.coordinator.ca_cert:
-            attributes[CONF_CA_CERT] = self.coordinator.ca_cert
+        ca_cert = self.coordinator.config_entry.options[CONF_CA_CERT]
+        if ca_cert:
+            attributes[CONF_CA_CERT] = ca_cert
         return attributes
 
 
@@ -116,7 +89,7 @@ class SSLCertificateDays(CertExpiryEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Cert Expiry ({self.coordinator.name})"
+        return f"Cert Expiry ({self.coordinator.config_entry.title})"
 
     @property
     def state(self):
@@ -130,7 +103,7 @@ class SSLCertificateDays(CertExpiryEntity):
     @property
     def unique_id(self):
         """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}"
+        return self.coordinator.unique_id
 
     @property
     def unit_of_measurement(self):
@@ -149,7 +122,7 @@ class SSLCertificateTimestamp(CertExpiryEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Cert Expiry Timestamp ({self.coordinator.name})"
+        return f"Cert Expiry Timestamp ({self.coordinator.config_entry.title})"
 
     @property
     def state(self):
@@ -161,4 +134,4 @@ class SSLCertificateTimestamp(CertExpiryEntity):
     @property
     def unique_id(self):
         """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}-timestamp"
+        return f"{self.coordinator.unique_id}-timestamp"

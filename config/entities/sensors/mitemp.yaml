@@ -4,8 +4,16 @@
 #
 platform: mitemp_bt
 batt_entities: true
-encryptors: !secret mitemp_encryptors
-whitelist:
-  - !secret mac_mitemp_balcony
-  - !secret mac_mitemp_sleeping
-  - !secret mac_mitemp_bath
+devices:
+  - name: Balkon
+    mac: !secret mac_mitemp_balcony
+    encryption_key: !secret key_mitemp_balcony
+  - name: Schlafzimmer
+    mac: !secret mac_mitemp_sleeping
+    encryption_key: !secret key_mitemp_sleeping
+  - name: Bad
+    mac: !secret mac_mitemp_bath
+    encryption_key: !secret key_mitemp_bath
+  - name: Wohnzimmer
+    mac: !secret mac_mitemp_livingroom
+    encryption_key: !secret key_mitemp_livingroom

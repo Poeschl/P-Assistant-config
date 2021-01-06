@@ -13,13 +13,14 @@ exclude:
 - known_devices.yaml
 - tts/
 - zigbee2mqtt
+- notebooks
 export:
   addons: true
   esphome: true
   lovelace: true
   node_red: true
 repository:
-  commit_message: Replace thermostat with zigbee one
+  commit_message: Long term update
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

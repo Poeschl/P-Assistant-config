@@ -10,6 +10,7 @@ http_static:
 init_commands: []
 keyfile: p-assist.key.pem
 npm_packages:
+- node-red-contrib-secret
 - node-red-contrib-weekday
 - node-red-contrib-cron-plus
 - node-red-contrib-credentials

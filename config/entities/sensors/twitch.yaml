@@ -7,4 +7,4 @@ token: !secret twitch_oauth_token
 channels:
   - izzyletsplays
   - nerdweib
-  - saabii_
+  - juicy_de

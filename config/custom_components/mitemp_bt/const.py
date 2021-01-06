@@ -12,9 +12,9 @@ CONF_USE_MEDIAN = "use_median"
 CONF_ACTIVE_SCAN = "active_scan"
 CONF_HCI_INTERFACE = "hci_interface"
 CONF_BATT_ENTITIES = "batt_entities"
-CONF_ENCRYPTORS = "encryptors"
 CONF_REPORT_UNKNOWN = "report_unknown"
-CONF_WHITELIST = "whitelist"
+CONF_ENCRYPTION_KEY = "encryption_key"
+
 
 # Default values for configuration options
 DEFAULT_ROUNDING = True
@@ -26,12 +26,12 @@ DEFAULT_ACTIVE_SCAN = False
 DEFAULT_HCI_INTERFACE = 0
 DEFAULT_BATT_ENTITIES = False
 DEFAULT_REPORT_UNKNOWN = False
-DEFAULT_WHITELIST = False
+DEFAULT_DISCOVERY = True
 
 
 """Fixed constants."""
 
-# Sensor measurement limits to exclude erroneous spikes from the results
+# Sensor measurement limits to exclude erroneous spikes from the results (temperature in °C)
 CONF_TMIN = -40.0
 CONF_TMAX = 60.0
 CONF_HMIN = 0.0
@@ -62,7 +62,7 @@ MMTS_DICT = {
     'GCLS002'   : [0, 9, 1, 2, 3, 9, 9, 9, 9],
     'HHCCPOT002': [9, 9, 0, 1, 9, 9, 9, 9, 9],
     'LYWSDCGQ'  : [0, 1, 9, 9, 9, 9, 9, 9, 2],
-    'LYWSD02'   : [0, 1, 9, 9, 9, 9, 9, 9, 9],
+    'LYWSD02'   : [0, 1, 9, 9, 9, 9, 9, 9, 2],
     'CGG1'      : [0, 1, 9, 9, 9, 9, 9, 9, 2],
     'LYWSD03MMC': [0, 1, 9, 9, 9, 9, 9, 9, 2],
     'CGD1'      : [0, 1, 9, 9, 9, 9, 9, 9, 2],

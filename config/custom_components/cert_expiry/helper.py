@@ -28,18 +28,24 @@ async def get_cert_expiry_timestamp(hass, hostname, port, ca_cert):
     """Return the certificate's expiration timestamp."""
     try:
         cert = await hass.async_add_executor_job(get_cert, hostname, port, ca_cert)
-    except socket.gaierror:
-        raise ResolveFailed(f"Cannot resolve hostname: {hostname}")
-    except socket.timeout:
-        raise ConnectionTimeout(f"Connection timeout with server: {hostname}:{port}")
-    except ConnectionRefusedError:
-        raise ConnectionRefused(f"Connection refused by server: {hostname}:{port}")
-    except FileNotFoundError:
-        raise ValidationFailure(f"CA certificate file '{ca_cert}' is not accessible")
+    except socket.gaierror as err:
+        raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
+    except socket.timeout as err:
+        raise ConnectionTimeout(
+            f"Connection timeout with server: {hostname}:{port}"
+        ) from err
+    except ConnectionRefusedError as err:
+        raise ConnectionRefused(
+            f"Connection refused by server: {hostname}:{port}"
+        ) from err
+    except FileNotFoundError as err:
+        raise ValidationFailure(
+            f"CA certificate file '{ca_cert}' is not accessible"
+        ) from err
     except ssl.CertificateError as err:
-        raise ValidationFailure(err.verify_message)
+        raise ValidationFailure(err.verify_message) from err
     except ssl.SSLError as err:
-        raise ValidationFailure(err.args[0])
+        raise ValidationFailure(err.args[0]) from err
 
     ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
     return dt.utc_from_timestamp(ts_seconds)

@@ -1,0 +1,28 @@
+peers:
+- addresses:
+  - '!secret ip_wireguard_phone'
+  allowed_ips: []
+  client_allowed_ips:
+  - '!secret ip_all_range'
+  - '!secret ip_home_range'
+  name: p-phone
+- addresses:
+  - '!secret ip_wireguard_laptop'
+  allowed_ips: []
+  client_allowed_ips:
+  - '!secret ip_all_range'
+  - '!secret ip_home_range'
+  name: p-laptop
+- addresses:
+  - '!secret ip_wireguard_desktop'
+  allowed_ips: []
+  client_allowed_ips:
+  - '!secret ip_all_range'
+  - '!secret ip_home_range'
+  name: p-desktop
+server:
+  addresses:
+  - '!secret ip_wireguard_range'
+  dns:
+  - '!secret ip_internal_dns'
+  host: '!secret wireguard_domain'

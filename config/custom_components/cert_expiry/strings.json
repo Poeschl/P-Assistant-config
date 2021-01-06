@@ -18,8 +18,21 @@
       "connection_refused": "Connection refused when connecting to host"
     },
     "abort": {
-      "already_configured": "This host and port combination is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "import_failed": "Import from config failed"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Use a custom CA certificate",
+          "ca_cert": "Path of CA certificate"
+        }
+      }
+    },
+    "error": {
+      "ca_cert_not_accessible": "The CA certificate could not be found"
     }
   }
 }
