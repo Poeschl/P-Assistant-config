@@ -9,3 +9,5 @@ telegram_bot:
     parse_mode: markdown
     allowed_chat_ids:
       - !secret telegram_markus_id
+      - !secret telegram_mele_id
+      - !secret telegram_susanne_id

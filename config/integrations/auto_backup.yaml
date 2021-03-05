@@ -1,7 +1,0 @@
----
-# Configuration for the auto-archive component
-# https://github.com/jcwillox/hass-auto-backup
-#
-auto_backup:
-  auto_purge: true
-  backup_timeout: 7200 # 2 hours

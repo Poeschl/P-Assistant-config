@@ -6,8 +6,11 @@ esphome:
   name: ${devicename}
   platform: ESP8266
   board: esp01_1m
+  build_path: /tmp/build/${devicename}
 
 <<: !include includes/common.yaml
+
+<<: !include includes/mqtt.yaml
 
 binary_sensor:
   - platform: gpio
@@ -16,7 +19,7 @@ binary_sensor:
     on_press:
       - fan.turn_on: bath_fan
     on_release:
-      - delay: 5min
+      - delay: 10min
       - fan.turn_off: bath_fan
     on_double_click:
       - fan.turn_off: bath_fan

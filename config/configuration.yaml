@@ -14,3 +14,14 @@ homeassistant:
   external_url: !secret homeassistant_external_url
   internal_url: !secret homeassistant_internal_url
 
+  auth_providers:
+    - type: homeassistant
+    - type: trusted_networks
+      trusted_networks:
+        - !secret ip_markus_android
+        - !secret ip_markus_laptop_lan
+        - !secret ip_markus_laptop_wifi
+        - !secret ip_markus_desktop
+        - !secret ip_work_laptop_lan
+        - !secret ip_work_laptop_wifi
+

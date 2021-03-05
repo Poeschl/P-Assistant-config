@@ -6,8 +6,11 @@ esphome:
   name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
+  build_path: /tmp/build/${devicename}
 
 <<: !include includes/common.yaml
+
+<<: !include includes/mqtt.yaml
 
 globals:
   - id: segment_size

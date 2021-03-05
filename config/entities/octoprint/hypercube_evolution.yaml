@@ -1,0 +1,14 @@
+---
+# The octoprint configuration for the Hypercube Evolution
+#
+host: !secret octopi_host
+api_key: !secret octoprint_api_key
+name: Hypercube Evolution
+bed: true
+number_of_tools: 1
+sensors:
+  monitored_conditions:
+    - 'Current State'
+    - 'Job Percentage'
+    - 'Time Remaining'
+    - 'Temperatures'

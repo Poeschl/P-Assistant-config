@@ -6,12 +6,17 @@ esphome:
   name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
+  build_path: /tmp/build/${devicename}
 
 <<: !include includes/common.yaml
+
+<<: !include includes/mqtt.yaml
 
 globals:
   - id: middle_double_click_status
     type: bool
+
+wled:
 
 light:
   - platform: fastled_clockless
@@ -38,6 +43,7 @@ light:
       - addressable_twinkle:
           twinkle_probability: 15%
           progress_interval: 15ms
+      - wled:
             
 binary_sensor:
   - platform: gpio
@@ -88,3 +94,4 @@ binary_sensor:
       } else {
         return false;
       }
+    

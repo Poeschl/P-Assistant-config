@@ -22,10 +22,12 @@ config:
       - entity: light.sideboard_leds
         tap_action:
           action: toggle
-      - entity: switch.shellyplug_s_7a2ce6_relay_0
+      - entity: light.schreibtischlampe_schreibtisch
+        name: Tisch Schreibtisch
         tap_action:
           action: toggle
-      - entity: light.bettbeleuchtung_leds
+      - entity: light.schreibtischlampe_gesicht
+        name: Gesicht Schreibtisch
         tap_action:
           action: toggle
       show_icon: true
@@ -74,19 +76,76 @@ config:
   - badges: []
     cards:
     - entities:
+      - entity: sensor.sk_augsburg_weekincidence
+        name: Inzidenz
+        secondary_info: last-updated
+      - entity: sensor.sk_augsburg_count
+        name: "F\xE4lle"
+      - entity: sensor.sk_augsburg_newcases
+        name: "Neue F\xE4lle"
+      - entity: sensor.sk_augsburg_newrecovered
+        name: Genesen
+      - entity: sensor.sk_augsburg_newdeaths
+        name: Tode
+      - entity: sensor.sk_augsburg_casesper100k
+        name: "F\xE4lle per 100.000"
+      show_header_toggle: false
+      title: RKI Augsburg
+      type: entities
+    - entities:
+      - entity: sensor.lk_augsburg_weekincidence
+        name: Inzidenz
+        secondary_info: last-updated
+      - entity: sensor.lk_augsburg_count
+        name: "F\xE4lle"
+      - entity: sensor.lk_augsburg_newcases
+        name: "Neue F\xE4lle"
+      - entity: sensor.lk_augsburg_newrecovered
+        name: Genesen
+      - entity: sensor.lk_augsburg_newdeaths
+        name: Tode
+      - entity: sensor.lk_augsburg_casesper100k
+        name: "F\xE4lle per 100.000"
+      show_header_toggle: false
+      title: RKI Augsburg Land
+      type: entities
+    - entities:
+      - entity: sensor.lk_freising_weekincidence
+        name: Inzidenz
+        secondary_info: last-updated
+      - entity: sensor.lk_freising_count
+        name: "F\xE4lle"
+      - entity: sensor.lk_freising_newcases
+        name: "Neue F\xE4lle"
+      - entity: sensor.lk_freising_newrecovered
+        name: Genesen
+      - entity: sensor.lk_freising_newdeaths
+        name: Tode
+      - entity: sensor.lk_freising_casesper100k
+        name: "F\xE4lle per 100.000"
+      show_header_toggle: false
+      title: RKI Freising
+      type: entities
+    icon: mdi:virus
+    path: corona
+    title: Corona
+  - badges: []
+    cards:
+    - entities:
       - entity: light.sideboard_leds
         secondary_info: brightness
       - entity: light.vitrine_leds
         secondary_info: brightness
       - entity: light.bettbeleuchtung_leds
         secondary_info: brightness
+      - entity: light.schreibtischlampe_schreibtisch
+      - entity: light.schreibtischlampe_gesicht
       show_header_toggle: false
       title: RGB Lampen
       type: entities
     - entities:
       - entity: light.tv_lampe
       - entity: switch.shellyplug_s_7a2ce6_relay_0
-      - entity: switch.shellyplug_s_26829b
       show_header_toggle: false
       title: "Bin\xE4re Lampen"
       type: entities
@@ -182,6 +241,10 @@ config:
           points_per_hour: 4
           type: custom:mini-graph-card
         type: horizontal-stack
+      - entities:
+        - entity: sensor.livingroom_iaq_level
+          name: "Luftqualit\xE4t"
+        type: entities
       title: Wohnzimmer
       type: custom:stack-in-card
     - cards:
@@ -218,7 +281,7 @@ config:
           hours_to_show: 24
           lower_bound: 18
           name: Temperatur
-          points_per_hour: 4
+          points_per_hour: 2
           type: custom:mini-graph-card
         - color_thresholds:
           - color: '#d32f2f'
@@ -238,9 +301,28 @@ config:
           hours_to_show: 24
           lower_bound: 25
           name: Luftfeuchte
-          points_per_hour: 4
+          points_per_hour: 2
+          type: custom:mini-graph-card
+        - color_thresholds:
+          - color: '#d32f2f'
+            value: 1800
+          - color: '#ffbf00'
+            value: 1300
+          - color: '#04d900'
+            value: 400
+          entities:
+          - sensor.schreibtischlampe_eco2
+          hour24: true
+          hours_to_show: 24
+          lower_bound: 400
+          name: CO2
+          points_per_hour: 2
           type: custom:mini-graph-card
         type: horizontal-stack
+      - entities:
+        - entity: sensor.sleepingroom_iaq_level
+          name: "Luftqualit\xE4t"
+        type: entities
       title: Schlafzimmer
       type: custom:stack-in-card
     - cards:
@@ -339,7 +421,7 @@ config:
     title: Klima
   - badges: []
     cards:
-    - camera_image: camera.p_dusty_map
+    - camera_image: camera.p_dusty_rendered_map
       entities:
       - vacuum.p_dusty
       title: Dusty
@@ -410,6 +492,11 @@ config:
     title: Media
   - badges: []
     cards:
+    - entities:
+      - entity: sensor.fritz_netmonitor
+        name: 'Fritzbox '
+        secondary_info: last-changed
+      type: entities
     - entities:
       - entity: sensor.fritzbox_download
         index: 0
@@ -510,8 +597,12 @@ config:
       type: entities
     - entities:
       - entity: person.markus
+      - entity: device_tracker.oneplus_a6003
+        name: Handy GPS
       - entity: device_tracker.p_android
+        name: Handy Netzwerk
       - entity: device_tracker.p_watch
+        name: Uhr Netzwerk
       - entity: device_tracker.desktop_markus
       - entity: device_tracker.laptop_markus_wifi
       - entity: device_tracker.p_switch
@@ -635,6 +726,44 @@ config:
     title: Raspberrys
   - badges: []
     cards:
+    - cards:
+      - entities:
+        - entity: sensor.hypercube_evolution_current_state
+          name: Drucker Zustand
+        - entity: sensor.hypercube_evolution_actual_tool0_temp
+          name: Hotend
+        - entity: sensor.hypercube_evolution_actual_bed_temp
+          name: Bett
+        type: entities
+      - camera_view: live
+        entity: camera.hypercube_evolution_cam
+        show_name: false
+        show_state: false
+        type: picture-entity
+      title: Hypercube Evolution
+      type: custom:stack-in-card
+    - cards:
+      - entity: sensor.hypercube_evolution_job_percentage
+        name: Fortschritt
+        positions:
+          icon: inside
+          indicator: inside
+        type: custom:bar-card
+      - entities:
+        - entity: sensor.hypercube_evolution_time_remaining
+          name: Verbleibende Zeit
+          show_points: false
+        hours_to_show: 1
+        points_per_hour: 60
+        smoothing: false
+        type: custom:mini-graph-card
+      title: Druckauftrag
+      type: custom:stack-in-card
+    icon: mdi:printer-3d
+    path: 3d-drucker
+    title: 3D Drucker
+  - badges: []
+    cards:
     - entities:
       - entity: input_boolean.winter_mode
       show_header_toggle: false
@@ -655,8 +784,7 @@ config:
       - entity: sensor.mi_battery_wohnzimmer
       - entity: sensor.wohnungstuer_battery
         name: "Wohnungst\xFCr Batterie"
-      - entity: sensor.thermostat_wohnzimmer_battery
-        name: Heizung Wohnzimmer  Batterie
+      - entity: binary_sensor.thermostat_wohnzimmer_battery_low
       - entity: sensor.magiccube_battery
         name: Magiccube Batterie
       - entity: sensor.balkontur_battery
@@ -692,5 +820,5 @@ config:
       title: Updates
       type: entities
     icon: mdi:cog
-    path: automation
-    title: Automation
+    path: system
+    title: System

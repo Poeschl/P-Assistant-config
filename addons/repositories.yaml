@@ -18,10 +18,6 @@ Poeschl Home Assistant Add-ons:
   maintainer: Poeschl <Poeschl@users.noreply.github.com>
   slug: 243ffc37
   source: https://github.com/Poeschl/Hassio-Addons
-Poeschl's ICantBelieveItsNotValetudo-Beta:
-  maintainer: Poeschl <Poeschl@users.noreply.github.com>
-  slug: a7e416f1
-  source: https://github.com/Poeschl/ICantBelieveItsNotValetudo-Beta
 Synesthesiam Hass.IO Add-Ons:
   maintainer: Michael Hansen <hansen.mike@gmail.com>
   slug: 75f2ff60

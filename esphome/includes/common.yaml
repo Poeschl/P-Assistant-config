@@ -1,10 +1,4 @@
 <<: !include wifi.yaml 
-    
-mqtt: 
-  broker: p-assist.fritz.box
-  username: !secret esphome_mqtt_user
-  password: !secret esphome_mqtt_pass
-  discovery: True
 
 captive_portal:
 

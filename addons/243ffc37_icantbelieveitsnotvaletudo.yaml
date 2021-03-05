@@ -1,7 +1,6 @@
 mapColors:
   floor: '#0076ff'
-  obstacle_strong: '#52aeff'
-  obstacle_weak: '#6699ff'
+  obstacle: '#cccccc'
   path: '#ffffff'
 mapSettings:
   drawCharger: true

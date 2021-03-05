@@ -6,8 +6,11 @@ esphome:
   name: ${devicename}
   platform: ESP8266
   board: nodemcuv2
+  build_path: /tmp/build/${devicename}
 
 <<: !include includes/common.yaml
+
+<<: !include includes/mqtt.yaml
 
 globals:
   - id: box_size
@@ -133,29 +136,6 @@ light:
           lambda: |-
             it.all().fade_to_black(10);
             it.range(18, 22) = ESPColor::WHITE;
-      # - addressable_color_wipe:
-      #     name: Progress
-      #     colors:
-      #       - red: 0%
-      #         green: 0%
-      #         blue: 100%
-      #         num_leds: 18
-      #       - red: 0%
-      #         green: 0%
-      #         blue: 0%
-      #         num_leds: 18
-      #     add_led_interval: 10ms
-      # - strobe:
-      #     name: Alarm
-      #     colors:
-      #       - state: True
-      #         brightness: 100%
-      #         red: 100%
-      #         green: 0%
-      #         blue: 0%
-      #         duration: 1s
-      #       - state: False
-      #         duration: 500ms
       
 i2c:
   sda: D5

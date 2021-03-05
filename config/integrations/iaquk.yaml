@@ -1,0 +1,5 @@
+---
+# This component allows you to evaluate the air quality in any room, using data from various sensors installed there.
+# see https://github.com/Limych/ha-iaquk
+#
+iaquk: !include_dir_named ../entities/iaquk

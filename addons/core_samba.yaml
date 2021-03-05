@@ -1,5 +1,6 @@
 allow_hosts:
 - '!secret ip_home_range'
+- '!secret ip_wireguard'
 compatibility_mode: true
 interface: ''
 password: '!secret samba_pass'

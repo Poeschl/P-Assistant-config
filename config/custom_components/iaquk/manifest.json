@@ -1,0 +1,11 @@
+{
+    "codeowners": [
+        "@Limych"
+    ],
+    "config_flow": false,
+    "dependencies": [],
+    "documentation": "https://github.com/Limych/ha-iaquk",
+    "domain": "iaquk",
+    "name": "IAQ UK",
+    "requirements": []
+}

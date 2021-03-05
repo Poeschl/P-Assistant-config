@@ -1,0 +1,2 @@
+api:
+  password: !secret esphome_api_password

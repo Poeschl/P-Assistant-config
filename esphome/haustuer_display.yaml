@@ -6,6 +6,7 @@ esphome:
   name: ${devicename}
   platform: ESP8266
   board: gen4iod
+  build_path: /tmp/build/${devicename}
   includes:
     - includes/custom_components/DisplayHaustuerComponent.h
     - includes/lib/GFX4dIoD9.cpp

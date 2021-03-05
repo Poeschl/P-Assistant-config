@@ -3,6 +3,7 @@ import asyncio
 import copy
 import json
 import logging
+import math
 import struct
 from threading import Thread
 import janus
@@ -26,8 +27,9 @@ from homeassistant.helpers.entity_registry import (
 )
 
 # It was decided to temporarily include this file in the integration bundle
-# until the issue with checking the adapter's capabilities is resolved in the official aioblescan repo
-# see https://github.com/frawau/aioblescan/pull/30, thanks to @vicamo
+# until the issue with checking the adapter's capabilities is resolved in
+# the official aioblescan repo see https://github.com/frawau/aioblescan/pull/30,
+# thanks to @vicamo
 from . import aioblescan_ext as aiobs
 
 from .const import (
@@ -42,6 +44,10 @@ from .const import (
     DEFAULT_DISCOVERY,
     DEFAULT_RESTORE_STATE,
     DEFAULT_HCI_INTERFACE,
+    DEFAULT_DEVICE_DECIMALS,
+    DEFAULT_DEVICE_USE_MEDIAN,
+    DEFAULT_DEVICE_RESTORE_STATE,
+    DEFAULT_DEVICE_RESET_TIMER,
     CONF_ROUNDING,
     CONF_DECIMALS,
     CONF_PERIOD,
@@ -53,10 +59,17 @@ from .const import (
     CONF_REPORT_UNKNOWN,
     CONF_RESTORE_STATE,
     CONF_ENCRYPTION_KEY,
+    CONF_DEVICE_DECIMALS,
+    CONF_DEVICE_USE_MEDIAN,
+    CONF_DEVICE_RESTORE_STATE,
+    CONF_DEVICE_RESET_TIMER,
     CONFIG_IS_FLOW,
     DOMAIN,
+    PLATFORMS,
     MAC_REGEX,
     AES128KEY_REGEX,
+    ATC_TYPE_DICT,
+    QINGPING_TYPE_DICT,
     XIAOMI_TYPE_DICT,
     SERVICE_CLEANUP_ENTRIES,
 )
@@ -67,11 +80,15 @@ _LOGGER = logging.getLogger(__name__)
 TH_STRUCT = struct.Struct("<hH")
 H_STRUCT = struct.Struct("<H")
 T_STRUCT = struct.Struct("<h")
+TTB_STRUCT = struct.Struct("<hhB")
 CND_STRUCT = struct.Struct("<H")
 ILL_STRUCT = struct.Struct("<I")
+LIGHT_STRUCT = struct.Struct("<I")
 FMDH_STRUCT = struct.Struct("<H")
-
-PLATFORMS = ["binary_sensor", "sensor"]
+THBV_STRUCT = struct.Struct(">hBBH")
+THVB_STRUCT = struct.Struct("<hHHB")
+M_STRUCT = struct.Struct("<L")
+P_STRUCT = struct.Struct("<H")
 
 CONFIG_YAML = {}
 UPDATE_UNLISTENER = None
@@ -82,34 +99,49 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ENCRYPTION_KEY): cv.matches_regex(AES128KEY_REGEX),
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+        vol.Optional(
+            CONF_DEVICE_DECIMALS, default=DEFAULT_DEVICE_DECIMALS
+        ): vol.In([DEFAULT_DEVICE_DECIMALS, 0, 1, 2, 3, 4]),
+        vol.Optional(
+            CONF_DEVICE_USE_MEDIAN, default=DEFAULT_DEVICE_USE_MEDIAN
+        ): vol.In([DEFAULT_DEVICE_USE_MEDIAN, True, False]),
+        vol.Optional(
+            CONF_DEVICE_RESTORE_STATE, default=DEFAULT_DEVICE_RESTORE_STATE
+        ): vol.In([DEFAULT_DEVICE_RESTORE_STATE, True, False]),
+        vol.Optional(
+            CONF_DEVICE_RESET_TIMER, default=DEFAULT_DEVICE_RESET_TIMER
+        ): cv.positive_int,
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_ROUNDING, default=DEFAULT_ROUNDING): cv.boolean,
-                vol.Optional(CONF_DECIMALS, default=DEFAULT_DECIMALS): cv.positive_int,
-                vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
-                vol.Optional(CONF_LOG_SPIKES, default=DEFAULT_LOG_SPIKES): cv.boolean,
-                vol.Optional(CONF_USE_MEDIAN, default=DEFAULT_USE_MEDIAN): cv.boolean,
-                vol.Optional(CONF_ACTIVE_SCAN, default=DEFAULT_ACTIVE_SCAN): cv.boolean,
-                vol.Optional(
-                    CONF_HCI_INTERFACE, default=[DEFAULT_HCI_INTERFACE]
-                ): vol.All(cv.ensure_list, [cv.positive_int]),
-                vol.Optional(
-                    CONF_BATT_ENTITIES, default=DEFAULT_BATT_ENTITIES
-                ): cv.boolean,
-                vol.Optional(
-                    CONF_REPORT_UNKNOWN, default=DEFAULT_REPORT_UNKNOWN
-                ): cv.boolean,
-                vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-                vol.Optional(CONF_RESTORE_STATE, default=DEFAULT_RESTORE_STATE): cv.boolean,
-                vol.Optional(CONF_DEVICES, default=[]): vol.All(
-                    cv.ensure_list, [DEVICE_SCHEMA]
-                ),
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_ROUNDING),
+            vol.Schema(
+                {
+                    vol.Optional(CONF_ROUNDING, default=DEFAULT_ROUNDING): cv.positive_int,
+                    vol.Optional(CONF_DECIMALS, default=DEFAULT_DECIMALS): cv.positive_int,
+                    vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
+                    vol.Optional(CONF_LOG_SPIKES, default=DEFAULT_LOG_SPIKES): cv.boolean,
+                    vol.Optional(CONF_USE_MEDIAN, default=DEFAULT_USE_MEDIAN): cv.boolean,
+                    vol.Optional(CONF_ACTIVE_SCAN, default=DEFAULT_ACTIVE_SCAN): cv.boolean,
+                    vol.Optional(
+                        CONF_HCI_INTERFACE, default=[DEFAULT_HCI_INTERFACE]
+                    ): vol.All(cv.ensure_list, [cv.positive_int]),
+                    vol.Optional(
+                        CONF_BATT_ENTITIES, default=DEFAULT_BATT_ENTITIES
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_REPORT_UNKNOWN, default=DEFAULT_REPORT_UNKNOWN
+                    ): cv.boolean,
+                    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+                    vol.Optional(CONF_RESTORE_STATE, default=DEFAULT_RESTORE_STATE): cv.boolean,
+                    vol.Optional(CONF_DEVICES, default=[]): vol.All(
+                        cv.ensure_list, [DEVICE_SCHEMA]
+                    ),
+                }
+            )
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -122,7 +154,6 @@ async def async_setup(hass: HomeAssistant, config):
     """Set up integration."""
 
     async def service_cleanup_entries(service_call):
-        # service = service_call.service
         service_data = service_call.data
 
         await async_cleanup_entries_service(hass, service_data)
@@ -268,32 +299,11 @@ async def async_cleanup_entries_service(hass: HomeAssistant, data):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = hass.data[DOMAIN]["config_entry_id"]
 
-    # entity_entries = async_entries_for_config_entry(
-    #     entity_registry, config_entry_id
-    # )
-
-    # entities_to_be_removed = []
     devices_to_be_removed = [
         entry.id
         for entry in device_registry.devices.values()
         if config_entry_id in entry.config_entries
     ]
-
-    # for entry in entity_entries:
-
-    #     # Don't remove available entities
-    #     if entry.unique_id in gateway.entities[entry.domain]:
-
-    #         # Don't remove devices with available entities
-    #         if entry.device_id in devices_to_be_removed:
-    #             devices_to_be_removed.remove(entry.device_id)
-    #         continue
-    #     # Remove entities that are not available
-    #     entities_to_be_removed.append(entry.entity_id)
-
-    # # Remove unavailable entities
-    # for entity_id in entities_to_be_removed:
-    #     entity_registry.async_remove(entity_id)
 
     # Remove devices that don't belong to any entity
     for device_id in devices_to_be_removed:
@@ -349,7 +359,7 @@ class BLEmonitor:
         return result
 
     def restart(self):
-        """Restart scanning"""
+        """Restart scanning."""
         if self.dumpthread.is_alive():
             self.dumpthread.restart()
         else:
@@ -362,34 +372,90 @@ class HCIdump(Thread):
     def __init__(self, config, dataqueue):
         """Initiate HCIdump thread."""
 
-        def obj0d10(xobj):
-            (temp, humi) = TH_STRUCT.unpack(xobj)
-            return {"temperature": temp / 10, "humidity": humi / 10}
+        # Xiaomi MiBeacon BLE advertisements
+        # https://iot.mi.com/new/doc/embedded-development/ble/object-definition
+        def obj0300(xobj):
+            return {"motion": xobj[0], "motion timer": xobj[0]}
 
-        def obj0610(xobj):
-            (humi,) = H_STRUCT.unpack(xobj)
-            return {"humidity": humi / 10}
+        def obj0f00(xobj):
+            if len(xobj) == 3:
+                (value,) = LIGHT_STRUCT.unpack(xobj + b'\x00')
+                # MJYD02YL:  1 - moving no light, 100 - moving with light
+                # RTCGQ02LM: 0 - moving no light, 256 - moving with light
+                # CGPR1:     moving, value is illumination in lux
+                return {"motion": 1, "motion timer": 1, "light": int(value >= 100), "illuminance": value}
+            else:
+                return {}
+
+        def obj0110(xobj):
+            if xobj[2] == 0:
+                press = "single press"
+            elif xobj[2] == 1:
+                press = "double press"
+            elif xobj[2] == 2:
+                press = "long press"
+            else:
+                press = "no press"
+            return {"button": press}
 
         def obj0410(xobj):
-            (temp,) = T_STRUCT.unpack(xobj)
-            return {"temperature": temp / 10}
+            if len(xobj) == 2:
+                (temp,) = T_STRUCT.unpack(xobj)
+                return {"temperature": temp / 10}
+            else:
+                return {}
 
-        def obj0910(xobj):
-            (cond,) = CND_STRUCT.unpack(xobj)
-            return {"conductivity": cond}
+        def obj0510(xobj):
+            return {"switch": xobj[0], "temperature": xobj[1]}
 
-        def obj1010(xobj):
-            (fmdh,) = FMDH_STRUCT.unpack(xobj)
-            return {"formaldehyde": fmdh / 100}
+        def obj0610(xobj):
+            if len(xobj) == 2:
+                (humi,) = H_STRUCT.unpack(xobj)
+                return {"humidity": humi / 10}
+            else:
+                return {}
 
-        def obj0a10(xobj):
-            return {"battery": xobj[0]}
+        def obj0710(xobj):
+            if len(xobj) == 3:
+                (illum,) = ILL_STRUCT.unpack(xobj + b'\x00')
+                return {"illuminance": illum, "light": 1 if illum == 100 else 0}
+            else:
+                return {}
 
         def obj0810(xobj):
             return {"moisture": xobj[0]}
 
+        def obj0910(xobj):
+            if len(xobj) == 2:
+                (cond,) = CND_STRUCT.unpack(xobj)
+                return {"conductivity": cond}
+            else:
+                return {}
+
+        def obj1010(xobj):
+            if len(xobj) == 2:
+                (fmdh,) = FMDH_STRUCT.unpack(xobj)
+                return {"formaldehyde": fmdh / 100}
+            else:
+                return {}
+
         def obj1210(xobj):
             return {"switch": xobj[0]}
+
+        def obj1310(xobj):
+            return {"consumable": xobj[0]}
+
+        def obj1410(xobj):
+            return {"moisture": xobj[0]}
+
+        def obj1710(xobj):
+            if len(xobj) == 4:
+                (motion,) = M_STRUCT.unpack(xobj)
+                # seconds since last motion detected message (not used, we use motion timer in obj0f00)
+                # 0 = motion detected
+                return {"motion": 1 if motion == 0 else 0}
+            else:
+                return {}
 
         def obj1810(xobj):
             return {"light": xobj[0]}
@@ -397,15 +463,62 @@ class HCIdump(Thread):
         def obj1910(xobj):
             return {"opening": xobj[0]}
 
-        def obj1310(xobj):
-            return {"consumable": xobj[0]}
+        def obj0a10(xobj):
+            return {"battery": xobj[0]}
 
-        def obj0710(xobj):
-            (illum,) = ILL_STRUCT.unpack(xobj + b'\x00')
-            return {"illuminance": illum}
+        def obj0d10(xobj):
+            if len(xobj) == 4:
+                (temp, humi) = TH_STRUCT.unpack(xobj)
+                return {"temperature": temp / 10, "humidity": humi / 10}
+            else:
+                return {}
 
-        def obj0510(xobj):
-            return {"switch": xobj[0], "temperature": xobj[1]}
+        def obj0020(xobj):
+            if len(xobj) == 5:
+                (temp1, temp2, bat) = TTB_STRUCT.unpack(xobj)
+                # Body temperature is calculated from the two measured temperatures.
+                # Formula is based on approximation based on values inthe app in the range 36.5 - 37.8.
+                body_temp = (
+                    3.71934 * pow(10, -11) * math.exp(0.69314 * temp1 / 100)
+                    - 1.02801 * pow(10, -8) * math.exp(0.53871 * temp2 / 100)
+                    + 36.413
+                )
+                return {"temperature": body_temp, "battery": bat}
+            else:
+                return {}
+
+        # Qingping BLE advertisements
+        def obj0104(xobj):
+            if len(xobj) == 4:
+                (temp, humi) = TH_STRUCT.unpack(xobj)
+                return {"temperature": temp / 10, "humidity": humi / 10}
+            else:
+                return {}
+
+        def obj0201(xobj):
+            return {"battery": xobj[0]}
+
+        def obj0702(xobj):
+            if len(xobj) == 2:
+                (pres,) = P_STRUCT.unpack(xobj)
+                return {"pressure": pres / 10}
+            else:
+                return {}
+
+        # ATC BLE advertisements
+        def objATC_short(xobj):
+            if len(xobj) == 6:
+                (temp, humi, batt, volt) = THBV_STRUCT.unpack(xobj)
+                return {"temperature": temp / 10, "humidity": humi, "voltage": volt / 1000, "battery": batt}
+            else:
+                return {}
+
+        def objATC_long(xobj):
+            if len(xobj) == 7:
+                (temp, humi, volt, batt) = THVB_STRUCT.unpack(xobj)
+                return {"temperature": temp / 100, "humidity": humi / 100, "voltage": volt / 1000, "battery": batt}
+            else:
+                return {}
 
         def reverse_mac(rmac):
             """Change LE order to BE."""
@@ -445,12 +558,13 @@ class HCIdump(Thread):
                 else:
                     continue
         _LOGGER.debug("%s encryptors mac:key pairs loaded.", len(self.aeskeys))
-        if isinstance(self.config[CONF_DISCOVERY], bool):
-            if self.config[CONF_DISCOVERY] is False:
-                self.discovery = False
-                if self.config[CONF_DEVICES]:
-                    for device in self.config[CONF_DEVICES]:
-                        self.whitelist.append(device["mac"])
+
+        if isinstance(self.config[CONF_DISCOVERY], bool) and self.config[CONF_DISCOVERY] is False:
+            self.discovery = False
+            if self.config[CONF_DEVICES]:
+                for device in self.config[CONF_DEVICES]:
+                    self.whitelist.append(device["mac"])
+
         # remove duplicates from whitelist
         self.whitelist = list(dict.fromkeys(self.whitelist))
         _LOGGER.debug("whitelist: [%s]", ", ".join(self.whitelist).upper())
@@ -460,23 +574,34 @@ class HCIdump(Thread):
         # dataobject dictionary to implement switch-case statement
         # dataObject id  (converter, binary, measuring)
         self._dataobject_dict = {
-            b'\x0D\x10': (obj0d10, False, True),
-            b'\x06\x10': (obj0610, False, True),
+            b'\x03\x00': (obj0300, True, False),
+            b'\x0F\x00': (obj0f00, True, True),
+            b'\x01\x10': (obj0110, False, True),
             b'\x04\x10': (obj0410, False, True),
+            b'\x05\x10': (obj0510, True, True),
+            b'\x06\x10': (obj0610, False, True),
+            b'\x07\x10': (obj0710, True, True),
+            b'\x08\x10': (obj0810, False, True),
             b'\x09\x10': (obj0910, False, True),
             b'\x10\x10': (obj1010, False, True),
-            b'\x0A\x10': (obj0a10, True, True),
-            b'\x08\x10': (obj0810, False, True),
             b'\x12\x10': (obj1210, True, False),
+            b'\x13\x10': (obj1310, False, True),
+            b'\x14\x10': (obj1410, True, False),
+            b'\x17\x10': (obj1710, True, False),
             b'\x18\x10': (obj1810, True, False),
             b'\x19\x10': (obj1910, True, False),
-            b'\x13\x10': (obj1310, False, True),
-            b'\x07\x10': (obj0710, False, True),
-            b'\x05\x10': (obj0510, True, True),
+            b'\x0A\x10': (obj0a10, True, True),
+            b'\x0D\x10': (obj0d10, False, True),
+            b'\x00\x20': (obj0020, False, True),
+            b'\x01\x04': (obj0104, False, True),
+            b'\x02\x01': (obj0201, False, True),
+            b'\x07\x02': (obj0702, False, True),
+            b'\x10\x16': (objATC_short, False, True),
+            b'\x12\x16': (objATC_long, False, True),
         }
 
     def process_hci_events(self, data):
-        """Parses HCI events."""
+        """Parse HCI events."""
         self.evt_cnt += 1
         if len(data) < 12:
             return
@@ -517,7 +642,9 @@ class HCIdump(Thread):
                     try:
                         self._event_loop.run_until_complete(btctrl[hci].send_scan_request(self._active))
                     except RuntimeError as error:
-                        _LOGGER.error("HCIdump thread: Runtime error while sending scan request on hci%i: %s", hci, error)
+                        _LOGGER.error(
+                            "HCIdump thread: Runtime error while sending scan request on hci%i: %s", hci, error
+                        )
             _LOGGER.debug("HCIdump thread: start main event_loop")
             try:
                 self._event_loop.run_forever()
@@ -556,7 +683,7 @@ class HCIdump(Thread):
             _LOGGER.debug("HCIdump thread: joined")
 
     def restart(self):
-        """Restarting scanner"""
+        """Restarting scanner."""
         try:
             self._event_loop.call_soon_threadsafe(self._event_loop.stop)
         except AttributeError as error:
@@ -564,52 +691,97 @@ class HCIdump(Thread):
 
     def parse_raw_message(self, data):
         """Parse the raw data."""
+
         # check if packet is Extended scan result
         is_ext_packet = True if data[3] == 0x0d else False
-        # check for Xiaomi service data
+
+        # check for service data (Xiaomi, qingping or ATC)
         xiaomi_index = data.find(b'\x16\x95\xFE', 15 + 15 if is_ext_packet else 0)
-        if xiaomi_index == -1:
-            return None, None, None
+        qingping_index = data.find(b'\x16\xCD\xFD', 15 + 15 if is_ext_packet else 0)
+        atc_index = data.find(b'\x16\x1A\x18', 15 + 15 if is_ext_packet else 0)
+
+        try:
+            if xiaomi_index != -1:
+                return self.parse_xiaomi(data, xiaomi_index, is_ext_packet)
+            elif qingping_index != -1:
+                return self.parse_qingping(data, qingping_index, is_ext_packet)
+            elif atc_index != -1:
+                return self.parse_atc(data, atc_index, is_ext_packet)
+
+        except NoValidError as nve:
+            _LOGGER.debug("Invalid data: %s", nve)
+
+        return None, None, None
+
+    def parse_xiaomi(self, data, xiaomi_index, is_ext_packet):
+        # parse BLE message in Xiaomi MiBeacon format
+        firmware = "Xiaomi (MiBeacon)"
+
         # check for no BR/EDR + LE General discoverable mode flags
         advert_start = 29 if is_ext_packet else 14
         adv_index = data.find(b"\x02\x01\x06", advert_start, 3 + advert_start)
         adv_index2 = data.find(b"\x15\x16\x95", advert_start, 3 + advert_start)
         if adv_index == -1 and adv_index2 == -1:
-            return None, None, None
+            raise NoValidError("Invalid index")
         if adv_index2 != -1:
             adv_index = adv_index2
+
         # check for BTLE msg size
         msg_length = data[2] + 3
         if msg_length != len(data):
-            return None, None, None
+            raise NoValidError("Invalid msg size")
+
+        # extract device type
+        device_type = data[xiaomi_index + 5:xiaomi_index + 7]
+
+        # extract frame control bits
+        framectrl_data = data[xiaomi_index + 3:xiaomi_index + 5]
+        framectrl, = struct.unpack('>H', framectrl_data)
+
+        # flag advertisements without mac address in service data
+        if device_type == b'\xF6\x07' and framectrl_data == b'\x48\x59':
+            # MJYD02YL does not have a MAC address in the service data of some advertisements
+            mac_in_service_data = False
+        elif device_type == b'\xDD\x03' and framectrl_data == b'\x40\x30':
+            # MUE4094RT does not have a MAC address in the service data
+            mac_in_service_data = False
+        else:
+            mac_in_service_data = True
+
         # check for MAC presence in message and in service data
-        xiaomi_mac_reversed = data[xiaomi_index + 8:xiaomi_index + 14]
         mac_index = adv_index - 14 if is_ext_packet else adv_index
-        source_mac_reversed = data[mac_index - 7:mac_index - 1]
-        if xiaomi_mac_reversed != source_mac_reversed:
-            return None, None, None
+        if mac_in_service_data is True:
+            xiaomi_mac_reversed = data[xiaomi_index + 8:xiaomi_index + 14]
+            source_mac_reversed = data[mac_index - 7:mac_index - 1]
+            if xiaomi_mac_reversed != source_mac_reversed:
+                raise NoValidError("Invalid MAC address")
+        else:
+            # for sensors without mac in service data, use the first mac in advertisment
+            xiaomi_mac_reversed = data[mac_index - 7:mac_index - 1]
+
         # check for MAC presence in whitelist, if needed
-        if self.discovery is False:
-            if xiaomi_mac_reversed not in self.whitelist:
-                return None, None, None
+        if self.discovery is False and xiaomi_mac_reversed not in self.whitelist:
+            return None, None, None
         packet_id = data[xiaomi_index + 7]
         try:
             prev_packet = self.lpacket_ids[xiaomi_mac_reversed]
         except KeyError:
+            # start with empty first packet
             prev_packet = None, None, None
         if prev_packet == packet_id:
+            # only process new messages
             return None, None, None
         self.lpacket_ids[xiaomi_mac_reversed] = packet_id
+
         # extract RSSI byte
         rssi_index = 18 if is_ext_packet else msg_length - 1
         (rssi,) = struct.unpack("<b", data[rssi_index:rssi_index + 1])
+
         # strange positive RSSI workaround
         if rssi > 0:
             rssi = -rssi
         try:
-            sensor_type, binary_data = XIAOMI_TYPE_DICT[
-                data[xiaomi_index + 5:xiaomi_index + 7]
-            ]
+            sensor_type, binary_data = XIAOMI_TYPE_DICT[device_type]
         except KeyError:
             if self.report_unknown:
                 _LOGGER.info(
@@ -618,9 +790,8 @@ class HCIdump(Thread):
                     ''.join('{:02X}'.format(x) for x in xiaomi_mac_reversed[::-1]),
                     data.hex()
                 )
-            return None, None, None
-        # frame control bits
-        framectrl, = struct.unpack('>H', data[xiaomi_index + 3:xiaomi_index + 5])
+            raise NoValidError("Device unkown")
+
         # check data is present
         if not (framectrl & 0x4000):
             return {
@@ -628,30 +799,40 @@ class HCIdump(Thread):
                 "mac": ''.join('{:02X}'.format(x) for x in xiaomi_mac_reversed[::-1]),
                 "type": sensor_type,
                 "packet": packet_id,
+                "firmware": firmware,
                 "data": False,
             }, None, None
-            # return None
         xdata_length = 0
         xdata_point = 0
+
         # check capability byte present
         if framectrl & 0x2000:
             xdata_length = -1
             xdata_point = 1
-        # xiaomi data length = message length
+
+        # check for messages without mac address in service data
+        if mac_in_service_data is False:
+            xdata_length = +6
+            xdata_point = -6
+
+        # parse_xiaomi data length = message length
         #     -all bytes before XiaomiUUID
         #     -3 bytes Xiaomi UUID + ADtype
         #     -1 byte rssi
         #     -3+1 bytes sensor type
         #     -1 byte packet_id
-        #     -6 bytes MAC
-        #     - capability byte offset
+        #     -6 bytes MAC (if present)
+        #     -capability byte offset
         xdata_length += msg_length - xiaomi_index - 15
         if xdata_length < 3:
-            return None, None, None
+            raise NoValidError("Xdata length invalid")
+
         xdata_point += xiaomi_index + 14
-        # check if xiaomi data start and length is valid
+
+        # check if parse_xiaomi data start and length is valid
         if xdata_length != len(data[xdata_point:-1]):
-            return None, None, None
+            raise NoValidError("Invalid data length")
+
         # check encrypted data flags
         if framectrl & 0x0800:
             # try to find encryption key for current device
@@ -659,11 +840,11 @@ class HCIdump(Thread):
                 key = self.aeskeys[xiaomi_mac_reversed]
             except KeyError:
                 # no encryption key found
-                return None, None, None
+                raise NoValidError("No encryption key found")
             nonce = b"".join(
                 [
                     xiaomi_mac_reversed,
-                    data[xiaomi_index + 5:xiaomi_index + 7],
+                    device_type,
                     data[xiaomi_index + 7:xiaomi_index + 8]
                 ]
             )
@@ -676,7 +857,7 @@ class HCIdump(Thread):
             cipherpayload = encrypted_payload[:-7]
             cipher = AES.new(key, AES.MODE_CCM, nonce=nonce, mac_len=4)
             cipher.update(aad)
-            decrypted_payload = None
+
             try:
                 decrypted_payload = cipher.decrypt_and_verify(cipherpayload, token)
             except ValueError as error:
@@ -685,13 +866,14 @@ class HCIdump(Thread):
                 _LOGGER.error("nonce: %s", nonce.hex())
                 _LOGGER.error("encrypted_payload: %s", encrypted_payload.hex())
                 _LOGGER.error("cipherpayload: %s", cipherpayload.hex())
-                return None, None, None
+                raise NoValidError("Error decrypting with arguments")
             if decrypted_payload is None:
                 _LOGGER.error(
                     "Decryption failed for %s, decrypted payload is None",
                     "".join("{:02X}".format(x) for x in xiaomi_mac_reversed[::-1]),
                 )
-                return None, None, None
+                raise NoValidError("Decryption failed")
+
             # replace cipher with decrypted data
             msg_length -= len(encrypted_payload)
             if is_ext_packet:
@@ -699,16 +881,19 @@ class HCIdump(Thread):
             else:
                 data = b"".join((data[:xdata_point], decrypted_payload, data[-1:]))
             msg_length += len(decrypted_payload)
+
         result = {
             "rssi": rssi,
             "mac": ''.join('{:02X}'.format(x) for x in xiaomi_mac_reversed[::-1]),
             "type": sensor_type,
             "packet": packet_id,
+            "firmware": firmware,
             "data": True,
         }
         binary = False
         measuring = False
-        # loop through xiaomi payload
+
+        # loop through parse_xiaomi payload
         # assume that the data may have several values of different types,
         # although I did not notice this behavior with my LYWSDCGQ sensors
         while True:
@@ -727,9 +912,11 @@ class HCIdump(Thread):
                 _LOGGER.error("data: %s", data.hex())
                 result = {}
                 break
+
             xnext_point = xdata_point + 3 + xvalue_length
             xvalue = data[xdata_point + 3:xnext_point]
             resfunc, tbinary, tmeasuring = self._dataobject_dict.get(xvalue_typecode, (None, None, None))
+
             if resfunc:
                 binary = binary or tbinary
                 measuring = measuring or tmeasuring
@@ -742,8 +929,236 @@ class HCIdump(Thread):
                         ''.join('{:02X}'.format(x) for x in xiaomi_mac_reversed[::-1]),
                         data.hex()
                     )
+
+            if xnext_point > msg_length - 3:
+                break
+            xdata_point = xnext_point
+
+        binary = binary and binary_data
+        return result, binary, measuring
+
+    def parse_qingping(self, data, qingping_index, is_ext_packet):
+        # parse BLE message in Qingping format
+        firmware = "Qingping"
+
+        # check for no BR/EDR + LE General discoverable mode flags
+        advert_start = 29 if is_ext_packet else 14
+        adv_index = data.find(b"\x02\x01\x06", advert_start, 3 + advert_start)
+        if adv_index == -1:
+            raise NoValidError("Invalid index")
+
+        # check for BTLE msg size
+        msg_length = data[2] + 3
+        if msg_length != len(data):
+            raise NoValidError("Invalid msg size")
+
+        # extract device type
+        device_type = data[qingping_index + 3:qingping_index + 5]
+
+        # check for MAC presence in message and in service data
+        mac_index = adv_index - 14 if is_ext_packet else adv_index
+        qingping_mac_reversed = data[qingping_index + 5:qingping_index + 11]
+        source_mac_reversed = data[mac_index - 7:mac_index - 1]
+        if qingping_mac_reversed != source_mac_reversed:
+            raise NoValidError("Invalid MAC address")
+
+        # check for MAC presence in whitelist, if needed
+        if self.discovery is False and qingping_mac_reversed not in self.whitelist:
+            return None, None, None
+        packet_id = "no packed id"
+
+        # extract RSSI byte
+        rssi_index = 18 if is_ext_packet else msg_length - 1
+        (rssi,) = struct.unpack("<b", data[rssi_index:rssi_index + 1])
+
+        # strange positive RSSI workaround
+        if rssi > 0:
+            rssi = -rssi
+        try:
+            sensor_type, binary_data = QINGPING_TYPE_DICT[device_type]
+        except KeyError:
+            if self.report_unknown:
+                _LOGGER.info(
+                    "BLE ADV from UNKNOWN: RSSI: %s, MAC: %s, ADV: %s",
+                    rssi,
+                    ''.join('{:02X}'.format(x) for x in qingping_mac_reversed[::-1]),
+                    data.hex()
+                )
+            raise NoValidError("Device unkown")
+        xdata_length = 0
+        xdata_point = 0
+
+        # parse_qingping data length = message length
+        #     -all bytes before Qingping UUID
+        #     -3 bytes Qingping UUID + ADtype
+        #     -1 byte rssi
+        #     -2 bytes sensor type
+        #     -6 bytes MAC
+        xdata_length += msg_length - qingping_index - 12
+        if xdata_length < 3:
+            raise NoValidError("Xdata length invalid")
+
+        xdata_point += qingping_index + 11
+
+        # check if parse_qingping data start and length is valid
+        if xdata_length != len(data[xdata_point:-1]):
+            raise NoValidError("Invalid data length")
+        result = {
+            "rssi": rssi,
+            "mac": ''.join('{:02X}'.format(x) for x in qingping_mac_reversed[::-1]),
+            "type": sensor_type,
+            "packet": packet_id,
+            "firmware": firmware,
+            "data": True,
+        }
+        binary = False
+        measuring = False
+
+        # loop through parse_qingping payload
+        # assume that the data may have several values of different types
+        while True:
+            xvalue_typecode = data[xdata_point:xdata_point + 2]
+            try:
+                xvalue_length = data[xdata_point + 1]
+            except ValueError as error:
+                _LOGGER.error("xvalue_length conv. error: %s", error)
+                _LOGGER.error("xdata_point: %s", xdata_point)
+                _LOGGER.error("data: %s", data.hex())
+                result = {}
+                break
+            except IndexError as error:
+                _LOGGER.error("Wrong xdata_point: %s", error)
+                _LOGGER.error("xdata_point: %s", xdata_point)
+                _LOGGER.error("data: %s", data.hex())
+                result = {}
+                break
+            xnext_point = xdata_point + 2 + xvalue_length
+            xvalue = data[xdata_point + 2:xnext_point]
+            resfunc, tbinary, tmeasuring = self._dataobject_dict.get(xvalue_typecode, (None, None, None))
+            if resfunc:
+                binary = binary or tbinary
+                measuring = measuring or tmeasuring
+                result.update(resfunc(xvalue))
+            else:
+                if self.report_unknown:
+                    _LOGGER.info(
+                        "UNKNOWN dataobject from DEVICE: %s, MAC: %s, ADV: %s",
+                        sensor_type,
+                        ''.join('{:02X}'.format(x) for x in qingping_mac_reversed[::-1]),
+                        data.hex()
+                    )
             if xnext_point > msg_length - 3:
                 break
             xdata_point = xnext_point
         binary = binary and binary_data
         return result, binary, measuring
+
+    def parse_atc(self, data, atc_index, is_ext_packet):
+
+        # parse BLE message in ATC format
+        # Check for the atc1441 or custom format
+        is_custom_adv = True if data[atc_index - 1] == 18 else False
+        firmware = "ATC (custom)" if is_custom_adv else "ATC firmware (ATC1441)"
+
+        # check for BTLE msg size
+        msg_length = data[2] + 3
+        if msg_length != len(data):
+            raise NoValidError("Invalid index")
+
+        # check for MAC presence in message and in service data
+        if is_custom_adv is True:
+            atc_mac_reversed = data[atc_index + 3:atc_index + 9]
+            atc_mac = atc_mac_reversed[::-1]
+        else:
+            atc_mac = data[atc_index + 3:atc_index + 9]
+
+        mac_index = atc_index - (22 if is_ext_packet else 8)
+        source_mac_reversed = data[mac_index:mac_index + 6]
+        source_mac = source_mac_reversed[::-1]
+        if atc_mac != source_mac:
+            raise NoValidError("Invalid MAC address")
+
+        # check for MAC presence in whitelist, if needed
+        if self.discovery is False and source_mac_reversed not in self.whitelist:
+            return None, None, None
+
+        packet_id = data[atc_index + 16 if is_custom_adv else atc_index + 15]
+        try:
+            prev_packet = self.lpacket_ids[atc_index]
+        except KeyError:
+            # start with empty first packet
+            prev_packet = None, None, None
+        if prev_packet == packet_id:
+            # only process new messages
+            return None, None, None
+        self.lpacket_ids[atc_index] = packet_id
+
+        # extract RSSI byte
+        rssi_index = 18 if is_ext_packet else msg_length - 1
+        (rssi,) = struct.unpack("<b", data[rssi_index:rssi_index + 1])
+
+        # strange positive RSSI workaround
+        if rssi > 0:
+            rssi = -rssi
+        device_type = data[atc_index + 1:atc_index + 3]
+        try:
+            sensor_type, binary_data = ATC_TYPE_DICT[device_type]
+        except KeyError:
+            if self.report_unknown:
+                _LOGGER.info(
+                    "BLE ADV from UNKNOWN ATC SENSOR: RSSI: %s, MAC: %s, ADV: %s",
+                    rssi,
+                    ''.join('{:02X}'.format(x) for x in atc_mac[:]),
+                    data.hex()
+                )
+            raise NoValidError("Device unkown")
+
+        # ATC data length = message length
+        # -all bytes before ATC UUID
+        # -3 bytes ATC UUID + ADtype
+        # -6 bytes MAC
+        # -1 Frame packet counter
+        # -1 byte flags (custom adv only)
+        # -1 RSSI (normal, not extended packet only)
+        xdata_length = msg_length - atc_index - (11 if is_custom_adv else 10) - (0 if is_ext_packet else 1)
+        if xdata_length < 6:
+            raise NoValidError("Xdata length invalid")
+
+        xdata_point = atc_index + 9
+
+        # check if parse_atc data start and length is valid
+        if xdata_length != len(data[xdata_point:(-3 if (is_custom_adv and not is_ext_packet) else -2)]):
+            raise NoValidError("Invalid data length")
+
+        result = {
+            "rssi": rssi,
+            "mac": ''.join('{:02X}'.format(x) for x in atc_mac[:]),
+            "type": sensor_type,
+            "packet": packet_id,
+            "firmware": firmware,
+            "data": True,
+        }
+        binary = False
+        measuring = False
+        xvalue_typecode = data[atc_index - 1:atc_index + 1]
+        xnext_point = xdata_point + xdata_length
+        xvalue = data[xdata_point:xnext_point]
+        resfunc, tbinary, tmeasuring = self._dataobject_dict.get(xvalue_typecode, (None, None, None))
+        if resfunc:
+            binary = binary or tbinary
+            measuring = measuring or tmeasuring
+            result.update(resfunc(xvalue))
+        else:
+            if self.report_unknown:
+                _LOGGER.info(
+                    "UNKNOWN dataobject from ATC DEVICE: %s, MAC: %s, ADV: %s",
+                    sensor_type,
+                    ''.join('{:02X}'.format(x) for x in atc_mac[:]),
+                    data.hex()
+                )
+        binary = binary and binary_data
+        return result, binary, measuring
+
+
+class NoValidError(Exception):
+    pass

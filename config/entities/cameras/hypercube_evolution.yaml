@@ -1,0 +1,7 @@
+---
+# The camera of the Hypercube Evolution
+#
+platform: mjpeg
+name: Hypercube Evolution Cam
+still_image_url: !secret octoprint_snapshot_url
+mjpeg_url: !secret octoprint_webcam_url

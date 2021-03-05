@@ -7,3 +7,7 @@ sideboard_leds_animating:
 
 vitrine_leds_animating:
   name: Vitrine LEDs animating
+
+schreibtisch_animating:
+  name: Schreibtisch LEDs animating
+

@@ -2,13 +2,13 @@
 from datetime import timedelta
 import asyncio
 import logging
-# from threading import Thread
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_POWER,
-    # BinarySensorEntity,
 )
 
 try:
@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
@@ -31,6 +32,9 @@ from .const import (
     CONF_PERIOD,
     CONF_BATT_ENTITIES,
     CONF_RESTORE_STATE,
+    CONF_DEVICE_RESTORE_STATE,
+    CONF_DEVICE_RESET_TIMER,
+    DEFAULT_DEVICE_RESET_TIMER,
     KETTLES,
     MANUFACTURER_DICT,
     MMTS_DICT,
@@ -41,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, conf, add_entities, discovery_info=None):
-    """setup from setup_entry"""
+    """Set up from setup_entry."""
     return True
 
 
@@ -51,21 +55,17 @@ async def async_setup_entry(hass, config_entry, add_entities):
 
     blemonitor = hass.data[DOMAIN]["blemonitor"]
     bleupdater = BLEupdaterBinary(blemonitor, add_entities)
-    # bleupdater.start()
-    # hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, bleupdater.async_run)
     hass.loop.create_task(bleupdater.async_run())
     _LOGGER.debug("Binary sensor entry setup finished")
     # Return successful setup
     return True
 
 
-# class BLEupdaterBinary(Thread):
 class BLEupdaterBinary():
     """BLE monitor entities updater."""
 
     def __init__(self, blemonitor, add_entities):
         """Initiate BLE updater."""
-        # Thread.__init__(self, daemon=True)
         _LOGGER.debug("BLE binary sensors updater initialization")
         self.monitor = blemonitor
         self.dataqueue = blemonitor.dataqueue["binary"].async_q
@@ -77,7 +77,6 @@ class BLEupdaterBinary():
 
     async def async_run(self):
         """Entities updater loop."""
-
         _LOGGER.debug("Binary entities updater loop started!")
         sensors_by_mac = {}
         sensors = []
@@ -90,14 +89,12 @@ class BLEupdaterBinary():
         await asyncio.sleep(0)
         while True:
             try:
-                # advevent = self.dataqueue.get(block=True, timeout=1)
                 advevent = await asyncio.wait_for(self.dataqueue.get(), 1)
                 if advevent is None:
                     _LOGGER.debug("Entities updater loop stopped")
                     return True
                 data = advevent
                 self.dataqueue.task_done()
-            # except queue.Empty:
             except asyncio.TimeoutError:
                 pass
             if len(hpriority) > 0:
@@ -110,15 +107,20 @@ class BLEupdaterBinary():
                 mac = data["mac"]
                 batt_attr = None
                 sensortype = data["type"]
-                sw_i, op_i, l_i, b_i = MMTS_DICT[sensortype][1]
+                firmware = data["firmware"]
+                sw_i, op_i, l_i, mo_i, mn_i, b_i = MMTS_DICT[sensortype][1]
                 if mac not in sensors_by_mac:
                     sensors = []
                     if sw_i != 9:
-                        sensors.insert(sw_i, PowerBinarySensor(self.config, mac, sensortype))
+                        sensors.insert(sw_i, PowerBinarySensor(self.config, mac, sensortype, firmware))
                     if op_i != 9:
-                        sensors.insert(op_i, OpeningBinarySensor(self.config, mac, sensortype))
+                        sensors.insert(op_i, OpeningBinarySensor(self.config, mac, sensortype, firmware))
                     if l_i != 9:
-                        sensors.insert(l_i, LightBinarySensor(self.config, mac, sensortype))
+                        sensors.insert(l_i, LightBinarySensor(self.config, mac, sensortype, firmware))
+                    if mo_i != 9:
+                        sensors.insert(mo_i, MoistureBinarySensor(self.config, mac, sensortype, firmware))
+                    if mn_i != 9:
+                        sensors.insert(mn_i, MotionBinarySensor(self.config, mac, sensortype, firmware))
                     if len(sensors) != 0:
                         sensors_by_mac[mac] = sensors
                         self.add_entities(sensors)
@@ -165,6 +167,20 @@ class BLEupdaterBinary():
                         light.async_schedule_update_ha_state(True)
                     elif light.ready_for_update is False and light.enabled is True:
                         hpriority.append(light)
+                if "moisture" in data:
+                    moisture = sensors[mo_i]
+                    moisture.collect(data, batt_attr)
+                    if moisture.pending_update is True:
+                        moisture.async_schedule_update_ha_state(True)
+                    elif moisture.ready_for_update is False and moisture.enabled is True:
+                        hpriority.append(moisture)
+                if "motion" in data:
+                    motion = sensors[mn_i]
+                    motion.collect(data, batt_attr)
+                    if motion.pending_update is True:
+                        motion.schedule_update_ha_state(True)
+                    elif motion.ready_for_update is False and motion.enabled is True:
+                        hpriority.append(motion)
                 data = None
             ts_now = dt_util.now()
             if ts_now - ts_last < timedelta(seconds=self.period):
@@ -182,26 +198,28 @@ class BLEupdaterBinary():
 class SwitchingSensor(RestoreEntity, BinarySensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, config, mac, devtype):
+    def __init__(self, config, mac, devtype, firmware):
         """Initialize the sensor."""
         self.ready_for_update = False
-        self._sensor_name = ""
-        self._mac = mac
         self._config = config
-        self._restore_state = config[CONF_RESTORE_STATE]
+        self._mac = mac
+        self._fmac = ":".join(self._mac[i:i + 2] for i in range(0, len(self._mac), 2))
         self._name = ""
         self._state = None
-        self._unique_id = ""
+        self._device_settings = self.get_device_settings()
+        self._device_name = self._device_settings["name"]
+        self._device_class = None
         self._device_type = devtype
+        self._device_firmware = firmware
         self._device_manufacturer = MANUFACTURER_DICT[devtype]
         self._device_state_attributes = {}
         self._device_state_attributes["sensor type"] = devtype
-        self._device_state_attributes["mac address"] = (
-            ':'.join(mac[i:i + 2] for i in range(0, len(mac), 2))
-        )
-        self._device_class = None
-        self._newstate = None
+        self._device_state_attributes["mac address"] = self._fmac
+        self._unique_id = ""
         self._measurement = "measurement"
+        self._restore_state = self._device_settings["restore state"]
+        self._reset_timer = self._device_settings["reset timer"]
+        self._newstate = None
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -212,7 +230,7 @@ class SwitchingSensor(RestoreEntity, BinarySensorEntity):
             self.ready_for_update = True
             return
         old_state = await self.async_get_last_state()
-        _LOGGER.debug(old_state)
+        _LOGGER.debug("Restored state: %s", old_state)
         if not old_state:
             self.ready_for_update = True
             return
@@ -225,6 +243,8 @@ class SwitchingSensor(RestoreEntity, BinarySensorEntity):
             self._device_state_attributes["ext_state"] = old_state.attributes["ext_state"]
         if "rssi" in old_state.attributes:
             self._device_state_attributes["rssi"] = old_state.attributes["rssi"]
+        if "firmware" in old_state.attributes:
+            self._device_state_attributes["firmware"] = old_state.attributes["firmware"]
         if "last packet id" in old_state.attributes:
             self._device_state_attributes["last packet id"] = old_state.attributes["last packet id"]
         if ATTR_BATTERY_LEVEL in old_state.attributes:
@@ -270,13 +290,15 @@ class SwitchingSensor(RestoreEntity, BinarySensorEntity):
 
     @property
     def device_info(self):
+        """Return device info."""
         return {
             "identifiers": {
                 # Unique identifiers within a specific domain
                 (DOMAIN, self._device_state_attributes["mac address"])
             },
-            "name": self.get_sensorname(),
+            "name": self._device_name,
             "model": self._device_type,
+            "sw_version": self._device_firmware,
             "manufacturer": self._device_manufacturer,
         }
 
@@ -285,32 +307,56 @@ class SwitchingSensor(RestoreEntity, BinarySensorEntity):
         """Force update."""
         return True
 
-    def get_sensorname(self):
-        """Set sensor name."""
+    def get_device_settings(self):
+        """Set device settings."""
+        device_settings = {}
+
+        # initial setup of device settings equal to integration settings
+        dev_name = self._mac
+        dev_restore_state = self._config[CONF_RESTORE_STATE]
+        dev_reset_timer = DEFAULT_DEVICE_RESET_TIMER
+
+        # in UI mode device name is equal to mac (but can be overwritten in UI)
+        # in YAML mode device name is taken from config
+        # when changing from YAML mode to UI mode, we keep using the unique_id as device name from YAML
         id_selector = CONF_UNIQUE_ID
-        # if we work with yaml, then we take the name
-        # if not, then we check the unique_id created when switching from yaml
         if "ids_from_name" in self._config:
             id_selector = CONF_NAME
+
+        # overrule settings with device setting if available
         if self._config[CONF_DEVICES]:
-            fmac = ":".join(self._mac[i:i + 2] for i in range(0, len(self._mac), 2))
             for device in self._config[CONF_DEVICES]:
-                if fmac in device["mac"].upper():
+                if self._fmac in device["mac"].upper():
                     if id_selector in device:
-                        custom_name = device[id_selector]
-                        _LOGGER.debug(
-                            "Name of %s sensor with mac address %s is set to: %s",
-                            self._measurement,
-                            fmac,
-                            custom_name,
-                        )
-                        return custom_name
-                    break
-        return self._mac
+                        # get device name (from YAML config)
+                        dev_name = device[id_selector]
+                    if CONF_DEVICE_RESTORE_STATE in device:
+                        if isinstance(device[CONF_DEVICE_RESTORE_STATE], bool):
+                            dev_restore_state = device[CONF_DEVICE_RESTORE_STATE]
+                        else:
+                            dev_restore_state = self._config[CONF_RESTORE_STATE]
+                    if CONF_DEVICE_RESET_TIMER in device:
+                        dev_reset_timer = device[CONF_DEVICE_RESET_TIMER]
+        device_settings = {
+            "name": dev_name,
+            "restore state": dev_restore_state,
+            "reset timer": dev_reset_timer
+        }
+        _LOGGER.debug(
+            "Binary sensor device with mac address %s has the following settings. "
+            "Name: %s. "
+            "Restore state: %s. "
+            "Reset Timer: %s",
+            self._fmac,
+            device_settings["name"],
+            device_settings["restore state"],
+            device_settings["reset timer"],
+        )
+        return device_settings
 
     @property
     def pending_update(self):
-        """Checks if entity is enabled"""
+        """Check if entity is enabled."""
         return self.enabled and self.ready_for_update
 
     def collect(self, data, batt_attr=None):
@@ -320,8 +366,12 @@ class SwitchingSensor(RestoreEntity, BinarySensorEntity):
         self._newstate = data[self._measurement]
         self._device_state_attributes["last packet id"] = data["packet"]
         self._device_state_attributes["rssi"] = data["rssi"]
+        self._device_state_attributes["firmware"] = data["firmware"]
         if batt_attr is not None:
             self._device_state_attributes[ATTR_BATTERY_LEVEL] = batt_attr
+        if "motion timer" in data:
+            if data["motion timer"] == 1:
+                self._device_state_attributes["last motion"] = dt_util.now()
 
     async def async_update(self):
         """Update sensor state and attribute."""
@@ -331,13 +381,12 @@ class SwitchingSensor(RestoreEntity, BinarySensorEntity):
 class PowerBinarySensor(SwitchingSensor):
     """Representation of a Sensor."""
 
-    def __init__(self, config, mac, devtype):
+    def __init__(self, config, mac, devtype, firmware):
         """Initialize the sensor."""
-        super().__init__(config, mac, devtype)
+        super().__init__(config, mac, devtype, firmware)
         self._measurement = "switch"
-        self._sensor_name = self.get_sensorname()
-        self._name = "ble switch {}".format(self._sensor_name)
-        self._unique_id = "sw_" + self._sensor_name
+        self._name = "ble switch {}".format(self._device_name)
+        self._unique_id = "sw_" + self._device_name
         self._device_class = DEVICE_CLASS_POWER
 
     async def async_update(self):
@@ -351,26 +400,24 @@ class PowerBinarySensor(SwitchingSensor):
 class LightBinarySensor(SwitchingSensor):
     """Representation of a Sensor."""
 
-    def __init__(self, config, mac, devtype):
+    def __init__(self, config, mac, devtype, firmware):
         """Initialize the sensor."""
-        super().__init__(config, mac, devtype)
+        super().__init__(config, mac, devtype, firmware)
         self._measurement = "light"
-        self._sensor_name = self.get_sensorname()
-        self._name = "ble light {}".format(self._sensor_name)
-        self._unique_id = "lt_" + self._sensor_name
+        self._name = "ble light {}".format(self._device_name)
+        self._unique_id = "lt_" + self._device_name
         self._device_class = DEVICE_CLASS_LIGHT
 
 
 class OpeningBinarySensor(SwitchingSensor):
     """Representation of a Sensor."""
 
-    def __init__(self, config, mac, devtype):
+    def __init__(self, config, mac, devtype, firmware):
         """Initialize the sensor."""
-        super().__init__(config, mac, devtype)
+        super().__init__(config, mac, devtype, firmware)
         self._measurement = "opening"
-        self._sensor_name = self.get_sensorname()
-        self._name = "ble opening {}".format(self._sensor_name)
-        self._unique_id = "op_" + self._sensor_name
+        self._name = "ble opening {}".format(self._device_name)
+        self._unique_id = "op_" + self._device_name
         self._ext_state = None
         self._device_class = DEVICE_CLASS_OPENING
 
@@ -379,3 +426,55 @@ class OpeningBinarySensor(SwitchingSensor):
         self._ext_state = self._newstate
         self._state = not bool(self._newstate) if self._ext_state < 2 else bool(self._newstate)
         self._device_state_attributes["ext_state"] = self._ext_state
+
+
+class MoistureBinarySensor(SwitchingSensor):
+    """Representation of a Sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "moisture"
+        self._name = "ble moisture {}".format(self._device_name)
+        self._unique_id = "mo_" + self._device_name
+        self._device_class = DEVICE_CLASS_MOISTURE
+
+
+class MotionBinarySensor(SwitchingSensor):
+    """Representation of a Sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "motion"
+        self._name = "ble motion {}".format(self._device_name)
+        self._unique_id = "mn_" + self._device_name
+        self._device_class = DEVICE_CLASS_MOTION
+
+    def reset_state(self, event=None):
+        """Reset state of the sensor."""
+        self._now = dt_util.now()
+        # check if the latest update of the timer is longer than the set timer value
+        if self._now - self._start_timer >= timedelta(seconds=self._reset_timer):
+            self._state = False
+            self.schedule_update_ha_state(False)
+
+    async def async_update(self):
+        """Update sensor state and attribute."""
+
+        # check if the reset timer is enabled
+        if self._reset_timer > 0:
+            try:
+                # if there is a last motion attribute, check the timer
+                self._now = dt_util.now()
+                self._start_timer = self._device_state_attributes["last motion"]
+
+                if self._now - self._start_timer >= timedelta(seconds=self._reset_timer):
+                    self._state = False
+                else:
+                    self._state = True
+                    async_call_later(self.hass, self._reset_timer, self.reset_state)
+            except KeyError:
+                self._state = self._newstate
+        else:
+            self._state = self._newstate

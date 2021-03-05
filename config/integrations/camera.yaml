@@ -1,0 +1,4 @@
+---
+# The camera integration allows you to use IP cameras with Home Assistant.
+#
+camera: !include_dir_list ../entities/cameras

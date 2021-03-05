@@ -1,0 +1,11 @@
+---
+# The Air quality sensor of the sleeping room
+#
+name: Schlafzimmer
+sources:
+  temperature: sensor.mi_temperature_schlafzimmer
+  humidity: sensor.mi_humidity_schlafzimmer
+  co2: sensor.schreibtischlampe_eco2
+  tvoc: sensor.schreibtischlampe_tvoc
+sensors:
+  - iaq_level
