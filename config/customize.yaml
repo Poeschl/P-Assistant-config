@@ -1,0 +1,8 @@
+binary_sensor.home_assistant_switch_firmware_update:
+  url: http://home-assistant-switch.fritz.box/
+binary_sensor.p_cube_switch_firmware_update:
+  url: http://p-cube-switch.fritz.box
+binary_sensor.shelly1pm_b1da7e_firmware_update:
+  url: http://multimedia-steckdose.fritz.box
+binary_sensor.shellyplug_s_7a2ce6_firmware_update:
+  url: http://monitor-light-plug.fritz.box

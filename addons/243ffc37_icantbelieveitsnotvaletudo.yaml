@@ -1,7 +1,7 @@
 mapColors:
   floor: '#0076ff'
-  obstacle: '#cccccc'
-  path: '#ffffff'
+  obstacle: '#444444'
+  path: '#d32f2f'
 mapSettings:
   drawCharger: true
   drawPath: true

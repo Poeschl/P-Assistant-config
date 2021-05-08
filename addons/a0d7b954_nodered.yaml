@@ -1,6 +1,5 @@
 certfile: p-assist.cert.pem
 credential_secret: '!secret node_red_credential_secret'
-dark_mode: true
 http_node:
   password: ''
   username: ''
@@ -20,3 +19,4 @@ npm_packages:
 require_ssl: true
 ssl: true
 system_packages: []
+theme: midnight-red

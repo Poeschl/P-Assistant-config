@@ -1,1 +1,7 @@
-items: []
+items:
+- id: p_cube
+  mode: storage
+  require_admin: false
+  show_in_sidebar: false
+  title: P-Cube
+  url_path: p-cube

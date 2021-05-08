@@ -1,8 +1,0 @@
----
-# The circadian switch for the bed leds
-#
-platform: circadian_lighting
-name: Circadian Lighting Bett
-min_brightness: 30
-lights_rgb:
-  - light.bettbeleuchtung_leds

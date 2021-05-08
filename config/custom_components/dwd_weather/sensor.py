@@ -1,6 +1,7 @@
 """Sensor for Deutscher Wetterdienst weather service."""
 
 import logging
+import re
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -10,9 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_KILOMETERS,
     PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    STATE_OK,
-    STATE_UNAVAILABLE,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_SECONDS,
 )
@@ -42,6 +41,13 @@ ATTR_SITE_NAME = "site_name"
 #   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default
 SENSOR_TYPES = {
     "weather": ["Weather", None, None, "mdi:weather-partly-cloudy", False],
+    "weather_report": [
+        "Weather Report",
+        None,
+        None,
+        "mdi:weather-partly-cloudy",
+        False,
+    ],
     "temperature": [
         "Temperature",
         DEVICE_CLASS_TEMPERATURE,
@@ -60,7 +66,7 @@ SENSOR_TYPES = {
     "wind_speed": [
         "Wind Speed",
         None,
-        SPEED_METERS_PER_SECOND,
+        SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         False,
     ],
@@ -68,7 +74,7 @@ SENSOR_TYPES = {
     "wind_gusts": [
         "Wind Gusts",
         None,
-        SPEED_METERS_PER_SECOND,
+        SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         False,
     ],
@@ -139,7 +145,7 @@ class DWDWeatherForecastSensor(Entity):
 
         self._type = sensor_type
         self._name = f"{SENSOR_TYPES[self._type][0]} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{self._connector.dwd_weather.get_station_name(False).lower()}"
+        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{hass_data[DWDWEATHER_NAME]}"
 
     @property
     def name(self):
@@ -154,9 +160,45 @@ class DWDWeatherForecastSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._connector.latest_update:
-            return STATE_OK
-        return STATE_UNAVAILABLE
+        result = ""
+        if self._type == "weather":
+            result = self._connector.get_condition()
+        elif self._type == "weather_report":
+            result = re.search(
+                "\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
+                self._connector.get_weather_report(),
+            ).group()
+        elif self._type == "temperature":
+            result = self._connector.get_temperature()
+        elif self._type == "dewpoint":
+            result = self._connector.get_dewpoint()
+        elif self._type == "pressure":
+            result = self._connector.get_pressure()
+        elif self._type == "wind_speed":
+            result = self._connector.get_wind_speed()
+        elif self._type == "wind_direction":
+            result = self._connector.get_wind_direction()
+        elif self._type == "wind_gusts":
+            result = self._connector.get_wind_gusts()
+        elif self._type == "precipitation":
+            result = self._connector.get_precipitation()
+        elif self._type == "precipitation_probability":
+            result = self._connector.get_precipitation_probability()
+        elif self._type == "precipitation_duration":
+            result = self._connector.get_precipitation_duration()
+        elif self._type == "cloud_coverage":
+            result = self._connector.get_cloud_coverage()
+        elif self._type == "visibility":
+            result = self._connector.get_visibility()
+        elif self._type == "sun_duration":
+            result = self._connector.get_sun_duration()
+        elif self._type == "sun_irradiance":
+            result = self._connector.get_sun_irradiance()
+        elif self._type == "fog_probability":
+            result = self._connector.get_fog_probability()
+        elif self._type == "humidity":
+            result = self._connector.get_humidity()
+        return result
 
     @property
     def unit_of_measurement(self):
@@ -189,6 +231,8 @@ class DWDWeatherForecastSensor(Entity):
 
         if self._type == "weather":
             attributes["data"] = self._connector.get_condition_hourly()
+        elif self._type == "weather_report":
+            attributes["data"] = self._connector.get_weather_report()
         elif self._type == "temperature":
             attributes["data"] = self._connector.get_temperature_hourly()
         elif self._type == "dewpoint":

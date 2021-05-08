@@ -10,7 +10,6 @@ advanced:
   network_key: []
   network_key_string: '!secret zigbee_key_string'
   pan_id: 1111
-  report: true
 blocklist: []
 data_path: /config/zigbee2mqtt
 device_options: {}

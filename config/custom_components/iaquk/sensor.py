@@ -1,13 +1,27 @@
 """Sensor platform to calculate IAQ UK index."""
 
 import logging
-from typing import Optional, Union, Dict, Any
+from typing import Any, Dict, Optional, Union
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import CONF_SENSORS, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SENSORS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LEVEL_INADEQUATE, LEVEL_POOR, LEVEL_GOOD, LEVEL_EXCELLENT
+from .const import (
+    DOMAIN,
+    ICON_DEFAULT,
+    ICON_EXCELLENT,
+    ICON_FAIR,
+    ICON_GOOD,
+    ICON_INADEQUATE,
+    ICON_POOR,
+    LEVEL_EXCELLENT,
+    LEVEL_GOOD,
+    LEVEL_INADEQUATE,
+    LEVEL_POOR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +35,9 @@ SENSORS = {
 
 
 # pylint: disable=w0613
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up a sensors to calculate IAQ UK index."""
     if discovery_info is None:
         return
@@ -40,7 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class IaqukSensor(Entity):
     """IAQ UK sensor."""
 
-    def __init__(self, hass, controller, sensor_type: str):
+    def __init__(self, hass: HomeAssistant, controller, sensor_type: str):
         """Initialize sensor."""
         self._hass = hass
         self._controller = controller
@@ -69,18 +85,18 @@ class IaqukSensor(Entity):
     @property
     def icon(self) -> Optional[str]:
         """Icon to use in the frontend, if any."""
-        icon = "mdi:air-filter"
+        icon = ICON_DEFAULT
         if self._sensor_type == SENSOR_LEVEL:
-            icon = "mdi:emoticon-neutral"
+            icon = ICON_FAIR
             if self.state == LEVEL_EXCELLENT:
-                icon = "mdi:emoticon-excited"
+                icon = ICON_EXCELLENT
             elif self.state == LEVEL_GOOD:
-                icon = "mdi:emoticon-happy"
+                icon = ICON_GOOD
             # Skip for LEVEL_FAIR -- default state
             elif self.state == LEVEL_POOR:
-                icon = "mdi:emoticon-sad"
+                icon = ICON_POOR
             elif self.state == LEVEL_INADEQUATE:
-                icon = "mdi:emoticon-dead"
+                icon = ICON_INADEQUATE
 
         return icon
 
@@ -92,6 +108,11 @@ class IaqukSensor(Entity):
             if self._sensor_type == SENSOR_INDEX
             else self._controller.iaq_level
         )
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return f"{DOMAIN}__level" if self._sensor_type == SENSOR_LEVEL else None
 
     @property
     def unit_of_measurement(self) -> Optional[str]:

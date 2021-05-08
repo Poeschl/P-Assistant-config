@@ -3,8 +3,8 @@
 #
 name: Schlafzimmer
 sources:
-  temperature: sensor.mi_temperature_schlafzimmer
-  humidity: sensor.mi_humidity_schlafzimmer
+  temperature: sensor.ble_temperature_schlafzimmer
+  humidity: sensor.ble_humidity_schlafzimmer
   co2: sensor.schreibtischlampe_eco2
   tvoc: sensor.schreibtischlampe_tvoc
 sensors:

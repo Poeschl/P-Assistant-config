@@ -1,0 +1,11 @@
+config:
+  views:
+  - badges: []
+    cards:
+    - entities:
+      - sensor.p_cube_switch_power
+      - switch.p_cube_switch
+      - sensor.p_cube_switch_rssi
+      type: entities
+    path: main
+    title: Main

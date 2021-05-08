@@ -90,3 +90,4 @@ slate_red:
   st-mode-background: 'var(--primary-background-color)'
   # fix white on white markdown code sections (eg. the addons infos)
   markdown-code-background-color: 'var(--secondary-background-color)'
+  c-activeLine-background-color: red

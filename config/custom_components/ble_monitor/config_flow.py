@@ -24,7 +24,6 @@ from .const import (
     DEFAULT_LOG_SPIKES,
     DEFAULT_USE_MEDIAN,
     DEFAULT_ACTIVE_SCAN,
-    DEFAULT_HCI_INTERFACE,
     DEFAULT_BATT_ENTITIES,
     DEFAULT_REPORT_UNKNOWN,
     DEFAULT_DISCOVERY,
@@ -39,6 +38,7 @@ from .const import (
     CONF_USE_MEDIAN,
     CONF_ACTIVE_SCAN,
     CONF_HCI_INTERFACE,
+    CONF_BT_INTERFACE,
     CONF_BATT_ENTITIES,
     CONF_REPORT_UNKNOWN,
     CONF_RESTORE_STATE,
@@ -52,6 +52,14 @@ from .const import (
     MAC_REGEX,
     AES128KEY_REGEX,
 )
+
+from . import (
+    BT_MAC_INTERFACES,
+    DEFAULT_BT_INTERFACE,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
 
 OPTION_LIST_DEVICE = "--Devices--"
 OPTION_ADD_DEVICE = "Add device..."
@@ -85,12 +93,11 @@ DEVICE_SCHEMA = vol.Schema(
 DOMAIN_SCHEMA = vol.Schema(
     {
         vol.Optional(
-            CONF_HCI_INTERFACE, default=[DEFAULT_HCI_INTERFACE]
-        ): cv.multi_select({"0": "0", "1": "1", "2": "2"}),
+            CONF_BT_INTERFACE, default=[DEFAULT_BT_INTERFACE]
+        ): cv.multi_select(BT_MAC_INTERFACES),
         vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
         vol.Optional(CONF_ACTIVE_SCAN, default=DEFAULT_ACTIVE_SCAN): cv.boolean,
-        vol.Optional(CONF_REPORT_UNKNOWN, default=DEFAULT_REPORT_UNKNOWN): cv.boolean,
         vol.Optional(CONF_BATT_ENTITIES, default=DEFAULT_BATT_ENTITIES): cv.boolean,
         vol.Optional(CONF_DECIMALS, default=DEFAULT_DECIMALS): cv.positive_int,
         vol.Optional(CONF_LOG_SPIKES, default=DEFAULT_LOG_SPIKES): cv.boolean,
@@ -99,10 +106,12 @@ DOMAIN_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICES, default=[]): vol.All(
             cv.ensure_list, [DEVICE_SCHEMA]
         ),
+        vol.Optional(
+            CONF_REPORT_UNKNOWN, default=DEFAULT_REPORT_UNKNOWN): vol.In(
+            ["Xiaomi", "Qingping", "ATC", "Mi Scale", "Kegtron", "Other", False]
+        ),
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class BLEMonitorFlow(data_entry_flow.FlowHandler):
@@ -289,7 +298,7 @@ class BLEMonitorFlow(data_entry_flow.FlowHandler):
 class BLEMonitorConfigFlow(BLEMonitorFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """BLEMonitor config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
@@ -343,11 +352,11 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_HCI_INTERFACE,
+                    CONF_BT_INTERFACE,
                     default=self.config_entry.options.get(
-                        CONF_HCI_INTERFACE, DEFAULT_HCI_INTERFACE
+                        CONF_BT_INTERFACE, DEFAULT_BT_INTERFACE
                     ),
-                ): cv.multi_select({"0": "0", "1": "1", "2": "2"}),
+                ): cv.multi_select(BT_MAC_INTERFACES),
                 vol.Optional(
                     CONF_PERIOD,
                     default=self.config_entry.options.get(
@@ -364,12 +373,6 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, config_entries.OptionsFlow):
                     CONF_ACTIVE_SCAN,
                     default=self.config_entry.options.get(
                         CONF_ACTIVE_SCAN, DEFAULT_ACTIVE_SCAN
-                    ),
-                ): cv.boolean,
-                vol.Optional(
-                    CONF_REPORT_UNKNOWN,
-                    default=self.config_entry.options.get(
-                        CONF_REPORT_UNKNOWN, DEFAULT_REPORT_UNKNOWN
                     ),
                 ): cv.boolean,
                 vol.Optional(
@@ -402,6 +405,12 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, config_entries.OptionsFlow):
                         CONF_RESTORE_STATE, DEFAULT_RESTORE_STATE
                     ),
                 ): cv.boolean,
+                vol.Optional(
+                    CONF_REPORT_UNKNOWN,
+                    default=self.config_entry.options.get(
+                        CONF_REPORT_UNKNOWN, DEFAULT_REPORT_UNKNOWN
+                    ),
+                ): vol.In(["Xiaomi", "Qingping", "ATC", "Mi Scale", "Kegtron", "Other", False]),
             }
         )
         return self._show_user_form("init", options_schema, errors or {})

@@ -22,12 +22,7 @@ config:
       - entity: light.sideboard_leds
         tap_action:
           action: toggle
-      - entity: light.schreibtischlampe_schreibtisch
-        name: Tisch Schreibtisch
-        tap_action:
-          action: toggle
-      - entity: light.schreibtischlampe_gesicht
-        name: Gesicht Schreibtisch
+      - entity: switch.shellyplug_s_7a2ce6_relay_0
         tap_action:
           action: toggle
       show_icon: true
@@ -151,11 +146,13 @@ config:
       type: entities
     - card:
         show_header_toggle: false
-        title: Circadian Lighting
+        title: 'Adaptive Lighting '
         type: entities
       filter:
         include:
-        - entity_id: switch.circadian_lighting*
+        - entity_id: switch.adaptive_lighting*
+      sort:
+        method: none
       type: custom:auto-entities
     icon: mdi:lightbulb-multiple
     path: lichter
@@ -212,7 +209,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mi_temperature_wohnzimmer
+          - entity: sensor.ble_temperature_wohnzimmer
             index: 0
           hour24: true
           hours_to_show: 24
@@ -232,7 +229,7 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.mi_humidity_wohnzimmer
+          - entity: sensor.ble_humidity_wohnzimmer
             index: 0
           hour24: true
           hours_to_show: 24
@@ -275,7 +272,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mi_temperature_schlafzimmer
+          - entity: sensor.ble_temperature_schlafzimmer
             index: 0
           hour24: true
           hours_to_show: 24
@@ -295,7 +292,7 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.mi_humidity_schlafzimmer
+          - entity: sensor.ble_humidity_schlafzimmer
             index: 0
           hour24: true
           hours_to_show: 24
@@ -345,7 +342,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mi_temperature_bad
+          - entity: sensor.ble_temperature_bad
             index: 0
           hour24: true
           hours_to_show: 24
@@ -365,7 +362,7 @@ config:
           - color: '#d32f2f'
             value: 25
           entities:
-          - entity: sensor.mi_humidity_bad
+          - entity: sensor.ble_humidity_bad
             index: 0
           hour24: true
           hours_to_show: 24
@@ -388,7 +385,7 @@ config:
           - color: '#0089d9'
             value: 13
           entities:
-          - entity: sensor.mi_temperature_balkon
+          - entity: sensor.ble_temperature_balkon
             index: 0
           hour24: true
           hours_to_show: 24
@@ -405,7 +402,7 @@ config:
           - color: '#ffbf00'
             value: 25
           entities:
-          - entity: sensor.mi_humidity_balkon
+          - entity: sensor.ble_humidity_balkon
             index: 0
           hour24: true
           hours_to_show: 24
@@ -421,11 +418,21 @@ config:
     title: Klima
   - badges: []
     cards:
-    - camera_image: camera.p_dusty_rendered_map
-      entities:
-      - vacuum.p_dusty
-      title: Dusty
-      type: picture-glance
+    - cards:
+      - camera_view: live
+        entity: camera.p_dusty_rendered_map
+        show_name: false
+        show_state: false
+        type: picture-entity
+      - entities:
+        - entity: vacuum.p_dusty
+        - entity: sensor.p_dusty_main_filter
+        - entity: sensor.p_dusty_main_brush
+        - entity: sensor.p_dusty_right_side_brush
+        - entity: sensor.p_dusty_sensor
+        type: entities
+      title: P-Dusty
+      type: custom:stack-in-card
     - card:
         title: Steckdosen
         type: entities
@@ -492,11 +499,12 @@ config:
     title: Media
   - badges: []
     cards:
-    - entities:
-      - entity: sensor.fritz_netmonitor
-        name: 'Fritzbox '
-        secondary_info: last-changed
-      type: entities
+    - entity: sensor.fritz_netmonitor
+      hours_to_show: 120
+      name: Fritzbox
+      ok: online
+      status_adaptive_color: true
+      type: custom:uptime-card
     - entities:
       - entity: sensor.fritzbox_download
         index: 0
@@ -584,34 +592,152 @@ config:
       show_header_toggle: false
       title: Zertifikatablaufdatum
       type: entities
+    - entity: device_tracker.p_storage
+      hours_to_show: 120
+      name: P-Storage
+      ok: home
+      status_adaptive_color: true
+      type: custom:uptime-card
     icon: mdi:lan
     path: network
     title: Network
   - badges: []
     cards:
-    - entities:
-      - entity: person.markus
-      - entity: input_boolean.holiday_mode
-      show_header_toggle: false
-      title: Anwesenheit
-      type: entities
-    - entities:
-      - entity: person.markus
-      - entity: device_tracker.oneplus_a6003
+    - cards:
+      - entities:
+        - entity: input_boolean.holiday_mode
+        show_header_toggle: false
+        type: entities
+      - bar:
+          height: 8
+          round: 0
+          spacing: -1
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: person.markus
+        icon: mdi:home
+        ko_icon: mdi:airplane
+        name: Markus
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      - bar:
+          height: 8
+          round: 0
+          spacing: -1
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: device_tracker.oneplus_a6003
+        icon: mdi:home
+        ko_icon: mdi:airplane
         name: Handy GPS
-      - entity: device_tracker.p_android
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      - bar:
+          height: 8
+          round: 0
+          spacing: 0
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: device_tracker.p_android
+        icon: mdi:lan-connect
+        ko_icon: mdi:lan-disconnect
         name: Handy Netzwerk
-      - entity: device_tracker.p_watch
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      - bar:
+          height: 8
+          round: 0
+          spacing: 0
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: device_tracker.p_watch
+        icon: mdi:lan-connect
+        ko_icon: mdi:lan-disconnect
         name: Uhr Netzwerk
-      - entity: device_tracker.desktop_markus
-      - entity: device_tracker.laptop_markus_wifi
-      - entity: device_tracker.p_switch
-      - entity: device_tracker.work_laptop_wifi
-      - entity: device_tracker.work_laptop_lan
-      hours_to_show: 24
-      refresh_interval: 0
-      title: "Aktivit\xE4t"
-      type: history-graph
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      - bar:
+          height: 8
+          round: 0
+          spacing: 0
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: device_tracker.desktop_markus
+        icon: mdi:lan-connect
+        ko_icon: mdi:lan-disconnect
+        name: Desktop
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      - bar:
+          height: 8
+          round: 0
+          spacing: 0
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: device_tracker.laptop_markus_wifi
+        icon: mdi:lan-connect
+        ko_icon: mdi:lan-disconnect
+        name: Laptop WLAN
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      - bar:
+          height: 8
+          round: 0
+          spacing: 0
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: device_tracker.work_laptop_lan
+        icon: mdi:lan-connect
+        ko_icon: mdi:lan-disconnect
+        name: Arbeitslaptop LAN
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      - bar:
+          height: 8
+          round: 0
+          spacing: 0
+        color:
+          half: '#aaa'
+          ko: '#444'
+        entity: device_tracker.work_laptop_wifi
+        icon: mdi:lan-connect
+        ko_icon: mdi:lan-disconnect
+        name: Arbeitslaptop WLAN
+        ok: home
+        show:
+          average: false
+          footer: false
+        type: custom:uptime-card
+      title: Anwesenheit
+      type: custom:stack-in-card
     - entity: sensor.oneplus_a6003_nachster_wecker
       type: entity
     icon: mdi:home-account
@@ -710,10 +836,10 @@ config:
             name: Pending Updates
           - entity: sensor.p_dice_wifistrength
             name: Wifi strength
-          - entity: sensor.p_dice_lastboot
-            name: Last boot
           - entity: sensor.p_dice_powerstatus
             name: Power status
+          - entity: sensor.p_dice_lastboot
+            name: Last boot
           type: entities
         title: P-Dice
         type: custom:stack-in-card
@@ -721,6 +847,46 @@ config:
       - entity: sensor.p_dice_cpuusage
         state_not: unavailable
       type: conditional
+    - cards:
+      - cards:
+        - entities:
+          - sensor.p_cube_cpu_usage
+          hours_to_show: 6
+          line_width: 4
+          name: CPU
+          points_per_hour: 4
+          type: custom:mini-graph-card
+        - entities:
+          - sensor.p_cube_temperature
+          hours_to_show: 6
+          line_width: 4
+          name: Temp
+          points_per_hour: 4
+          type: custom:mini-graph-card
+        type: horizontal-stack
+      - cards:
+        - entity: sensor.p_cube_disk_use
+          name: Disk space
+          positions:
+            icon: inside
+            indicator: inside
+          type: custom:bar-card
+        - entity: sensor.p_cube_memory_use
+          name: RAM
+          positions:
+            icon: inside
+            indicator: inside
+          type: custom:bar-card
+        type: horizontal-stack
+      - entities:
+        - sensor.p_cube_swap_usage
+        - sensor.p_cube_updates
+        - sensor.p_cube_wifi_strength
+        - binary_sensor.p_cube_under_voltage
+        - sensor.p_cube_last_boot
+        type: entities
+      title: P-Cube
+      type: custom:stack-in-card
     icon: mdi:raspberry-pi
     path: raspberrys
     title: Raspberrys
@@ -759,6 +925,31 @@ config:
         type: custom:mini-graph-card
       title: Druckauftrag
       type: custom:stack-in-card
+    - entities:
+      - sensor.ble_temperature_filament
+      - sensor.ble_humidity_filament
+      show_header_toggle: false
+      title: Filament
+      type: entities
+    - cards:
+      - entities:
+        - sensor.p_cube_switch_power
+        hours_to_show: 3
+        lower_bound: 0
+        points_per_hour: 48
+        type: custom:mini-graph-card
+      - entities:
+        - binary_sensor.p_cube_switch_overpowering
+        type: entities
+      - cards:
+        - entities:
+          - entity: switch.p_cube_switch
+            name: Power Switch
+          type: entities
+        popup: confirm
+        type: custom:love-lock-card
+      title: Energie
+      type: custom:stack-in-card
     icon: mdi:printer-3d
     path: 3d-drucker
     title: 3D Drucker
@@ -778,10 +969,10 @@ config:
         - entity_id: switch*neustart
       type: custom:auto-entities
     - entities:
-      - entity: sensor.mi_battery_schlafzimmer
-      - entity: sensor.mi_battery_balkon
-      - entity: sensor.mi_battery_bad
-      - entity: sensor.mi_battery_wohnzimmer
+      - entity: sensor.ble_battery_schlafzimmer
+      - entity: sensor.ble_battery_balkon
+      - entity: sensor.ble_battery_bad
+      - entity: sensor.ble_battery_wohnzimmer
       - entity: sensor.wohnungstuer_battery
         name: "Wohnungst\xFCr Batterie"
       - entity: binary_sensor.thermostat_wohnzimmer_battery_low
@@ -808,8 +999,8 @@ config:
       points_per_hour: 0.25
       type: custom:mini-graph-card
     - entities:
-      - entity: binary_sensor.updater
-        name: Home Assistant Update available
+      - entity: binary_sensor.home_assistant_operating_system_update_available
+        name: Home Assistant OS Update available
       - entity: sensor.hacs
         name: Available HACS Updates
       - entity: binary_sensor.thermostat_wohnzimmer_update_available
@@ -817,6 +1008,7 @@ config:
       - entity: binary_sensor.shellyplug_s_7a2ce6_firmware_update
       - entity: binary_sensor.shellyplug_s_26829b_firmware_update
       - entity: binary_sensor.home_assistant_switch_firmware_update
+      - entity: binary_sensor.p_cube_switch_firmware_update
       title: Updates
       type: entities
     icon: mdi:cog
