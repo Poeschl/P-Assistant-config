@@ -4,3 +4,6 @@
 # TLS is used over a nginx reverse proxy.
 #
 http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - !secret nginx_internal_ip

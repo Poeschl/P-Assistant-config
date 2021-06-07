@@ -22,6 +22,9 @@ config:
       - entity: light.sideboard_leds
         tap_action:
           action: toggle
+      - entity: light.bettbeleuchtung_leds
+        tap_action:
+          action: toggle
       - entity: switch.shellyplug_s_7a2ce6_relay_0
         tap_action:
           action: toggle
@@ -429,7 +432,7 @@ config:
         - entity: sensor.p_dusty_main_filter
         - entity: sensor.p_dusty_main_brush
         - entity: sensor.p_dusty_right_side_brush
-        - entity: sensor.p_dusty_sensor
+        - entity: sensor.p_dusty_sensor_cleaning
         type: entities
       title: P-Dusty
       type: custom:stack-in-card
@@ -499,7 +502,9 @@ config:
     title: Media
   - badges: []
     cards:
-    - entity: sensor.fritz_netmonitor
+    - bar:
+        height: 10
+      entity: sensor.fritz_netmonitor
       hours_to_show: 120
       name: Fritzbox
       ok: online
@@ -592,9 +597,19 @@ config:
       show_header_toggle: false
       title: Zertifikatablaufdatum
       type: entities
-    - entity: device_tracker.p_storage
+    - bar:
+        height: 10
+      entity: device_tracker.p_storage
       hours_to_show: 120
       name: P-Storage
+      ok: home
+      status_adaptive_color: true
+      type: custom:uptime-card
+    - bar:
+        height: 10
+      entity: device_tracker.p_dusty
+      hours_to_show: 120
+      name: P-Dusty
       ok: home
       status_adaptive_color: true
       type: custom:uptime-card

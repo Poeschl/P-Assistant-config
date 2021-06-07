@@ -13,7 +13,7 @@ mqtt:
   broker_url: '!secret roborock_mqtt_url'
   caPath: ''
   identifier: P-Dusty
-  mapDataTopic: valetudo/P-Dusty/map_data
+  mapDataTopic: valetudo/P-Dusty/MapData/map-data
   minMillisecondsBetweenMapUpdates: 10000
   publishMapImage: true
   topicPrefix: valetudo

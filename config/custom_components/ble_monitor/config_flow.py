@@ -24,7 +24,6 @@ from .const import (
     DEFAULT_LOG_SPIKES,
     DEFAULT_USE_MEDIAN,
     DEFAULT_ACTIVE_SCAN,
-    DEFAULT_BATT_ENTITIES,
     DEFAULT_REPORT_UNKNOWN,
     DEFAULT_DISCOVERY,
     DEFAULT_RESTORE_STATE,
@@ -39,7 +38,6 @@ from .const import (
     CONF_ACTIVE_SCAN,
     CONF_HCI_INTERFACE,
     CONF_BT_INTERFACE,
-    CONF_BATT_ENTITIES,
     CONF_REPORT_UNKNOWN,
     CONF_RESTORE_STATE,
     CONF_ENCRYPTION_KEY,
@@ -50,7 +48,8 @@ from .const import (
     CONFIG_IS_FLOW,
     DOMAIN,
     MAC_REGEX,
-    AES128KEY_REGEX,
+    AES128KEY24_REGEX,
+    AES128KEY32_REGEX,
 )
 
 from . import (
@@ -98,7 +97,6 @@ DOMAIN_SCHEMA = vol.Schema(
         vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
         vol.Optional(CONF_ACTIVE_SCAN, default=DEFAULT_ACTIVE_SCAN): cv.boolean,
-        vol.Optional(CONF_BATT_ENTITIES, default=DEFAULT_BATT_ENTITIES): cv.boolean,
         vol.Optional(CONF_DECIMALS, default=DEFAULT_DECIMALS): cv.positive_int,
         vol.Optional(CONF_LOG_SPIKES, default=DEFAULT_LOG_SPIKES): cv.boolean,
         vol.Optional(CONF_USE_MEDIAN, default=DEFAULT_USE_MEDIAN): cv.boolean,
@@ -138,8 +136,9 @@ class BLEMonitorFlow(data_entry_flow.FlowHandler):
         """Key validation."""
         if not value or value == "-":
             return
-        if not self.validate_regex(value, AES128KEY_REGEX):
-            errors[CONF_ENCRYPTION_KEY] = "invalid_key"
+        if not self.validate_regex(value, AES128KEY24_REGEX):
+            if not self.validate_regex(value, AES128KEY32_REGEX):
+                errors[CONF_ENCRYPTION_KEY] = "invalid_key"
 
     def _show_main_form(self, errors=None):
         _LOGGER.error("_show_main_form: shouldn't be here")
@@ -373,12 +372,6 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, config_entries.OptionsFlow):
                     CONF_ACTIVE_SCAN,
                     default=self.config_entry.options.get(
                         CONF_ACTIVE_SCAN, DEFAULT_ACTIVE_SCAN
-                    ),
-                ): cv.boolean,
-                vol.Optional(
-                    CONF_BATT_ENTITIES,
-                    default=self.config_entry.options.get(
-                        CONF_BATT_ENTITIES, DEFAULT_BATT_ENTITIES
                     ),
                 ): cv.boolean,
                 vol.Optional(

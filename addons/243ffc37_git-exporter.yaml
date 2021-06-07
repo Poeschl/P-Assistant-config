@@ -18,7 +18,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Update to 2021.5.0
+  commit_message: Update to 2021.6.2
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

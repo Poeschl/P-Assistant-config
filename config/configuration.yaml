@@ -24,4 +24,4 @@ homeassistant:
         - !secret ip_markus_desktop
         - !secret ip_work_laptop_lan
         - !secret ip_work_laptop_wifi
-
+        - !secret ip_p_cube

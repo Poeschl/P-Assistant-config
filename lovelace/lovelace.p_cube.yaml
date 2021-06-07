@@ -3,9 +3,33 @@ config:
   - badges: []
     cards:
     - entities:
-      - sensor.p_cube_switch_power
-      - switch.p_cube_switch
-      - sensor.p_cube_switch_rssi
+      - entity: vacuum.p_dusty
+        name: Dusty schicken
+        tap_action:
+          action: call-service
+          service: mqtt.publish
+          service_data:
+            payload: '20'
+            topic: valetudo/P-Dusty/MapSegmentationCapability/clean/set
+      - entity: vacuum.p_dusty
+        name: Dusty zur Base
+        tap_action:
+          action: call-service
+          service: vacuum.return_to_base
+          service_data:
+            entity_id: vacuum.p_dusty
+      show_state: false
+      type: glance
+    - entities:
+      - entity: sensor.p_cube_switch_power
+      - entity: sensor.p_cube_switch_rssi
+      title: System
+      type: entities
+    - entities:
+      - entity: sensor.ble_temperature_filament
+      - entity: sensor.ble_humidity_filament
+      show_header_toggle: false
+      title: Filament
       type: entities
     path: main
     title: Main

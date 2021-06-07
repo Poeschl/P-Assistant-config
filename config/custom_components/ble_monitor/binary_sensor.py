@@ -30,14 +30,14 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_PERIOD,
-    CONF_BATT_ENTITIES,
     CONF_RESTORE_STATE,
     CONF_DEVICE_RESTORE_STATE,
     CONF_DEVICE_RESET_TIMER,
     DEFAULT_DEVICE_RESET_TIMER,
     KETTLES,
     MANUFACTURER_DICT,
-    MMTS_DICT,
+    MEASUREMENT_DICT,
+    BINARY_SENSOR_DICT,
     DOMAIN,
 )
 
@@ -71,7 +71,6 @@ class BLEupdaterBinary():
         self.dataqueue = blemonitor.dataqueue["binary"].async_q
         self.config = blemonitor.config
         self.period = self.config[CONF_PERIOD]
-        self.batt_entities = self.config[CONF_BATT_ENTITIES]
         self.add_entities = add_entities
         _LOGGER.debug("BLE binary sensors updater initialized")
 
@@ -79,24 +78,13 @@ class BLEupdaterBinary():
         """Entities updater loop."""
 
         async def async_add_binary_sensor(mac, sensortype, firmware):
-            sw_i, op_i, l_i, mo_i, mn_i, wr_i, b_i = MMTS_DICT[sensortype][1]
-
+            device_sensors = MEASUREMENT_DICT[sensortype][1]
             if mac not in sensors_by_mac:
                 sensors = []
-                if sw_i != 9:
-                    sensors.insert(sw_i, PowerBinarySensor(self.config, mac, sensortype, firmware))
-                if op_i != 9:
-                    sensors.insert(op_i, OpeningBinarySensor(self.config, mac, sensortype, firmware))
-                if l_i != 9:
-                    sensors.insert(l_i, LightBinarySensor(self.config, mac, sensortype, firmware))
-                if mo_i != 9:
-                    sensors.insert(mo_i, MoistureBinarySensor(self.config, mac, sensortype, firmware))
-                if mn_i != 9:
-                    sensors.insert(mn_i, MotionBinarySensor(self.config, mac, sensortype, firmware))
-                if wr_i != 9:
-                    sensors.insert(wr_i, WeightRemovedBinarySensor(self.config, mac, sensortype, firmware))
-                if b_i != 9:
-                    pass
+                for sensor in device_sensors:
+                    sensors.insert(device_sensors.index(sensor), globals()[BINARY_SENSOR_DICT[sensor]](
+                        self.config, mac, sensortype, firmware)
+                    )
                 if len(sensors) != 0:
                     sensors_by_mac[mac] = sensors
                     self.add_entities(sensors)
@@ -157,7 +145,7 @@ class BLEupdaterBinary():
                 batt_attr = None
                 sensortype = data["type"]
                 firmware = data["firmware"]
-                sw_i, op_i, l_i, mo_i, mn_i, wr_i, b_i = MMTS_DICT[sensortype][1]
+                device_sensors = MEASUREMENT_DICT[sensortype][1]
                 sensors = await async_add_binary_sensor(mac, sensortype, firmware)
 
                 if data["data"] is False:
@@ -165,7 +153,7 @@ class BLEupdaterBinary():
                     continue
 
                 # store found readings per device
-                if (b_i != 9):
+                if "battery" in MEASUREMENT_DICT[sensortype][0]:
                     if "battery" in data:
                         batt[mac] = int(data["battery"])
                         batt_attr = batt[mac]
@@ -178,49 +166,15 @@ class BLEupdaterBinary():
                             batt_attr = batt[mac]
                         except KeyError:
                             batt_attr = None
-                # schedule an immediate update of binary sensors
-                if "switch" in data and (sw_i != 9):
-                    switch = sensors[sw_i]
-                    switch.collect(data, batt_attr)
-                    if switch.pending_update is True:
-                        switch.async_schedule_update_ha_state(True)
-                    elif switch.ready_for_update is False and switch.enabled is True:
-                        hpriority.append(switch)
-                if "opening" in data and (op_i != 9):
-                    opening = sensors[op_i]
-                    opening.collect(data, batt_attr)
-                    if opening.pending_update is True:
-                        opening.async_schedule_update_ha_state(True)
-                    elif opening.ready_for_update is False and opening.enabled is True:
-                        hpriority.append(opening)
-                if "light" in data and (l_i != 9):
-                    light = sensors[l_i]
-                    light.collect(data, batt_attr)
-                    if light.pending_update is True:
-                        light.async_schedule_update_ha_state(True)
-                    elif light.ready_for_update is False and light.enabled is True:
-                        hpriority.append(light)
-                if "moisture" in data and (mo_i != 9):
-                    moisture = sensors[mo_i]
-                    moisture.collect(data, batt_attr)
-                    if moisture.pending_update is True:
-                        moisture.async_schedule_update_ha_state(True)
-                    elif moisture.ready_for_update is False and moisture.enabled is True:
-                        hpriority.append(moisture)
-                if "motion" in data and (mn_i != 9):
-                    motion = sensors[mn_i]
-                    motion.collect(data, batt_attr)
-                    if motion.pending_update is True:
-                        motion.schedule_update_ha_state(True)
-                    elif motion.ready_for_update is False and motion.enabled is True:
-                        hpriority.append(motion)
-                if "weight removed" in data and (wr_i != 9):
-                    weight_removed = sensors[wr_i]
-                    weight_removed.collect(data, batt_attr)
-                    if weight_removed.pending_update is True:
-                        weight_removed.schedule_update_ha_state(True)
-                    elif weight_removed.ready_for_update is False and weight_removed.enabled is True:
-                        hpriority.append(weight_removed)
+                # schedule an immediate update of remote binary sensors
+                for measurement in device_sensors:
+                    if measurement in data:
+                        entity = sensors[device_sensors.index(measurement)]
+                        entity.collect(data, batt_attr)
+                        if entity.pending_update is True:
+                            entity.async_schedule_update_ha_state(True)
+                        elif entity.ready_for_update is False and entity.enabled is True:
+                            hpriority.append(entity)
                 data = None
             ts_now = dt_util.now()
             if ts_now - ts_last < timedelta(seconds=self.period):
@@ -415,6 +369,28 @@ class SwitchingSensor(RestoreEntity, BinarySensorEntity):
     async def async_update(self):
         """Update sensor state and attribute."""
         self._state = self._newstate
+
+
+class RemoteSinglePressBinarySensor(SwitchingSensor):
+    """Representation of a Remote (single press) Binary Sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "remote single press"
+        self._name = "ble remote binary single press {}".format(self._device_name)
+        self._unique_id = "rb_single_press_" + self._device_name
+
+
+class RemoteLongPressBinarySensor(SwitchingSensor):
+    """Representation of a Remote (long press) Binary Sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "remote long press"
+        self._name = "ble remote binary long press {}".format(self._device_name)
+        self._unique_id = "rb_long_press_" + self._device_name
 
 
 class PowerBinarySensor(SwitchingSensor):

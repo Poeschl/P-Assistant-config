@@ -1,0 +1,8 @@
+---
+# The entities in this group are simulating precence when needed.
+#
+name: Präsenzsimulation Entities
+entities:
+  - switch.shellyplug_s_7a2ce6_relay_0
+  - light.tv_lampe
+  - light.vitrine_leds

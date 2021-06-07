@@ -1,10 +1,11 @@
 """Passive BLE monitor integration."""
+import aioblescan as aiobs
 import asyncio
 import copy
+import janus
 import json
 import logging
 from threading import Thread
-import janus
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -23,13 +24,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
 )
 
-# It was decided to temporarily include this file in the integration bundle
-# until the issue with checking the adapter's capabilities is resolved in
-# the official aioblescan repo see https://github.com/frawau/aioblescan/pull/30,
-# thanks to @vicamo
-from . import aioblescan_ext as aiobs
-from .ble_parser import ble_parser
-
+from .ble_parser import ble_parser, hci_get_mac
 from .const import (
     DEFAULT_ROUNDING,
     DEFAULT_DECIMALS,
@@ -65,7 +60,9 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     MAC_REGEX,
-    AES128KEY_REGEX,
+    AES128KEY24_REGEX,
+    AES128KEY32_REGEX,
+    MEASUREMENT_DICT,
     SERVICE_CLEANUP_ENTRIES,
 )
 
@@ -74,10 +71,10 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_YAML = {}
 UPDATE_UNLISTENER = None
 
-BT_INTERFACES = aiobs.get_bt_interface_mac([0, 1, 2, 3])
-BT_HCI_INTERFACES = list(BT_INTERFACES.keys())
-BT_MAC_INTERFACES = list(BT_INTERFACES.values())
 try:
+    BT_INTERFACES = hci_get_mac([0, 1, 2, 3])
+    BT_HCI_INTERFACES = list(BT_INTERFACES.keys())
+    BT_MAC_INTERFACES = list(BT_INTERFACES.values())
     DEFAULT_BT_INTERFACE = list(BT_INTERFACES.items())[0][1]
     DEFAULT_HCI_INTERFACE = list(BT_INTERFACES.items())[0][0]
 except IndexError:
@@ -91,7 +88,9 @@ DEVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_MAC): cv.matches_regex(MAC_REGEX),
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ENCRYPTION_KEY): cv.matches_regex(AES128KEY_REGEX),
+        vol.Optional(CONF_ENCRYPTION_KEY): vol.Any(
+            cv.matches_regex(AES128KEY24_REGEX), cv.matches_regex(AES128KEY32_REGEX)
+        ),
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         vol.Optional(
             CONF_DEVICE_DECIMALS, default=DEFAULT_DEVICE_DECIMALS
@@ -112,6 +111,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.deprecated(CONF_ROUNDING),
+            cv.deprecated(CONF_BATT_ENTITIES),
             vol.Schema(
                 {
                     vol.Optional(CONF_ROUNDING, default=DEFAULT_ROUNDING): cv.positive_int,
@@ -241,7 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         # Configuration in YAML
         for key, value in CONFIG_YAML.items():
             config[key] = value
-        _LOGGER.warning("Available Bluetooth interfaces for BLE monitor: %s", BT_MAC_INTERFACES)
+        _LOGGER.info("Available Bluetooth interfaces for BLE monitor: %s", BT_MAC_INTERFACES)
 
         if config[CONF_HCI_INTERFACE]:
             # Configuration of BT interface with hci number
@@ -430,12 +430,6 @@ class HCIdump(Thread):
     def __init__(self, config, dataqueue):
         """Initiate HCIdump thread."""
 
-        def reverse_mac(rmac):
-            """Change LE order to BE."""
-            if len(rmac) != 12:
-                return None
-            return rmac[10:12] + rmac[8:10] + rmac[6:8] + rmac[4:6] + rmac[2:4] + rmac[0:2]
-
         Thread.__init__(self)
         _LOGGER.debug("HCIdump thread: Init")
         self.dataqueue_bin = dataqueue["binary"]
@@ -444,6 +438,7 @@ class HCIdump(Thread):
         self._joining = False
         self.evt_cnt = 0
         self.lpacket_ids = {}
+        self.adv_priority = {}
         self.config = config
         self._interfaces = config[CONF_HCI_INTERFACE]
         self._active = int(config[CONF_ACTIVE_SCAN] is True)
@@ -462,7 +457,7 @@ class HCIdump(Thread):
             for device in self.config[CONF_DEVICES]:
                 if CONF_ENCRYPTION_KEY in device and device[CONF_ENCRYPTION_KEY]:
                     p_mac = bytes.fromhex(
-                        reverse_mac(device["mac"].replace(":", "")).lower()
+                        device["mac"].replace(":", "").lower()
                     )
                     p_key = bytes.fromhex(device[CONF_ENCRYPTION_KEY].lower())
                     self.aeskeys[p_mac] = p_key
@@ -480,7 +475,7 @@ class HCIdump(Thread):
         self.whitelist = list(dict.fromkeys(self.whitelist))
         _LOGGER.debug("whitelist: [%s]", ", ".join(self.whitelist).upper())
         for i, mac in enumerate(self.whitelist):
-            self.whitelist[i] = bytes.fromhex(reverse_mac(mac.replace(":", "")).lower())
+            self.whitelist[i] = bytes.fromhex(mac.replace(":", "")).lower()
         _LOGGER.debug("%s whitelist item(s) loaded.", len(self.whitelist))
 
     def process_hci_events(self, data):
@@ -488,8 +483,12 @@ class HCIdump(Thread):
         self.evt_cnt += 1
         if len(data) < 12:
             return
-        msg, binary, measuring = ble_parser(self, data)
+        msg = ble_parser(self, data)
         if msg:
+            measurements = list(msg.keys())
+            device_type = msg["type"]
+            measuring = any(x in measurements for x in MEASUREMENT_DICT[device_type][0])
+            binary = any(x in measurements for x in MEASUREMENT_DICT[device_type][1])
             if binary == measuring:
                 self.dataqueue_bin.sync_q.put_nowait(msg)
                 self.dataqueue_meas.sync_q.put_nowait(msg)
