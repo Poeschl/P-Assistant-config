@@ -28,4 +28,4 @@ items:
   url: /hacsfiles/uptime-card/uptime-card.js
 - id: 1ad2e201b77245e2aa0702cf2bd5d6cf
   type: module
-  url: /hacsfiles/kiosk-mode/kiosk-mode.js
+  url: /hacsfiles/kiosk-mode/kiosk-mode.js?hacstag=303101606171

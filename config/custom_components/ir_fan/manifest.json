@@ -1,0 +1,9 @@
+{
+  "domain": "ir-fan",
+  "version": "1.0.0",
+  "name": "IR Fan",
+  "documentation": "https://github.com/Poeschl/ir-fan",
+  "codeowners": ["@Poeschl"],
+  "requirements": [],
+  "homeassistant": "2021.3"
+}

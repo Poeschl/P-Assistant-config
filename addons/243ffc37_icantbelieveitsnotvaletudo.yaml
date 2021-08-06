@@ -1,13 +1,13 @@
 mapColors:
   floor: '#0076ff'
-  obstacle: '#444444'
-  path: '#d32f2f'
+  obstacle: '#52aeff'
+  path: '#ffffff'
 mapSettings:
   drawCharger: true
   drawPath: true
   drawRobot: true
   rotate: 0
-  scale: 2
+  scale: 4
 mqtt:
   autoconfPrefix: homeassistant
   broker_url: '!secret roborock_mqtt_url'

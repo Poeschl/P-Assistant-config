@@ -3,6 +3,7 @@ from homeassistant.components.switch import SwitchEntity
 from datetime import datetime, timezone, timedelta
 import math
 import logging
+import pytz
 from .const import (
         DOMAIN,
         SWITCH_PLATFORM,
@@ -75,8 +76,10 @@ class PresenceSimulationSwitch(SwitchEntity):
             try:
                 self.attr["next_event_datetime"] = self.attr["next_event_datetime"].astimezone(self.hass.config.time_zone).strftime("%d/%m/%Y %H:%M:%S")
             except Exception as e:
-                _LOGGER.error("Exception while trying to convert utc to local time: %s",e)
-                pass
+                try:
+                    self.attr["next_event_datetime"] = self.attr["next_event_datetime"].astimezone(pytz.timezone(self.hass.config.time_zone)).strftime("%d/%m/%Y %H:%M:%S")
+                except Exception as e:
+                    _LOGGER.warning("Exception while trying to convert utc to local time: %s",e)
         else:
             for prop in ("next_event_datetime", "next_entity_id", "next_entity_state"):
                 if prop in self.attr:
@@ -89,8 +92,10 @@ class PresenceSimulationSwitch(SwitchEntity):
             try:
                 self.attr["next_event_datetime"] = self.attr["next_event_datetime"].astimezone(self.hass.config.time_zone).strftime("%d/%m/%Y %H:%M:%S")
             except Exception as e:
-                _LOGGER.error("Exception while trying to convert utc to local time: %s",e)
-                pass
+                try:
+                    self.attr["next_event_datetime"] = self.attr["next_event_datetime"].astimezone(pytz.timezone(self.hass.config.time_zone)).strftime("%d/%m/%Y %H:%M:%S")
+                except Exception as e:
+                    _LOGGER.warning("Exception while trying to convert utc to local time: %s",e)
         else:
             for prop in ("next_event_datetime", "next_entity_id", "next_entity_state"):
                 if prop in self.attr:
@@ -127,19 +132,33 @@ class PresenceSimulationSwitch(SwitchEntity):
     async def set_start_datetime(self, start_datetime):
         self.attr["simulation_start"] = start_datetime
 
-    async def reset_start_datetime(self):
-        if "simulation_start" in self.attr:
-            del self.attr["simulation_start"]
-
     async def set_delta(self, delta):
-        _LOGGER.debug("setting delta %s", delta)
         self.attr["delta"] = delta
 
     async def set_entities(self, entities):
         self.attr["entity_id"] = entities
 
-    async def reset_entities(self):
+    async def set_restore_states(self, restore_states):
+        self.attr["restore_states"] = restore_states
+
+    async def restore_states(self):
+        if 'restore_states' in self.attr:
+            return self.attr['restore_states']
+        else:
+            return False
+
+    async def reset_start_datetime(self):
+        if "simulation_start" in self.attr:
+            del self.attr["simulation_start"]
+
+    async def reset_delta(self):
         if "delta" in self.attr:
             del self.attr["delta"]
+
+    async def reset_entities(self):
         if "entity_id" in self.attr:
             del self.attr["entity_id"]
+
+    async def reset_restore_states(self):
+        if "restore_states" in self.attr:
+            del self.attr["restore_states"]

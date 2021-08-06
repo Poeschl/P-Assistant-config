@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SMOKE,
 )
 
 try:
@@ -78,7 +79,7 @@ class BLEupdaterBinary():
         """Entities updater loop."""
 
         async def async_add_binary_sensor(mac, sensortype, firmware):
-            device_sensors = MEASUREMENT_DICT[sensortype][1]
+            device_sensors = MEASUREMENT_DICT[sensortype][2]
             if mac not in sensors_by_mac:
                 sensors = []
                 for sensor in device_sensors:
@@ -115,7 +116,10 @@ class BLEupdaterBinary():
                     mac = mac.replace(":", "")
                     sensortype = dev.model
                     firmware = dev.sw_version
-                    sensors = await async_add_binary_sensor(mac, sensortype, firmware)
+                    if sensortype and firmware:
+                        sensors = await async_add_binary_sensor(mac, sensortype, firmware)
+                    else:
+                        continue
                 else:
                     pass
         else:
@@ -145,7 +149,7 @@ class BLEupdaterBinary():
                 batt_attr = None
                 sensortype = data["type"]
                 firmware = data["firmware"]
-                device_sensors = MEASUREMENT_DICT[sensortype][1]
+                device_sensors = MEASUREMENT_DICT[sensortype][2]
                 sensors = await async_add_binary_sensor(mac, sensortype, firmware)
 
                 if data["data"] is False:
@@ -166,7 +170,7 @@ class BLEupdaterBinary():
                             batt_attr = batt[mac]
                         except KeyError:
                             batt_attr = None
-                # schedule an immediate update of remote binary sensors
+                # schedule an immediate update of binary sensors
                 for measurement in device_sensors:
                     if measurement in data:
                         entity = sensors[device_sensors.index(measurement)]
@@ -510,3 +514,15 @@ class WeightRemovedBinarySensor(SwitchingSensor):
     def icon(self):
         """Return the icon of the sensor."""
         return "mdi:weight"
+
+
+class SmokeDetectorBinarySensor(SwitchingSensor):
+    """Representation of a Smoke Detector Binary Sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "smoke detector"
+        self._name = "ble smoke detector {}".format(self._device_name)
+        self._unique_id = "sd_" + self._device_name
+        self._device_class = DEVICE_CLASS_SMOKE

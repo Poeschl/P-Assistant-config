@@ -6,7 +6,7 @@ esphome:
 
 <<: !include common.yaml
 
-<<: !include includes/mqtt.yaml
+<<: !include mqtt.yaml
 
 switch:
   - platform: restart

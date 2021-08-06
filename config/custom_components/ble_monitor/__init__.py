@@ -24,9 +24,8 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
 )
 
-from .ble_parser import ble_parser, hci_get_mac
+from .ble_parser import BleParser
 from .const import (
-    DEFAULT_ROUNDING,
     DEFAULT_DECIMALS,
     DEFAULT_PERIOD,
     DEFAULT_LOG_SPIKES,
@@ -40,7 +39,9 @@ from .const import (
     DEFAULT_DEVICE_USE_MEDIAN,
     DEFAULT_DEVICE_RESTORE_STATE,
     DEFAULT_DEVICE_RESET_TIMER,
-    CONF_ROUNDING,
+    DEFAULT_DEVICE_TRACK,
+    DEFAULT_DEVICE_TRACKER_SCAN_INTERVAL,
+    DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
     CONF_DECIMALS,
     CONF_PERIOD,
     CONF_LOG_SPIKES,
@@ -56,7 +57,10 @@ from .const import (
     CONF_DEVICE_USE_MEDIAN,
     CONF_DEVICE_RESTORE_STATE,
     CONF_DEVICE_RESET_TIMER,
+    CONF_DEVICE_TRACK,
     CONFIG_IS_FLOW,
+    CONF_DEVICE_TRACKER_SCAN_INTERVAL,
+    CONF_DEVICE_TRACKER_CONSIDER_HOME,
     DOMAIN,
     PLATFORMS,
     MAC_REGEX,
@@ -66,23 +70,18 @@ from .const import (
     SERVICE_CLEANUP_ENTRIES,
 )
 
+from .bt_helpers import (
+    BT_INTERFACES,
+    BT_HCI_INTERFACES,
+    BT_MAC_INTERFACES,
+    DEFAULT_BT_INTERFACE,
+    DEFAULT_HCI_INTERFACE,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_YAML = {}
 UPDATE_UNLISTENER = None
-
-try:
-    BT_INTERFACES = hci_get_mac([0, 1, 2, 3])
-    BT_HCI_INTERFACES = list(BT_INTERFACES.keys())
-    BT_MAC_INTERFACES = list(BT_INTERFACES.values())
-    DEFAULT_BT_INTERFACE = list(BT_INTERFACES.items())[0][1]
-    DEFAULT_HCI_INTERFACE = list(BT_INTERFACES.items())[0][0]
-except IndexError:
-    DEFAULT_BT_INTERFACE = '00:00:00:00:00:00'
-    DEFAULT_HCI_INTERFACE = 0
-    BT_HCI_INTERFACES = [0]
-    BT_MAC_INTERFACES = ['00:00:00:00:00:00']
-    _LOGGER.warning("No Bluetooth interface found. Make sure Bluetooth is installed on your system")
 
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -104,17 +103,24 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_DEVICE_RESET_TIMER, default=DEFAULT_DEVICE_RESET_TIMER
         ): cv.positive_int,
+        vol.Optional(
+            CONF_DEVICE_TRACK, default=DEFAULT_DEVICE_TRACK
+        ): cv.boolean,
+        vol.Optional(
+            CONF_DEVICE_TRACKER_SCAN_INTERVAL, default=DEFAULT_DEVICE_TRACKER_SCAN_INTERVAL
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_DEVICE_TRACKER_CONSIDER_HOME, default=DEFAULT_DEVICE_TRACKER_CONSIDER_HOME
+        ): cv.positive_int,
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_ROUNDING),
             cv.deprecated(CONF_BATT_ENTITIES),
             vol.Schema(
                 {
-                    vol.Optional(CONF_ROUNDING, default=DEFAULT_ROUNDING): cv.positive_int,
                     vol.Optional(CONF_DECIMALS, default=DEFAULT_DECIMALS): cv.positive_int,
                     vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
                     vol.Optional(CONF_LOG_SPIKES, default=DEFAULT_LOG_SPIKES): cv.boolean,
@@ -137,7 +143,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(
                         CONF_REPORT_UNKNOWN, default=DEFAULT_REPORT_UNKNOWN
                     ): vol.In(
-                        ["Xiaomi", "Qingping", "ATC", "Mi Scale", "Kegtron", "Other", False]
+                        ["ATC", "Brifit", "Govee", "iNode", "Kegtron", "Mi Scale", "Qingping", "Ruuvitag", "Teltonika", "Thermoplus", "Xiaomi", "Other", False]
                     ),
                 }
             )
@@ -380,6 +386,7 @@ class BLEmonitor:
         self.dataqueue = {
             "binary": janus.Queue(),
             "measuring": janus.Queue(),
+            "tracker": janus.Queue(),
         }
         self.config = config
         self.dumpthread = None
@@ -402,6 +409,7 @@ class BLEmonitor:
         """Stop HCIdump thread(s)."""
         self.dataqueue["binary"].sync_q.put_nowait(None)
         self.dataqueue["measuring"].sync_q.put_nowait(None)
+        self.dataqueue["tracker"].sync_q.put_nowait(None)
         result = True
         if self.dumpthread is None:
             _LOGGER.debug("BLE monitor stopped")
@@ -434,17 +442,18 @@ class HCIdump(Thread):
         _LOGGER.debug("HCIdump thread: Init")
         self.dataqueue_bin = dataqueue["binary"]
         self.dataqueue_meas = dataqueue["measuring"]
+        self.dataqueue_tracker = dataqueue["tracker"]
         self._event_loop = None
         self._joining = False
         self.evt_cnt = 0
-        self.lpacket_ids = {}
-        self.adv_priority = {}
         self.config = config
         self._interfaces = config[CONF_HCI_INTERFACE]
         self._active = int(config[CONF_ACTIVE_SCAN] is True)
         self.discovery = True
+        self.filter_duplicates = True
         self.aeskeys = {}
-        self.whitelist = []
+        self.sensor_whitelist = []
+        self.tracker_whitelist = []
         self.report_unknown = False
         if self.config[CONF_REPORT_UNKNOWN]:
             self.report_unknown = self.config[CONF_REPORT_UNKNOWN]
@@ -465,38 +474,65 @@ class HCIdump(Thread):
                     continue
         _LOGGER.debug("%s encryptors mac:key pairs loaded.", len(self.aeskeys))
 
+        # prepare sensor whitelist to speedup parser
         if isinstance(self.config[CONF_DISCOVERY], bool) and self.config[CONF_DISCOVERY] is False:
             self.discovery = False
             if self.config[CONF_DEVICES]:
                 for device in self.config[CONF_DEVICES]:
-                    self.whitelist.append(device["mac"])
+                    self.sensor_whitelist.append(device["mac"])
 
-        # remove duplicates from whitelist
-        self.whitelist = list(dict.fromkeys(self.whitelist))
-        _LOGGER.debug("whitelist: [%s]", ", ".join(self.whitelist).upper())
-        for i, mac in enumerate(self.whitelist):
-            self.whitelist[i] = bytes.fromhex(mac.replace(":", "")).lower()
-        _LOGGER.debug("%s whitelist item(s) loaded.", len(self.whitelist))
+        # remove duplicates from sensor whitelist
+        self.sensor_whitelist = list(dict.fromkeys(self.sensor_whitelist))
+        _LOGGER.debug("sensor whitelist: [%s]", ", ".join(self.sensor_whitelist).upper())
+        for i, mac in enumerate(self.sensor_whitelist):
+            self.sensor_whitelist[i] = bytes.fromhex(mac.replace(":", "")).lower()
+        _LOGGER.debug("%s sensor whitelist item(s) loaded.", len(self.sensor_whitelist))
+
+        # prepare device tracker list to speedup parser
+        if self.config[CONF_DEVICES]:
+            for device in self.config[CONF_DEVICES]:
+                if CONF_DEVICE_TRACK in device and device[CONF_DEVICE_TRACK]:
+                    track_mac = bytes.fromhex(
+                        device["mac"].replace(":", "")
+                    )
+                    self.tracker_whitelist.append(track_mac.lower())
+                else:
+                    continue
+        _LOGGER.debug("%s device tracker(s) being monitored.", len(self.tracker_whitelist))
+
+        # prepare the ble_parser
+        self.ble_parser = BleParser(
+            report_unknown=self.report_unknown,
+            discovery=self.discovery,
+            filter_duplicates=self.filter_duplicates,
+            sensor_whitelist=self.sensor_whitelist,
+            tracker_whitelist=self.tracker_whitelist,
+            aeskeys=self.aeskeys
+        )
 
     def process_hci_events(self, data):
         """Parse HCI events."""
         self.evt_cnt += 1
         if len(data) < 12:
             return
-        msg = ble_parser(self, data)
-        if msg:
-            measurements = list(msg.keys())
-            device_type = msg["type"]
-            measuring = any(x in measurements for x in MEASUREMENT_DICT[device_type][0])
-            binary = any(x in measurements for x in MEASUREMENT_DICT[device_type][1])
+        sensor_msg, tracker_msg = self.ble_parser.parse_data(data)
+        if sensor_msg:
+            measurements = list(sensor_msg.keys())
+            device_type = sensor_msg["type"]
+            sensor_list = MEASUREMENT_DICT[device_type][0] + MEASUREMENT_DICT[device_type][1]
+            binary_list = MEASUREMENT_DICT[device_type][2] + ["battery"]
+            measuring = any(x in measurements for x in sensor_list)
+            binary = any(x in measurements for x in binary_list)
             if binary == measuring:
-                self.dataqueue_bin.sync_q.put_nowait(msg)
-                self.dataqueue_meas.sync_q.put_nowait(msg)
+                self.dataqueue_bin.sync_q.put_nowait(sensor_msg)
+                self.dataqueue_meas.sync_q.put_nowait(sensor_msg)
             else:
                 if binary is True:
-                    self.dataqueue_bin.sync_q.put_nowait(msg)
+                    self.dataqueue_bin.sync_q.put_nowait(sensor_msg)
                 if measuring is True:
-                    self.dataqueue_meas.sync_q.put_nowait(msg)
+                    self.dataqueue_meas.sync_q.put_nowait(sensor_msg)
+        if tracker_msg:
+            self.dataqueue_tracker.sync_q.put_nowait(tracker_msg)
 
     def run(self):
         """Run HCIdump thread."""

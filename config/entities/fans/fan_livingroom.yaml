@@ -1,0 +1,10 @@
+---
+# The Livingroom fan with custom ir integration
+#
+#
+platform: ir-fan
+remote_entity: remote.ir_livingroom_remote
+device_name: livingroom_fan
+power_command_name: power
+speed_command_name: speed
+oscillate_command_name: oscillate

@@ -136,8 +136,6 @@ config:
         secondary_info: brightness
       - entity: light.bettbeleuchtung_leds
         secondary_info: brightness
-      - entity: light.schreibtischlampe_schreibtisch
-      - entity: light.schreibtischlampe_gesicht
       show_header_toggle: false
       title: RGB Lampen
       type: entities
@@ -461,17 +459,9 @@ config:
     title: Devices
   - badges: []
     cards:
-    - card:
-        title: Twitch
-        type: glance
-      filter:
-        include:
-        - attributes:
-            icon: mdi:twitch
-      sort: name
-      type: custom:auto-entities
     - artwork: cover
       entity: media_player.fernseher_wohnzimmer
+      icon: mdi:television
       shortcuts:
         buttons:
         - icon: mdi:youtube
@@ -493,29 +483,55 @@ config:
       type: custom:mini-media-player
     - artwork: cover
       entity: media_player.p_radio
+      group: false
+      icon: mdi:radio
+      source: full
       type: custom:mini-media-player
     - artwork: cover
       entity: media_player.chromecast_radio
+      type: custom:mini-media-player
+    - artwork: cover
+      entity: media_player.youtube_music
+      hide:
+        icon_state: false
+        shuffle: false
+      icon: mdi:youtube
+      shortcuts:
+        buttons:
+        - id: LM
+          name: Was ich mag
+          type: channel
+        - id: PLP_Ucs-zBz6LqyCggpJ2CJb8EGOoLhqxY
+          name: Tomorrowland
+          type: playlist
+        columns: 3
       type: custom:mini-media-player
     icon: mdi:play-circle
     path: media
     title: Media
   - badges: []
     cards:
-    - bar:
-        height: 10
-      entity: sensor.fritz_netmonitor
-      hours_to_show: 120
-      name: Fritzbox
-      ok: online
-      status_adaptive_color: true
-      type: custom:uptime-card
+    - cards:
+      - bar:
+          height: 10
+        entity: binary_sensor.fritz_box_7530_connectivity
+        hours_to_show: 120
+        name: Internetverbinung
+        ok: 'on'
+        status_adaptive_color: true
+        type: custom:uptime-card
+      - entities:
+        - sensor.fritz_box_7530_device_uptime
+        show_header_toggle: false
+        type: entities
+      title: Fritzbox
+      type: custom:stack-in-card
     - entities:
-      - entity: sensor.fritzbox_download
+      - entity: sensor.fritz_box_7530_kb_s_received
         index: 0
         name: Download
         show_fill: false
-      - entity: sensor.fritzbox_upload
+      - entity: sensor.fritz_box_7530_kb_s_sent
         index: 1
         name: Upload
         show_fill: false
@@ -611,6 +627,15 @@ config:
       hours_to_show: 120
       name: P-Dusty
       ok: home
+      status_adaptive_color: true
+      type: custom:uptime-card
+    - bar:
+        height: 10
+      entity: remote.ir_livingroom_remote
+      hours_to_show: 120
+      ko: unavailable
+      name: RM Mini
+      ok: 'on'
       status_adaptive_color: true
       type: custom:uptime-card
     icon: mdi:lan
