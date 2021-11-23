@@ -3,6 +3,7 @@ import asyncio
 from enum import Enum
 from functools import partial
 import logging
+from typing import Optional
 
 from miio import (  # pylint: disable=import-error
     AirDogX3,
@@ -93,6 +94,10 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +125,7 @@ MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
 MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
+MODEL_AIRPURIFIER_ZA1 = "zhimi.airpurifier.za1"
 MODEL_AIRPURIFIER_AIRDOG_X3 = "airdog.airpurifier.x3"
 MODEL_AIRPURIFIER_AIRDOG_X5 = "airdog.airpurifier.x5"
 MODEL_AIRPURIFIER_AIRDOG_X7SM = "airdog.airpurifier.x7sm"
@@ -131,6 +137,7 @@ MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
 MODEL_AIRHUMIDIFIER_MJJSQ = "deerma.humidifier.mjjsq"
 MODEL_AIRHUMIDIFIER_JSQ = "deerma.humidifier.jsq"
 MODEL_AIRHUMIDIFIER_JSQ1 = "deerma.humidifier.jsq1"
+MODEL_AIRHUMIDIFIER_JSQ5 = "deerma.humidifier.jsq5"
 MODEL_AIRHUMIDIFIER_JSQ001 = "shuii.humidifier.jsq001"
 
 MODEL_AIRFRESH_A1 = "dmaker.airfresh.a1"
@@ -175,6 +182,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 MODEL_AIRPURIFIER_2H,
                 MODEL_AIRPURIFIER_3,
                 MODEL_AIRPURIFIER_3H,
+                MODEL_AIRPURIFIER_ZA1,
                 MODEL_AIRPURIFIER_AIRDOG_X3,
                 MODEL_AIRPURIFIER_AIRDOG_X5,
                 MODEL_AIRPURIFIER_AIRDOG_X7SM,
@@ -185,6 +193,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 MODEL_AIRHUMIDIFIER_MJJSQ,
                 MODEL_AIRHUMIDIFIER_JSQ,
                 MODEL_AIRHUMIDIFIER_JSQ1,
+                MODEL_AIRHUMIDIFIER_JSQ5,
                 MODEL_AIRHUMIDIFIER_JSQ001,
                 MODEL_AIRFRESH_A1,
                 MODEL_AIRFRESH_VA2,
@@ -263,7 +272,7 @@ ATTR_FAULT = "fault"
 ATTR_POWER_TIME = "power_time"
 ATTR_CLEAN_MODE = "clean_mode"
 
-# Air Humidifier MJJSQ, JSQ and JSQ1
+# Air Humidifier MJJSQ, JSQ and JSQ1 and JSQ5
 ATTR_NO_WATER = "no_water"
 ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 ATTR_WET_PROTECTION = "wet_protection"
@@ -305,7 +314,7 @@ ATTR_RAW_SPEED = "raw_speed"
 # Fan Leshow SS4
 ATTR_ERROR_DETECTED = "error_detected"
 
-PURIFIER_MIOT = [MODEL_AIRPURIFIER_3, MODEL_AIRPURIFIER_3H]
+PURIFIER_MIOT = [MODEL_AIRPURIFIER_3, MODEL_AIRPURIFIER_3H, MODEL_AIRPURIFIER_ZA1]
 HUMIDIFIER_MIOT = [MODEL_AIRHUMIDIFIER_CA4]
 
 # AirDogX7SM
@@ -507,6 +516,10 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_JSQ1 = {
     ATTR_WET_PROTECTION: "wet_protection",
 }
 
+AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_JSQ5 = {
+    **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_MJJSQ
+}
+
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_JSQ = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
     ATTR_CHILD_LOCK: "child_lock",
@@ -667,6 +680,9 @@ FAN_PRESET_MODES_1C = {
     FAN_SPEED_LEVEL3: 3,
 }
 
+FAN_SPEEDS_1C = list(FAN_PRESET_MODES_1C)
+FAN_SPEEDS_1C.remove(SPEED_OFF)
+
 OPERATION_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
 OPERATION_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
@@ -797,6 +813,12 @@ FEATURE_FLAGS_AIRHUMIDIFIER_JSQ1 = (
     | FEATURE_SET_LED
     | FEATURE_SET_TARGET_HUMIDITY
     | FEATURE_SET_WET_PROTECTION
+)
+
+FEATURE_FLAGS_AIRHUMIDIFIER_JSQ5 = (
+    FEATURE_SET_BUZZER
+    | FEATURE_SET_LED
+    | FEATURE_SET_TARGET_HUMIDITY
 )
 
 FEATURE_FLAGS_AIRHUMIDIFIER_JSQ = (
@@ -1093,6 +1115,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         MODEL_AIRHUMIDIFIER_MJJSQ,
         MODEL_AIRHUMIDIFIER_JSQ,
         MODEL_AIRHUMIDIFIER_JSQ1,
+        MODEL_AIRHUMIDIFIER_JSQ5
     ]:
         air_humidifier = AirHumidifierMjjsq(host, token, model=model)
         device = XiaomiAirHumidifierMjjsq(name, air_humidifier, model, unique_id)
@@ -1838,6 +1861,9 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
         if self._model == MODEL_AIRHUMIDIFIER_JSQ1:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_JSQ1
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_JSQ1
+        elif self._model == MODEL_AIRHUMIDIFIER_JSQ5:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_JSQ5
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_JSQ5
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJJSQ
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_MJJSQ
@@ -2371,11 +2397,11 @@ class XiaomiFan(XiaomiGenericDevice):
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if direction == 'forward':
-            direction = 'right'
+        if direction == "forward":
+            direction = "right"
 
-        if direction == 'reverse':
-            direction = 'left'
+        if direction == "reverse":
+            direction = "left"
 
         if self._oscillate:
             await self._try_command(
@@ -2739,7 +2765,7 @@ class XiaomiFan1C(XiaomiFan):
     @property
     def supported_features(self) -> int:
         """Supported features."""
-        return SUPPORT_PRESET_MODE | SUPPORT_OSCILLATE
+        return SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE | SUPPORT_OSCILLATE
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -2785,6 +2811,16 @@ class XiaomiFan1C(XiaomiFan):
                 )
 
     @property
+    def percentage(self) -> Optional[int]:
+        """Return the current speed percentage."""
+        return ordered_list_item_to_percentage(FAN_SPEEDS_1C, self._preset_mode)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(FAN_SPEEDS_1C)
+
+    @property
     def preset_modes(self):
         """Get the list of available preset modes."""
         return self._preset_modes
@@ -2801,10 +2837,34 @@ class XiaomiFan1C(XiaomiFan):
         """Set the preset mode of the fan."""
         _LOGGER.debug("Setting the preset mode to: %s", preset_mode)
 
+        if not self._state:
+            await self._try_command(
+                "Turning the miio device on failed.", self._device.on
+            )
         await self._try_command(
             "Setting preset mode of the miio device failed.",
             self._device.set_speed,
             FAN_PRESET_MODES_1C[preset_mode],
+        )
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        _LOGGER.debug("Setting the fan speed percentage to: %s", percentage)
+
+        if percentage == 0:
+            await self.async_turn_off()
+            return
+
+        if not self._state:
+            await self._try_command(
+                "Turning the miio device on failed.", self._device.on
+            )
+        await self._try_command(
+            "Setting preset mode of the miio device failed.",
+            self._device.set_speed,
+            FAN_PRESET_MODES_1C[
+                percentage_to_ordered_list_item(FAN_SPEEDS_1C, percentage)
+            ],
         )
 
     @property

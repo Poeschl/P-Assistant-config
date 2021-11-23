@@ -33,6 +33,29 @@ config:
       show_state: true
       title: Leuchten und Schalter
       type: glance
+    - artwork: cover
+      entity: media_player.youtube_music
+      hide:
+        controls: true
+        icon_state: false
+        shuffle: true
+      icon: mdi:youtube
+      shortcuts:
+        buttons:
+        - id: LM
+          name: Was ich mag
+          type: playlist
+        - id: PLP_Ucs-zBz6LqyCggpJ2CJb8EGOoLhqxY
+          name: Tomorrowland
+          type: playlist
+        - id: PLv3CwolRlVpXqGWex9N-6QQ-ON55eXL3D
+          name: Schiebt
+          type: playlist
+        - id: RDCLAK5uy_kvmdYWgmu7MBsrWUzv53AyF02ytmE18bo
+          name: Gute Laune
+          type: playlist
+        columns: 4
+      type: custom:mini-media-player
     - card:
         entities:
         - entity: fan.wohnzimmer_lufter
@@ -136,6 +159,8 @@ config:
         secondary_info: brightness
       - entity: light.bettbeleuchtung_leds
         secondary_info: brightness
+      - entity: light.eingangslicht_leds
+        secondary_info: brightness
       show_header_toggle: false
       title: RGB Lampen
       type: entities
@@ -150,6 +175,8 @@ config:
         title: 'Adaptive Lighting '
         type: entities
       filter:
+        exclude:
+        - entity_id: switch.adaptive_lighting_adapt*
         include:
         - entity_id: switch.adaptive_lighting*
       sort:
@@ -299,21 +326,6 @@ config:
           hours_to_show: 24
           lower_bound: 25
           name: Luftfeuchte
-          points_per_hour: 2
-          type: custom:mini-graph-card
-        - color_thresholds:
-          - color: '#d32f2f'
-            value: 1800
-          - color: '#ffbf00'
-            value: 1300
-          - color: '#04d900'
-            value: 400
-          entities:
-          - sensor.schreibtischlampe_eco2
-          hour24: true
-          hours_to_show: 24
-          lower_bound: 400
-          name: CO2
           points_per_hour: 2
           type: custom:mini-graph-card
         type: horizontal-stack
@@ -500,9 +512,18 @@ config:
         buttons:
         - id: LM
           name: Was ich mag
-          type: channel
+          type: playlist
         - id: PLP_Ucs-zBz6LqyCggpJ2CJb8EGOoLhqxY
           name: Tomorrowland
+          type: playlist
+        - id: PLv3CwolRlVpXqGWex9N-6QQ-ON55eXL3D
+          name: Schiebt
+          type: playlist
+        - id: PLnhIjbEv_gap0WjcdsySTVU93vGaHPj-w
+          name: Taverne
+          type: playlist
+        - id: RDCLAK5uy_kvmdYWgmu7MBsrWUzv53AyF02ytmE18bo
+          name: Gute Laune
           type: playlist
         columns: 3
       type: custom:mini-media-player
@@ -751,7 +772,7 @@ config:
         color:
           half: '#aaa'
           ko: '#444'
-        entity: device_tracker.work_laptop_lan
+        entity: device_tracker.dockingstation_lan
         icon: mdi:lan-connect
         ko_icon: mdi:lan-disconnect
         name: Arbeitslaptop LAN
@@ -767,7 +788,7 @@ config:
         color:
           half: '#aaa'
           ko: '#444'
-        entity: device_tracker.work_laptop_wifi
+        entity: device_tracker.nb163_wifi
         icon: mdi:lan-connect
         ko_icon: mdi:lan-disconnect
         name: Arbeitslaptop WLAN
@@ -1013,6 +1034,7 @@ config:
       - entity: sensor.ble_battery_balkon
       - entity: sensor.ble_battery_bad
       - entity: sensor.ble_battery_wohnzimmer
+      - entity: sensor.ble_battery_filament
       - entity: sensor.wohnungstuer_battery
         name: "Wohnungst\xFCr Batterie"
       - entity: binary_sensor.thermostat_wohnzimmer_battery_low

@@ -18,7 +18,7 @@ export:
   lovelace: true
   node_red: true
 repository:
-  commit_message: Update to 2021.8.2
+  commit_message: Version for 2021.9.5
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

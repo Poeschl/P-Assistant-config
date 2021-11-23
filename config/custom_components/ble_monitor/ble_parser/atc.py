@@ -1,13 +1,13 @@
-# Parser for ATC BLE advertisements
-from Cryptodome.Cipher import AES
+"""Parser for ATC BLE advertisements"""
 import logging
 from struct import unpack
+from Cryptodome.Cipher import AES
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def parse_atc(self, data, source_mac, rssi):
-    # check for adstruc length
+    """Check for adstruc length"""
     device_type = "ATC"
     msg_length = len(data)
     if msg_length == 19:
@@ -100,7 +100,7 @@ def parse_atc(self, data, source_mac, rssi):
         return None
 
     # check for MAC presence in sensor whitelist, if needed
-    if self.discovery is False and atc_mac.lower() not in self.sensor_whitelist:
+    if self.discovery is False and atc_mac not in self.sensor_whitelist:
         return None
 
     try:
@@ -140,7 +140,7 @@ def parse_atc(self, data, source_mac, rssi):
 
 
 def decrypt_atc(self, data, atc_mac):
-    # try to find encryption key for current device
+    """Try to find encryption key for current device"""
     try:
         key = self.aeskeys[atc_mac]
         if len(key) != 16:
@@ -176,4 +176,5 @@ def decrypt_atc(self, data, atc_mac):
 
 
 def to_mac(addr: int):
+    """Convert MAC address."""
     return ':'.join('{:02x}'.format(x) for x in addr).upper()
