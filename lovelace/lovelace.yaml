@@ -629,8 +629,6 @@ config:
       type: custom:stack-in-card
     - entities:
       - entity: sensor.cert_expiry_timestamp_cloud_poeschl_xyz
-      - entity: sensor.cert_expiry_timestamp_p_storage_fritz_box_5001
-      - entity: sensor.cert_expiry_timestamp_p_assist_fritz_box
       show_header_toggle: false
       title: Zertifikatablaufdatum
       type: entities
@@ -955,12 +953,8 @@ config:
     cards:
     - cards:
       - entities:
-        - entity: sensor.hypercube_evolution_current_state
+        - entity: sensor.octoprint_current_state
           name: Drucker Zustand
-        - entity: sensor.hypercube_evolution_actual_tool0_temp
-          name: Hotend
-        - entity: sensor.hypercube_evolution_actual_bed_temp
-          name: Bett
         type: entities
       - camera_view: live
         entity: camera.hypercube_evolution_cam
@@ -970,14 +964,14 @@ config:
       title: Hypercube Evolution
       type: custom:stack-in-card
     - cards:
-      - entity: sensor.hypercube_evolution_job_percentage
+      - entity: sensor.octoprint_job_percentage
         name: Fortschritt
         positions:
           icon: inside
           indicator: inside
         type: custom:bar-card
       - entities:
-        - entity: sensor.hypercube_evolution_time_remaining
+        - entity: sensor.octoprint_time_remaining
           name: Verbleibende Zeit
           show_points: false
         hours_to_show: 1
@@ -1047,9 +1041,6 @@ config:
     - aggregate_func: max
       animate: false
       entities:
-      - entity: sensor.auto_backup_monitored_snapshots
-        name: Monitored
-        show_points: false
       - entity: sensor.auto_backup
         name: Pending
         show_points: false

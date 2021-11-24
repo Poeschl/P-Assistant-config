@@ -1,6 +1,0 @@
----
-# Setups the Medion radio in the living room as Direct Media Renderer.
-#
-platform: dlna_dmr
-name: P-Radio DLNA
-url: !secret p-radio_desc_url

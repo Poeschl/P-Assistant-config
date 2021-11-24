@@ -1,6 +1,0 @@
----
-#
-# This is the main integration to integrate OctoPrint sensors.
-#
-octoprint: !include_dir_list ../entities/octoprint
-

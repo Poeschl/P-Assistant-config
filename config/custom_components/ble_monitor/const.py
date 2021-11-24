@@ -5,11 +5,11 @@ from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_LOCK,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_LOCK,
     BinarySensorEntityDescription,
 )
 from homeassistant.components.sensor import (
@@ -17,6 +17,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    CONDUCTIVITY,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -26,10 +28,9 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
-    CONDUCTIVITY,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
@@ -44,6 +45,7 @@ DOMAIN = "ble_monitor"
 PLATFORMS = ["binary_sensor", "device_tracker", "sensor"]
 
 # Configuration options
+CONF_BT_AUTO_RESTART = "bt_auto_restart"
 CONF_DECIMALS = "decimals"
 CONF_PERIOD = "period"
 CONF_LOG_SPIKES = "log_spikes"
@@ -54,7 +56,7 @@ CONF_BT_INTERFACE = "bt_interface"
 CONF_BATT_ENTITIES = "batt_entities"
 CONF_REPORT_UNKNOWN = "report_unknown"
 CONF_RESTORE_STATE = "restore_state"
-CONF_ENCRYPTION_KEY = "encryption_key"
+CONF_DEVICE_ENCRYPTION_KEY = "encryption_key"
 CONF_DEVICE_DECIMALS = "decimals"
 CONF_DEVICE_USE_MEDIAN = "use_median"
 CONF_DEVICE_RESTORE_STATE = "restore_state"
@@ -68,15 +70,18 @@ CONFIG_IS_FLOW = "is_flow"
 SERVICE_CLEANUP_ENTRIES = "cleanup_entries"
 
 # Default values for configuration options
+DEFAULT_BT_AUTO_RESTART = False
 DEFAULT_DECIMALS = 1
 DEFAULT_PERIOD = 60
 DEFAULT_LOG_SPIKES = False
 DEFAULT_USE_MEDIAN = False
 DEFAULT_ACTIVE_SCAN = False
 DEFAULT_BATT_ENTITIES = True
-DEFAULT_REPORT_UNKNOWN = False
+DEFAULT_REPORT_UNKNOWN = "Off"
 DEFAULT_DISCOVERY = True
 DEFAULT_RESTORE_STATE = False
+DEFAULT_DEVICE_MAC = ""
+DEFAULT_DEVICE_ENCRYPTION_KEY = ""
 DEFAULT_DEVICE_DECIMALS = "default"
 DEFAULT_DEVICE_USE_MEDIAN = "default"
 DEFAULT_DEVICE_RESTORE_STATE = "default"
@@ -330,7 +335,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=STATE_CLASS_MEASUREMENT,
-        entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BLEMonitorSensorEntityDescription(
         key="battery",
@@ -340,6 +345,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BLEMonitorSensorEntityDescription(
         key="voltage",
@@ -349,6 +355,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BLEMonitorSensorEntityDescription(
         key="consumable",
@@ -416,6 +423,26 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         unique_id="pow_",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    BLEMonitorSensorEntityDescription(
+        key="magnetic field",
+        sensor_class="InstantUpdateSensor",
+        name="ble magnetic field",
+        unique_id="mf_",
+        icon="mdi:magnet",
+        native_unit_of_measurement="µT",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    BLEMonitorSensorEntityDescription(
+        key="magnetic field direction",
+        sensor_class="InstantUpdateSensor",
+        name="ble magnetic field direction",
+        unique_id="mfd_",
+        icon="mdi:compass",
+        native_unit_of_measurement=None,
+        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     BLEMonitorSensorEntityDescription(
@@ -594,7 +621,7 @@ MEASUREMENT_DICT = {
     'CGG1-ENCRYPTED'          : [["temperature", "humidity", "battery", "rssi"], [], []],
     'CGH1'                    : [["battery", "rssi"], [], ["opening"]],
     'CGP1W'                   : [["temperature", "humidity", "battery", "pressure", "rssi"], [], []],
-    'CGPR1'                   : [["illuminance", "battery", "rssi"], [], ["motion"]],
+    'CGPR1'                   : [["illuminance", "battery", "rssi"], [], ["light", "motion"]],
     'MHO-C401'                : [["temperature", "humidity", "battery", "rssi"], [], []],
     'MHO-C303'                : [["temperature", "humidity", "battery", "rssi"], [], []],
     'JQJCY01YM'               : [["temperature", "humidity", "battery", "formaldehyde", "rssi"], [], []],
@@ -625,6 +652,16 @@ MEASUREMENT_DICT = {
     'H5179'                   : [["temperature", "humidity", "battery", "rssi"], [], []],
     'Ruuvitag'                : [["temperature", "humidity", "pressure", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
     'iNode Energy Meter'      : [["battery", "voltage", "rssi"], ["energy", "power"], []],
+    "iNode Care Sensor 1"     : [["temperature", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
+    "iNode Care Sensor 2"     : [["temperature", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
+    "iNode Care Sensor 3"     : [["temperature", "humidity", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
+    "iNode Care Sensor 4"     : [["temperature", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
+    "iNode Care Sensor 5"     : [["temperature", "battery", "voltage", "rssi"], ["acceleration", "magnetic field", "magnetic field direction"], ["motion"]],
+    "iNode Care Sensor 6"     : [["temperature", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
+    "iNode Care Sensor T"     : [["temperature", "battery", "voltage", "rssi"], [], []],
+    "iNode Care Sensor HT"    : [["temperature", "humidity", "battery", "voltage", "rssi"], [], []],
+    "iNode Care Sensor PT"    : [["temperature", "pressure", "battery", "voltage", "rssi"], [], []],
+    "iNode Care Sensor PHT"   : [["temperature", "humidity", "pressure", "battery", "voltage", "rssi"], [], []],
     'Blue Puck T'             : [["temperature", "rssi"], [], []],
     'Blue Coin T'             : [["temperature", "rssi"], [], []],
     'Blue Puck RHT'           : [["temperature", "humidity", "rssi"], [], []],
@@ -697,6 +734,16 @@ MANUFACTURER_DICT = {
     'H5179'                   : 'Govee',
     'Ruuvitag'                : 'Ruuvitag',
     'iNode Energy Meter'      : 'iNode',
+    "iNode Care Sensor 1"     : 'iNode',
+    "iNode Care Sensor 2"     : 'iNode',
+    "iNode Care Sensor 3"     : 'iNode',
+    "iNode Care Sensor 4"     : 'iNode',
+    "iNode Care Sensor 5"     : 'iNode',
+    "iNode Care Sensor 6"     : 'iNode',
+    "iNode Care Sensor T"     : 'iNode',
+    "iNode Care Sensor HT"    : 'iNode',
+    "iNode Care Sensor PT"    : 'iNode',
+    "iNode Care Sensor PHT"   : 'iNode',
     'Blue Puck T'             : 'Teltonika',
     'Blue Coin T'             : 'Teltonika',
     'Blue Puck RHT'           : 'Teltonika',
@@ -711,3 +758,25 @@ MANUFACTURER_DICT = {
 RENAMED_MODEL_DICT = {
     'H5051/H5074': 'H5074'
 }
+
+# Selection list for report_uknown
+REPORT_UNKNOWN_LIST = [
+    "ATC",
+    "BlueMaestro",
+    "Brifit",
+    "Govee",
+    "iNode",
+    "Kegtron",
+    "Mi Scale",
+    "Moat",
+    "Qingping",
+    "Ruuvitag",
+    "SensorPush",
+    "Teltonika",
+    "Thermoplus",
+    "Xiaogui",
+    "Xiaomi",
+    "Other",
+    "Off",
+    False,
+]

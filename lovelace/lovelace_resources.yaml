@@ -16,7 +16,7 @@ items:
   url: /hacsfiles/stack-in-card/stack-in-card.js
 - id: afb5b8b810b2483f83feee4f58323987
   type: module
-  url: /hacsfiles/mini-media-player/mini-media-player-bundle.js?hacstag=1485208381130
+  url: /hacsfiles/mini-media-player/mini-media-player-bundle.js?hacstag=1485208381150
 - id: c49677f6c4e54789874b9cd5a5cd7648
   type: module
   url: /hacsfiles/love-lock-card/love-lock-card.js
@@ -25,7 +25,7 @@ items:
   url: /hacsfiles/text-divider-row/text-divider-row.js
 - id: e9671e80937d432abf31033aa382fd49
   type: module
-  url: /hacsfiles/uptime-card/uptime-card.js?hacstag=350509867071
+  url: /hacsfiles/uptime-card/uptime-card.js?hacstag=350509867081
 - id: 1ad2e201b77245e2aa0702cf2bd5d6cf
   type: module
   url: /hacsfiles/kiosk-mode/kiosk-mode.js?hacstag=303101606172
