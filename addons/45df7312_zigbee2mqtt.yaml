@@ -1,0 +1,43 @@
+advanced:
+  availability_blocklist: []
+  availability_passlist: []
+  cache_state_persistent: true
+  cache_state_send_on_startup: true
+  channel: 20
+  last_seen: ISO_8601_local
+  log_level: info
+  network_key: []
+  network_key_string: '!secret zigbee_key_string'
+  pan_id: 16962
+availability:
+  active:
+    timeout: 15
+  passive:
+    timeout: 180
+blocklist: []
+data_path: /config/zigbee2mqtt
+device_options: {}
+devices: devices.yaml
+experimental: {}
+external_converters: []
+frontend:
+  port: 8099
+groups: groups.yaml
+homeassistant: true
+mqtt:
+  base_topic: zigbee2mqtt
+  password: '!secret zigbee2mqtt_mqtt_password'
+  server: mqtt://core-mosquitto
+  user: '!secret zigbee2mqtt_mqtt_user'
+passlist: []
+permit_join: false
+queue: {}
+serial:
+  port: /dev/serial/by-id/usb-Silicon_Labs_slae.sh_cc2652rb_stick_-_slaesh_s_iot_stuff_00_12_4B_00_23_93_2C_D3-if00-port0
+socat:
+  enabled: false
+  log: false
+  master: pty,raw,echo=0,link=/dev/ttyZ2M,mode=777
+  options: -d -d
+  slave: tcp-listen:8485,keepalive,nodelay,reuseaddr,keepidle=1,keepintvl=1,keepcnt=5
+zigbee_herdsman_debug: false

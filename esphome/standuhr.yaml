@@ -1,0 +1,80 @@
+substitutions:
+  devicename: standuhr
+  human_devicename: Standuhr
+
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: nodemcuv2
+  build_path: /tmp/build/${devicename}
+
+wifi:
+  ssid: !secret esphome_wifi_name
+  password: !secret esphome_wifi_pass
+  ap:
+    ssid: "${devicename} Fallback"
+    password: !secret standuhr_wifi_password
+
+captive_portal:
+
+logger:
+
+ota:
+
+web_server:
+
+status_led:
+  pin: 
+    number: GPIO2
+    inverted: true
+
+output:
+  - platform: esp8266_pwm
+    id: servo_output
+    pin: D1
+    frequency: 50 Hz
+
+servo:
+  - id: bell_servo
+    output: servo_output
+    min_level: 3.1%
+    idle_level: 7.1%
+    max_level: 11.1%
+  
+sensor:
+  - platform: wifi_signal
+    name: "${human_devicename} Signalstärke"
+
+switch:
+  - platform: restart
+    name: ${human_devicename} Neustart
+  - platform: template
+    id: gong_switch
+    name: "${human_devicename} Gong"
+    optimistic: true
+    turn_on_action:
+      - servo.write: 
+          id: bell_servo
+          level: 100.0%
+    turn_off_action:
+      - servo.write: 
+          id: bell_servo
+          level: -100.0%
+    
+time:
+  - platform: sntp
+    id: sntp_time
+    servers:
+      - de.pool.ntp.org
+    on_time:
+      - seconds: 0
+        minutes: 0
+        hours: 21
+        then:
+          - switch.turn_off: gong_switch
+      - seconds: 0
+        minutes: 0
+        hours: 8
+        then:
+          - switch.turn_on: gong_switch
+

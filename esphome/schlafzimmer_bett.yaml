@@ -16,8 +16,6 @@ globals:
   - id: middle_double_click_status
     type: bool
 
-wled:
-
 light:
   - platform: fastled_clockless
     id: led
@@ -88,7 +86,6 @@ light:
               it[Pixel] = ESPColor(r, g, b);
             }
             delay(random(10,120));
-      - wled:
             
 binary_sensor:
   - platform: gpio

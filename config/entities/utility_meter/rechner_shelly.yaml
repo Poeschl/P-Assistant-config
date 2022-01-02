@@ -1,0 +1,6 @@
+---
+# The meter for the rechner shelly
+#
+rechner_plug_energy_cum:
+  source: sensor.rechner_plug_energy
+  cycle: daily

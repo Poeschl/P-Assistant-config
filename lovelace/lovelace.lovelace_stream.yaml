@@ -1,0 +1,10 @@
+config:
+  views:
+  - cards:
+    - entities:
+      - sensor.rechner_plug_power
+      hours_to_show: 3
+      name: Rechner Verbrauch
+      points_per_hour: 12
+      type: custom:mini-graph-card
+    title: Home

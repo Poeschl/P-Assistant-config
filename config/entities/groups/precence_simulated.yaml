@@ -3,6 +3,6 @@
 #
 name: Präsenzsimulation Entities
 entities:
-  - switch.shellyplug_s_7a2ce6_relay_0
+  - light.monitorbeleuchtung
   - light.tv_lampe
   - light.vitrine_leds

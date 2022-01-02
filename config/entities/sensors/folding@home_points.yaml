@@ -2,9 +2,9 @@
 # Get donor statistics of folding@home.
 #
 platform: rest
-resource: https://stats.foldingathome.org/api/donor/68720193
+resource: https://api2.foldingathome.org/user/Poeschl
 name: Folding at Home
-value_template: '{{ value_json.credit }}'
+value_template: '{{ value_json.score }}'
 scan_interval: 1800
 unit_of_measurement: credits
 json_attributes:

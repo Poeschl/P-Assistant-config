@@ -25,7 +25,10 @@ config:
       - entity: light.bettbeleuchtung_leds
         tap_action:
           action: toggle
-      - entity: switch.shellyplug_s_7a2ce6_relay_0
+      - entity: light.monitorbeleuchtung
+        tap_action:
+          action: toggle
+      - entity: switch.monitor_switch
         tap_action:
           action: toggle
       show_icon: true
@@ -161,12 +164,14 @@ config:
         secondary_info: brightness
       - entity: light.eingangslicht_leds
         secondary_info: brightness
+      - entity: light.monitorbeleuchtung
+        secondary_info: brightness
       show_header_toggle: false
       title: RGB Lampen
       type: entities
     - entities:
       - entity: light.tv_lampe
-      - entity: switch.shellyplug_s_7a2ce6_relay_0
+      - entity: switch.monitor_switch
       show_header_toggle: false
       title: "Bin\xE4re Lampen"
       type: entities
@@ -454,10 +459,17 @@ config:
         - entity_id: '*relay_.'
       sort: name
       type: custom:auto-entities
-    - entities:
-      - sensor.multimedia_dose_power
-      hours_to_show: 24
-      type: custom:mini-graph-card
+    - cards:
+      - entities:
+        - sensor.multimedia_dose_power
+        hours_to_show: 24
+        type: custom:mini-graph-card
+      - entities:
+        - sensor.rechner_plug_power
+        hours_to_show: 24
+        type: custom:mini-graph-card
+      title: Verbrauch
+      type: custom:stack-in-card
     - cards:
       - entities:
         - entity: lock.wohnungstuer
@@ -535,14 +547,26 @@ config:
     - cards:
       - bar:
           height: 10
-        entity: binary_sensor.fritz_box_7530_connectivity
+        entity: device_tracker.fritz_box
         hours_to_show: 120
-        name: Internetverbinung
+        ok: home
+        status_adaptive_color: true
+        title: Device online
+        type: custom:uptime-card
+      - entities:
+        - sensor.fritz_box_7530_device_uptime
+        show_header_toggle: false
+        type: entities
+      - bar:
+          height: 10
+        entity: binary_sensor.fritz_box_7530_connection
+        hours_to_show: 120
+        name: Device online
         ok: 'on'
         status_adaptive_color: true
         type: custom:uptime-card
       - entities:
-        - sensor.fritz_box_7530_device_uptime
+        - sensor.fritz_box_7530_connection_uptime
         show_header_toggle: false
         type: entities
       title: Fritzbox
@@ -562,36 +586,6 @@ config:
       line_width: 4
       name: Internet-Traffic
       points_per_hour: 2
-      type: custom:mini-graph-card
-    - entities:
-      - entity: sensor.speedtest_download
-        index: 0
-        name: Download
-        show_fill: false
-      - entity: sensor.speedtest_upload
-        index: 1
-        name: Upload
-        show_fill: false
-      group_by: date
-      hour24: true
-      hours_to_show: 168
-      icon: mdi:speedometer
-      line_width: 4
-      lower_bound: 0
-      name: Speedtest
-      type: custom:mini-graph-card
-    - entities:
-      - entity: sensor.speedtest_ping
-        index: 0
-        name: Ping
-        show_fill: false
-      group_by: date
-      hour24: true
-      hours_to_show: 168
-      icon: mdi:speedometer
-      line_width: 4
-      lower_bound: 0
-      points_per_hour: 0.25
       type: custom:mini-graph-card
     - cards:
       - cards:
@@ -1059,9 +1053,10 @@ config:
       - entity: binary_sensor.thermostat_wohnzimmer_update_available
       - entity: binary_sensor.shelly1pm_b1da7e_firmware_update
       - entity: binary_sensor.shellyplug_s_7a2ce6_firmware_update
-      - entity: binary_sensor.shellyplug_s_26829b_firmware_update
+      - entity: binary_sensor.monitor_switch_firmware_update
       - entity: binary_sensor.home_assistant_switch_firmware_update
       - entity: binary_sensor.p_cube_switch_firmware_update
+      - entity: binary_sensor.rechner_plug_firmware_update
       title: Updates
       type: entities
     icon: mdi:cog

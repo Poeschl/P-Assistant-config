@@ -6,4 +6,4 @@
 http:
   use_x_forwarded_for: true
   trusted_proxies:
-    - !secret nginx_internal_ip
+    - !secret ip_internal_services_range

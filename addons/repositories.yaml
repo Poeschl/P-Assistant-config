@@ -1,7 +1,7 @@
 'Home Assistant Add-on: Zigbee2mqtt':
   maintainer: Daniel Welch <dwelch2102@gmail.com>
-  slug: 7ad98f9c
-  source: https://github.com/danielwelch/hassio-zigbee2mqtt
+  slug: 45df7312
+  source: https://github.com/zigbee2mqtt/hassio-zigbee2mqtt
 Home Assistant Community Add-ons:
   maintainer: Franck Nijhof <frenck@addons.community>
   slug: a0d7b954

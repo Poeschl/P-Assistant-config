@@ -1,0 +1,6 @@
+---
+# The meter for the multimedia shelly
+#
+multimedia_energy_cum:
+  source: sensor.multimedia_dose_energy
+  cycle: daily

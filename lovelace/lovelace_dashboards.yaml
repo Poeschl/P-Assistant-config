@@ -5,3 +5,9 @@ items:
   show_in_sidebar: false
   title: P-Cube
   url_path: p-cube
+- id: lovelace_stream
+  mode: storage
+  require_admin: false
+  show_in_sidebar: false
+  title: Stream
+  url_path: lovelace-stream

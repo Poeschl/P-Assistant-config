@@ -95,7 +95,7 @@ import homeassistant.components.input_select as input_select
 import homeassistant.components.input_boolean as input_boolean
 
 # Should be equal to the name of your component.
-PLATFORM = "media_player"
+PLATFORMS = {"media_player", "sensor"}
 DOMAIN = "ytube_music_player"
 
 SUPPORT_YTUBEMUSIC_PLAYER = (
@@ -119,6 +119,7 @@ SUPPORT_YTUBEMUSIC_PLAYER = (
 
 SERVICE_SEARCH = "search"
 SERVICE_ADD_TO_PLAYLIST = "add_to_playlist"
+SERVICE_REMOVE_FROM_PLAYLIST = "remove_from_playlist"
 SERVICE_LIMIT_COUNT = "limit_count"
 SERVICE_RADIO = "start_radio"
 ATTR_PARAMETERS = "parameters"
@@ -154,6 +155,8 @@ CONF_ADVANCE_CONFIG = 'advance_config'
 CONF_LIKE_IN_NAME = 'like_in_name'
 CONF_DEBUG_AS_ERROR = 'debug_as_error'
 CONF_LEGACY_RADIO = 'legacy_radio'
+CONF_SORT_BROWSER = 'sort_browser'
+CONF_INIT_EXTRA_SENSOR = 'extra_sensor'
 
 CONF_TRACK_LIMIT = 'track_limit'
 CONF_PROXY_URL = 'proxy_url'
@@ -173,10 +176,12 @@ DEFAULT_SELECT_SPEAKERS = input_select.DOMAIN + "." + DOMAIN + '_speakers'
 DEFAULT_HEADER_FILENAME = 'ytube_header.json'
 DEFAULT_LIKE_IN_NAME = False
 DEFAULT_DEBUG_AS_ERROR = False
+DEFAULT_INIT_EXTRA_SENSOR = False
 PROXY_FILENAME = "ytube_proxy.mp4"
 
 DEFAULT_TRACK_LIMIT = 25
 DEFAULT_LEGACY_RADIO = True
+DEFAULT_SORT_BROWSER = True
 DEFAULT_SHUFFLE_MODE = 1
 DEFAULT_SHUFFLE = True
 
@@ -352,6 +357,8 @@ def ensure_config(user_input):
 	out[CONF_DEBUG_AS_ERROR] = DEFAULT_DEBUG_AS_ERROR
 	out[CONF_TRACK_LIMIT] = DEFAULT_TRACK_LIMIT
 	out[CONF_LEGACY_RADIO] = DEFAULT_LEGACY_RADIO
+	out[CONF_SORT_BROWSER] = DEFAULT_SORT_BROWSER
+	out[CONF_INIT_EXTRA_SENSOR] = DEFAULT_INIT_EXTRA_SENSOR
 
 	if user_input is not None:
 		out.update(user_input)

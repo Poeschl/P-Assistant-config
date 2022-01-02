@@ -1,5 +1,5 @@
 check:
-  check_for_ips: true
+  check_for_ips: false
   check_for_secrets: false
   enabled: true
 dry_run: false
@@ -19,7 +19,7 @@ export:
   node_red: true
 repository:
   branch_name: master
-  commit_message: Version for 2021.11.1
+  commit_message: Sync on 2022
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

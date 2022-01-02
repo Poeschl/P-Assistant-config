@@ -1,4 +1,3 @@
-anonymous: false
 certfile: p-assist.cert.pem
 customize:
   active: false
