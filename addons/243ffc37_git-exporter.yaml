@@ -5,7 +5,7 @@ check:
 dry_run: false
 exclude:
 - '*.db'
-- '*.log'
+- '*.log*'
 - __pycache__
 - ._*
 - .DS_Store
@@ -19,7 +19,7 @@ export:
   node_red: true
 repository:
   branch_name: master
-  commit_message: Sync on 2022
+  commit_message: After ESPHome doings
   email: Poeschl@users.noreply.github.com
   password: '!secret github_api_token'
   pull_before_push: true

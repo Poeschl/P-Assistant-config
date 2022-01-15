@@ -333,6 +333,22 @@ config:
           name: Luftfeuchte
           points_per_hour: 2
           type: custom:mini-graph-card
+        - color_thresholds:
+          - color: '#d32f2f'
+            value: 1300
+          - color: '#ffbf00'
+            value: 900
+          - color: '#04d900'
+            value: 600
+          entities:
+          - entity: sensor.schreibtisch_monitor_eco2
+            index: 0
+          hour24: true
+          hours_to_show: 24
+          lower_bound: 400
+          name: CO2
+          points_per_hour: 2
+          type: custom:mini-graph-card
         type: horizontal-stack
       - entities:
         - entity: sensor.sleepingroom_iaq_level
@@ -659,6 +675,7 @@ config:
     - cards:
       - entities:
         - entity: input_boolean.holiday_mode
+        - entity: input_boolean.markus_schlaft
         show_header_toggle: false
         type: entities
       - bar:
@@ -1015,7 +1032,7 @@ config:
         type: entities
       filter:
         include:
-        - entity_id: switch*neustart
+        - entity_id: button*neustart
       type: custom:auto-entities
     - entities:
       - entity: sensor.ble_battery_schlafzimmer

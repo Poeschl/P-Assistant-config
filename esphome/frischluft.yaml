@@ -1,0 +1,341 @@
+substitutions:
+  devicename: frischluft
+  human_devicename: Frischluft
+
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+  mqtt: !include includes/mqtt.yaml
+
+esp32:
+  board: esp-wrover-kit
+
+web_server:
+
+globals:
+  - id: thresholdWarningPPM
+    type: int
+    initial_value: '1000'
+    restore_value: true
+  - id: thresholdAlarmPPM
+    type: int
+    initial_value: '1600'
+    restore_value: true
+  - id: sound
+    type: boolean
+    initial_value: 'true'
+    restore_value: true
+  - id: led_brightness
+    type: float
+    initial_value: '0.5'
+    restore_value: true
+  - id: calibrating
+    type: boolean
+    initial_value: 'false'
+
+number:
+  - platform: template
+    name: "Warning Threshold"
+    unit_of_measurement: ppm
+    entity_category: config
+    mode: BOX
+    icon: mdi:alert-circle-outline
+    min_value: 400
+    max_value: 2000
+    step: 1
+    lambda: return id(thresholdWarningPPM);
+    set_action:
+      then:
+        lambda: id(thresholdWarningPPM) = x;
+  - platform: template
+    name: "Alarm Threshold"
+    unit_of_measurement: ppm
+    entity_category: config
+    mode: BOX
+    icon: mdi:alert
+    min_value: 400
+    max_value: 2000
+    step: 1
+    lambda: return id(thresholdAlarmPPM);
+    set_action:
+      then:
+        lambda: id(thresholdAlarmPPM) = x;
+  - platform: template
+    name: "LED standby brightness"
+    unit_of_measurement: '%'
+    entity_category: config
+    mode: SLIDER
+    icon: mdi:brightness-5
+    min_value: 0
+    max_value: 100
+    step: 1
+    lambda: return id(led_brightness) * 100;
+    set_action:
+      then:
+        - lambda: id(led_brightness) = x / 100;
+        - light.turn_on:
+            id: led
+            brightness: !lambda return id(led_brightness);
+
+
+esphome:
+  on_boot:
+    then:
+      - display.page.show: status_page
+      - if:
+          condition:
+            lambda: return id(sound);
+          then:
+            - rtttl.play: 'MarioStart:d=4,o=6,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p'
+      - light.turn_on:
+          id: led
+          red: 100%
+          green: 0%
+          blue: 0%
+      - delay: 200ms
+      - light.turn_on:
+          id: led
+          red: 0%
+          green: 100%
+          blue: 0%
+      - delay: 200ms
+      - light.turn_on:
+          id: led
+          red: 0%
+          green: 0%
+          blue: 100%
+      - delay: 200ms
+      - light.turn_on:
+          id: led
+          red: 100%
+          green: 100%
+          blue: 100%
+      - light.turn_off:
+          id: led
+      - delay: 10s
+      - display.page.show: default_page
+
+uart:
+  rx_pin: GPIO16
+  tx_pin: GPIO17
+  baud_rate: 9600
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  frequency: 100kHz
+
+output:
+  - platform: ledc
+    id: led_red
+    frequency: 500
+    pin: 
+      number: GPIO05
+      inverted: true
+  - platform: ledc
+    id: led_green
+    frequency: 500
+    pin: 
+      number: GPIO23
+      inverted: true
+  - platform: ledc
+    id: led_blue
+    frequency: 500
+    pin: 
+      number: GPIO19
+      inverted: true
+  - platform: ledc
+    pin: GPIO26
+    frequency: 3000
+    id: buzzer_out
+
+light:
+  # - platform: rgb
+  #   id: led
+  #   name: "${human_devicename} LED"
+  #   internal: true
+  #   red: led_red
+  #   green: led_green
+  #   blue: led_blue
+  #   effects:
+  #     - pulse:
+  - platform: fastled_clockless
+    id: led
+    chipset: WS2812B
+    pin: GPIO18
+    num_leds: 1
+    rgb_order: GRB
+    internal: true
+    name: "${human_devicename} LED"
+    effects:
+      - pulse:
+
+rtttl:
+  output: buzzer_out
+  id: buzzer
+
+font:
+  - file: "fonts/arialbd.ttf"
+    id: arial_bold
+    size: 16
+  - file: "fonts/arial.ttf"
+    id: arial
+    size: 12
+  - file: "fonts/arial.ttf"
+    id: arial_small
+    size: 10
+
+image:
+  - file: "icon/bell-ring.png"
+    id: bell
+    resize: 48x48
+  - file: "icon/reload.png"
+    id: reload
+    resize: 32x32
+
+graph:
+  - id: co2_graph
+    duration: 1h
+    width: 128
+    height: 46
+    border: false
+    traces:
+      - sensor: mhz19_co2
+        line_type: SOLID
+
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    id: status_display
+    pages:
+      - id: default_page
+        lambda: |-
+          auto co2 = id(mhz19_co2).state;
+
+          it.printf(75, 18, id(arial_bold), TextAlign::BOTTOM_RIGHT, "%.0f", co2);
+          it.print(75, 16, id(arial_small), TextAlign::BOTTOM_LEFT, "ppm");
+
+          if (co2 > id(thresholdAlarmPPM)) {
+            it.image(40, 17, id(bell));
+          } else {
+            it.graph(0, 18, id(co2_graph));
+          }
+      - id: status_page
+        lambda: |-
+          it.print(64, 18, id(arial_bold), TextAlign::BOTTOM_CENTER, "Status");
+
+          auto wifi_status = "not connected";
+          if(id(wifi_component)->is_connected()) {
+            wifi_status = "ok";
+          }
+          it.print(0, 28, id(arial), TextAlign::BOTTOM_LEFT, "WiFi ...");
+          it.printf(128, 28, id(arial), TextAlign::BOTTOM_RIGHT, "%s", wifi_status);
+
+          auto mqtt_status = "not connected";
+          if(id(mqtt_component)->is_connected()) {
+            mqtt_status = "ok";
+          }
+          it.print(0, 40, id(arial), TextAlign::BOTTOM_LEFT, "MQTT ...");
+          it.printf(128, 40, id(arial), TextAlign::BOTTOM_RIGHT, "%s", mqtt_status);
+      - id: calibration
+        lambda: |-
+          it.print(64, 18, id(arial_bold), TextAlign::BOTTOM_CENTER, "Calibration");
+
+          it.image(48, 17, id(reload));
+          it.print(64, 64, id(arial_small), TextAlign::BOTTOM_CENTER, "This will take 20 minutes");
+
+sensor:
+  - platform: mhz19
+    id: mhz19_id
+    co2:
+      name: "${human_devicename} CO2"
+      id: mhz19_co2
+      on_raw_value:
+        then:
+          - if:
+              condition:
+                lambda: return !id(calibrating);
+              then:
+                - lambda: |-
+                    auto lastState = id(mhz19_co2).state;
+                    auto currentState = x;
+
+                    auto call = id(led).turn_on();
+
+                    if (lastState < id(thresholdAlarmPPM) && currentState >= id(thresholdAlarmPPM)) {
+                      if(id(sound)) {
+                        id(buzzer)->play("siren:d=8,o=6,b=100:d,e,d,e,d,e,d,e");
+                        call.set_brightness(1.0);
+                      }
+                      call.set_brightness(1.0);
+                    } else if ((lastState < id(thresholdWarningPPM) && currentState >= id(thresholdWarningPPM))
+                      || (lastState >= id(thresholdAlarmPPM) && currentState < id(thresholdAlarmPPM)) ) {
+                      if(id(sound)) {
+                        id(buzzer)->play("two short:d=4,o=6,b=100:16e6,16e6");
+                        call.set_brightness(1.0);
+                      }
+                      call.set_brightness(1.0);
+                    } else if ((lastState > id(thresholdWarningPPM) && currentState < id(thresholdWarningPPM)) ) {
+                      // do nothing on going to green, just make the led bright
+                      call.set_brightness(1.0);
+                    }
+
+                    if (currentState >= id(thresholdAlarmPPM)) {
+                      call.set_rgb(1,0,0);
+                    } else if (currentState >= id(thresholdWarningPPM)) {
+                      call.set_rgb(1,1,0);
+                    } else {
+                      call.set_rgb(0,1,0);
+                    }
+
+                    call.perform();
+                - delay: 20s
+                - light.turn_on:
+                    id: led
+                    brightness: !lambda return id(led_brightness);
+    temperature:
+      name: "${human_devicename} Temperature"
+    update_interval: 60s
+
+switch:
+  - platform: template
+    name: "Audio"
+    entity_category: config
+    icon: mdi:volume-high
+    lambda: return id(sound);
+    turn_on_action:
+      - lambda: id(sound) = true;
+    turn_off_action:
+      - lambda: id(sound) = false;
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO36
+    name: "${human_devicename} Button"
+    internal: true
+    on_click:
+      - then:
+        - display.page.show: status_page
+        - component.update: status_display
+        - delay: 10s
+        - display.page.show: default_page
+      - min_length: 2000ms
+        max_length: 5000ms
+        then:
+          - lambda: id(calibrating) = true;
+          - light.turn_on:
+              id: led
+              brightness: 1.0
+              red: 0
+              green: 0
+              blue: 1.0
+              effect: pulse
+          - display.page.show: calibration
+          - component.update: status_display
+          - delay: 20min
+          - mhz19.calibrate_zero: mhz19_id
+          - display.page.show: default_page
+          - light.turn_off:
+              id: led
+          - lambda: id(calibrating) = false;

@@ -2,15 +2,13 @@ substitutions:
   devicename: sideboard_led
   human_devicename: Sideboard ESP
 
-esphome:
-  name: ${devicename}
-  platform: ESP8266
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+  mqtt: !include includes/mqtt.yaml
+
+esp8266:
   board: nodemcuv2
-  build_path: /tmp/build/${devicename}
-
-<<: !include includes/common.yaml
-
-<<: !include includes/mqtt.yaml
 
 globals:
   - id: box_size
@@ -136,23 +134,3 @@ light:
           lambda: |-
             it.all().fade_to_black(10);
             it.range(18, 22) = ESPColor::WHITE;
-      
-i2c:
-  sda: D5
-  scl: D6
-  scan: True
-  id: bus_a
-  
-sensor:
-  - platform: bh1750
-    name: "Wohnzimmer Helligkeit"
-    address: 0x23
-  - platform: ccs811
-    eco2:
-      name: "Wohnzimmer eCO2"
-    tvoc:
-      name: "Flüchtige organische Verbindungen Wohnzimmer"
-    address: 0x5A
-    update_interval: 60s
-  - platform: wifi_signal
-    name: "${human_devicename} Signalstärke"

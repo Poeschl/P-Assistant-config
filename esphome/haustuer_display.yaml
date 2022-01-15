@@ -2,29 +2,24 @@ substitutions:
   devicename: haustuer_display
   human_devicename: Display Haustür
 
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+
 esphome:
-  name: ${devicename}
-  platform: ESP8266
-  board: gen4iod
-  build_path: /tmp/build/${devicename}
   includes:
     - includes/custom_components/DisplayHaustuerComponent.h
     - includes/lib/GFX4dIoD9.cpp
     - includes/lib/GFX4dIoD9.h
 
-<<: !include includes/wifi.yaml
+esp8266:
+  board: gen4iod
 
 api:
     
 logger:
 
-switch:
-  - platform: restart
-    name: ${human_devicename} Neustart
-
 sensor:
-  - platform: wifi_signal
-    name: "${human_devicename} Signalstärke"
   - platform: homeassistant
     name: "Forecast Temp"
     entity_id: sensor.dwd_weather_augsburg_temperature

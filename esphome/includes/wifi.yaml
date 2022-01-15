@@ -3,14 +3,25 @@ wifi:
   password: !secret esphome_wifi_pass
   domain: .fritz.box
   power_save_mode: none
+  id: wifi_component
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: !secret esphome_wifi_fallback_name
     password: !secret esphome_wifi_fallback_pass  
 
+captive_portal:
+
+ota:
+
+sensor:
+  - platform: wifi_signal
+    name: "${human_devicename} Signalstärke"
+
 time:
   - platform: sntp
     id: sntp_time
     servers:
-      - fritz.box 
+      - fritz.box
+      - 0.de.pool.ntp.org
+      - 1.de.pool.ntp.org

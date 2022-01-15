@@ -2,7 +2,11 @@ substitutions:
   devicename: schlafzimmer_luefter
   human_devicename: Schlafzimmer Lüfter
 
-<<: !include includes/alfawise_plug.yaml
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+  mqtt: !include includes/mqtt.yaml
+  alfawise_plug: !include includes/alfawise_plug.yaml
 
 binary_sensor:
   - platform: gpio

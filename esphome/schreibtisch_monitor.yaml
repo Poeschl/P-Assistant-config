@@ -1,0 +1,43 @@
+substitutions:
+  devicename: schreibtisch_monitor
+  human_devicename: 'Schreibtisch Monitor'
+
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+  mqtt: !include includes/mqtt.yaml
+
+esp8266:
+  board: nodemcuv2
+
+wled:
+
+light:
+  - platform: fastled_clockless
+    id: led
+    rgb_order: GRB
+    chipset: WS2812B
+    pin: D1
+    num_leds: 160
+    name: "Monitorbeleuchtung"
+    effects:
+      - addressable_rainbow:  
+      - wled:
+      - addressable_scan:
+          name: Scan
+          scan_width: 8
+          move_interval: 20ms
+
+i2c:
+  sda: D2
+  scl: D3
+
+sensor:
+  - platform: ccs811
+    eco2:
+      name: "${human_devicename} eCO2"
+    tvoc:
+      name: "${human_devicename} Flüchtige organische Verbindungen"
+    address: 0x5A
+    baseline: 0x61BC
+    update_interval: 60s

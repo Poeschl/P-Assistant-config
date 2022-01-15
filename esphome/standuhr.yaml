@@ -4,9 +4,10 @@ substitutions:
 
 esphome:
   name: ${devicename}
-  platform: ESP8266
-  board: nodemcuv2
   build_path: /tmp/build/${devicename}
+
+esp8266:
+  board: nodemcuv2
 
 wifi:
   ssid: !secret esphome_wifi_name
@@ -45,9 +46,11 @@ sensor:
   - platform: wifi_signal
     name: "${human_devicename} Signalstärke"
 
-switch:
+button:
   - platform: restart
     name: ${human_devicename} Neustart
+
+switch:
   - platform: template
     id: gong_switch
     name: "${human_devicename} Gong"
@@ -68,12 +71,12 @@ time:
       - de.pool.ntp.org
     on_time:
       - seconds: 0
-        minutes: 0
+        minutes: 30
         hours: 21
         then:
           - switch.turn_off: gong_switch
       - seconds: 0
-        minutes: 0
+        minutes: 30
         hours: 8
         then:
           - switch.turn_on: gong_switch

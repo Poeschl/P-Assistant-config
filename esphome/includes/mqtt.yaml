@@ -3,3 +3,4 @@ mqtt:
   username: !secret esphome_mqtt_user
   password: !secret esphome_mqtt_pass
   discovery: True
+  id: mqtt_component

@@ -2,15 +2,13 @@ substitutions:
   devicename: schlafzimmer_bett
   human_devicename: Bettbeleuchtung
 
-esphome:
-  name: ${devicename}
-  platform: ESP8266
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+  mqtt: !include includes/mqtt.yaml
+
+esp8266:
   board: nodemcuv2
-  build_path: /tmp/build/${devicename}
-
-<<: !include includes/common.yaml
-
-<<: !include includes/mqtt.yaml
 
 globals:
   - id: middle_double_click_status

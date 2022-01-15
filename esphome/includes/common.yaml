@@ -1,15 +1,9 @@
-<<: !include wifi.yaml 
-
-captive_portal:
+esphome:
+  name: ${devicename}
+  build_path: /tmp/build/${devicename}
 
 logger:
 
-ota:
-  
-sensor:
-  - platform: wifi_signal
-    name: "${human_devicename} Signalstärke"
-
-switch:
+button:
   - platform: restart
     name: ${human_devicename} Neustart

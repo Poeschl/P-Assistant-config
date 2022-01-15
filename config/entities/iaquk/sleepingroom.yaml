@@ -5,7 +5,7 @@ name: Schlafzimmer
 sources:
   temperature: sensor.ble_temperature_schlafzimmer
   humidity: sensor.ble_humidity_schlafzimmer
-  # co2: sensor.schreibtischlampe_eco2
-  # tvoc: sensor.schreibtischlampe_tvoc
+  co2: sensor.schreibtisch_monitor_eco2
+  tvoc: sensor.schreibtisch_monitor_fluchtige_organische_verbindungen
 sensors:
   - iaq_level
