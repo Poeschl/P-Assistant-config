@@ -2,13 +2,18 @@
 import logging
 from struct import unpack
 
+from .helpers import (
+    to_mac,
+    to_unformatted_mac,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
 def parse_qingping(self, data, source_mac, rssi):
     """Qingping parser"""
     msg_length = len(data)
-    if msg_length > 12 and data[4] in [0x08, 0x48]:
+    if msg_length > 12:
         firmware = "Qingping"
         device_id = data[5]
         if device_id == 0x01:
@@ -21,11 +26,16 @@ def parse_qingping(self, data, source_mac, rssi):
             device_type = "CGPR1"
         elif device_id == 0x0C:
             device_type = "CGD1"
+        elif device_id == 0x0E:
+            device_type = "CGDN1"
         else:
             device_type = None
 
-        qingping_mac_reversed = data[6:12]
-        qingping_mac = qingping_mac_reversed[::-1]
+        if device_type == "CGDN1":
+            qingping_mac = source_mac
+        else:
+            qingping_mac_reversed = data[6:12]
+            qingping_mac = qingping_mac_reversed[::-1]
 
         result = {
             "rssi": rssi,
@@ -61,6 +71,12 @@ def parse_qingping(self, data, source_mac, rssi):
                 elif xdata_id == 0x11 and xdata_size == 1:
                     light = data[xdata_point]
                     result.update({"light": light})
+                elif xdata_id == 0x12 and xdata_size == 4:
+                    (pm2_5, pm10) = unpack("<HH", data[xdata_point:xdata_point + xdata_size])
+                    result.update({"pm2.5": pm2_5, "pm10": pm10})
+                elif xdata_id == 0x13 and xdata_size == 2:
+                    (co2,) = unpack("<H", data[xdata_point:xdata_point + xdata_size])
+                    result.update({"co2": co2})
                 elif xdata_id == 0x0F and xdata_size == 1:
                     packet_id = data[xdata_point]
                     result.update({"packet": packet_id})
@@ -94,14 +110,9 @@ def parse_qingping(self, data, source_mac, rssi):
 
     result.update({
         "rssi": rssi,
-        "mac": ''.join('{:02X}'.format(x) for x in qingping_mac[:]),
+        "mac": to_unformatted_mac(qingping_mac),
         "type": device_type,
         "firmware": firmware,
         "data": True
     })
     return result
-
-
-def to_mac(addr: int):
-    """Return formatted MAC address"""
-    return ':'.join('{:02x}'.format(x) for x in addr).upper()

@@ -11,15 +11,15 @@ class TestBParasite:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "b-parasite V1.1.0 (with illuminance)"
         assert sensor_msg["type"] == "b-parasite V1.1.0"
         assert sensor_msg["mac"] == "F0CAF0CA0201"
         assert sensor_msg["packet"] == 11
         assert sensor_msg["data"]
-        assert sensor_msg["temperature"] == 21.548 
-        assert sensor_msg["humidity"] == 73.68316650390625 
+        assert sensor_msg["temperature"] == 21.548
+        assert sensor_msg["humidity"] == 73.68316650390625
         assert sensor_msg["voltage"] == 2.721
         assert sensor_msg["illuminance"] == 66
         assert sensor_msg["moisture"] == 99.99847412109375
@@ -31,15 +31,15 @@ class TestBParasite:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "b-parasite V1.0.0 (without illuminance)"
         assert sensor_msg["type"] == "b-parasite V1.0.0"
         assert sensor_msg["mac"] == "F0CAF0CA0201"
         assert sensor_msg["packet"] == 11
         assert sensor_msg["data"]
-        assert sensor_msg["temperature"] == 21.548 
-        assert sensor_msg["humidity"] == 73.68316650390625 
+        assert sensor_msg["temperature"] == 21.548
+        assert sensor_msg["humidity"] == 73.68316650390625
         assert sensor_msg["voltage"] == 2.721
         assert sensor_msg["moisture"] == 99.99847412109375
         assert sensor_msg["rssi"] == -72

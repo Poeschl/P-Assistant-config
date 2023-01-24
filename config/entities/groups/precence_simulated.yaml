@@ -1,8 +1,0 @@
----
-# The entities in this group are simulating precence when needed.
-#
-name: Präsenzsimulation Entities
-entities:
-  - light.monitorbeleuchtung
-  - light.tv_lampe
-  - light.vitrine_leds

@@ -1,0 +1,126 @@
+esp8266:
+  board: d1_mini
+
+globals:
+  - id: maxWaterTrigger
+    type: boolean
+    initial_value: "false"
+  - id: thresholdVoltage
+    type: float
+    initial_value: '0.65'
+    restore_value: true
+  - id: wateringCount
+    type: int
+    initial_value: '20'
+    restore_value: true
+  - id: pumpTimeout
+    type: float
+    initial_value: '15'
+    restore_value: true
+
+sensor:
+  - platform: adc
+    id: water_sensor
+    name: ${human_devicename} Wasser Spannung
+    entity_category: diagnostic
+    pin: A0
+    update_interval: 1s
+    on_value_range: 
+      - above: !lambda "return id(thresholdVoltage);"
+        then: 
+          - globals.set:
+              id: maxWaterTrigger
+              value: "true"
+      - below: !lambda "return id(thresholdVoltage);"
+        then: 
+          - globals.set:
+              id: maxWaterTrigger
+              value: "false"
+              
+output:
+  - platform: gpio
+    pin: 
+      number: D1
+      inverted: true
+    id: pump
+
+switch:
+  - platform: output
+    name: ${human_devicename} Pumpe
+    id: pump_switch
+    entity_category: config
+    output: 'pump'
+    restore_mode: ALWAYS_OFF
+    on_turn_on: 
+      then:
+        - wait_until:
+            condition:
+              - lambda: return id(maxWaterTrigger);
+            timeout: !lambda "return id(pumpTimeout) * 1000;"
+        - switch.turn_off: pump_switch
+
+button:
+  - platform: template
+    name: ${human_devicename} Gießen
+    id: giessen
+    on_press:
+      - logger.log: Starte Gießen
+      - repeat:
+          count: !lambda "return id(wateringCount);"
+          then:
+            - switch.turn_on: pump_switch
+            - wait_until:
+              - switch.is_off: pump_switch
+            - delay: 2s
+      - switch.turn_off: pump_switch
+
+interval:
+  - interval: 5days
+    then:
+      - button.press: giessen
+
+status_led:
+  pin: 
+    number: D4
+    inverted: True
+
+number:
+  - platform: template
+    name: "${human_devicename} Sensor Trigger Spannung"
+    unit_of_measurement: V
+    entity_category: config
+    mode: SLIDER
+    icon: mdi:waves-arrow-up
+    min_value: 0.1
+    max_value: 1.0
+    step: 0.05
+    lambda: return id(thresholdVoltage);
+    set_action:
+      then:
+        lambda: id(thresholdVoltage) = x;
+  - platform: template
+    name: "${human_devicename} Pumpzyklen"
+    unit_of_measurement: Zyklen
+    entity_category: config
+    mode: SLIDER
+    icon: mdi:refresh
+    min_value: 5
+    max_value: 30
+    step: 1
+    lambda: return id(wateringCount);
+    set_action:
+      then:
+        lambda: id(wateringCount) = x;
+  - platform: template
+    name: "${human_devicename} Pumplaufzeit"
+    unit_of_measurement: sec
+    entity_category: config
+    mode: SLIDER
+    icon: mdi:timer-sand
+    min_value: 10
+    max_value: 30
+    step: 1
+    lambda: return id(pumpTimeout);
+    set_action:
+      then:
+        lambda: id(pumpTimeout) = x;

@@ -7,5 +7,7 @@ input_datetime:
 input_number:
 input_select:
 input_text:
+input_button:
 counter:
 timer:
+schedule:

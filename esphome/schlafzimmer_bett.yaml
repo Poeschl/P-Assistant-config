@@ -15,15 +15,14 @@ globals:
     type: bool
 
 light:
-  - platform: fastled_clockless
+  - platform: neopixelbus
     id: led
-    rgb_order: GRB
-    chipset: WS2812B
+    type: GRB
+    variant: ws2812x
     pin: D1
     num_leds: 154
     name: "Bettbeleuchtung LEDs"
-    effects:
-      - addressable_rainbow:    
+    effects:   
       - addressable_scan:
           name: Scan
           scan_width: 8
@@ -32,12 +31,51 @@ light:
           twinkle_probability: 15%
           progress_interval: 15ms
       - addressable_lambda:
+          name: Rainbow
+          lambda: |-
+            uint8_t led_change = 20; //(higher is more change) the difference in hue for each led down the strip
+            float speed = 7; //(lower is faster) the speed the first led colour changes at (therefore affecting all)
+            
+            if (initial_run) {
+              it.all() = Color(0, 0, 0);
+            }
+            
+            unsigned long time = millis() / speed;
+            int repetitions = time / 1529;
+            uint16_t hue = time - (1529 * repetitions);
+            
+            for (int i = 0; i < it.size(); i++) {
+              if (hue >= 0 && hue < 255) {
+                uint8_t green = hue;
+                it[i] = Color(255, green, 0);
+              } else if (hue >= 255 && hue < 510) {
+                uint8_t red = hue - 255;
+                it[i] = Color((255 - red), 255, 0);
+              } else if (hue >= 510 && hue < 765) {
+                uint8_t blue = hue - 510;
+                it[i] = Color(0, 255, blue);
+              } else if (hue >= 765 && hue < 1020) {
+                uint8_t green = hue - 765;
+                it[i] = Color(0, (255 - green), 255);
+              } else if (hue >= 1020 && hue < 1275) {
+                uint8_t red = hue - 1020;
+                it[i] = Color(red, 0, 255);
+              } else if (hue >= 1275 && hue < 1530) {
+                uint8_t blue = hue - 1275;
+                it[i] = Color(255, 0, (255 - blue));
+              }
+              hue+=led_change;
+              if (hue >= 1530) {
+                hue-=1530;
+              }
+            }
+      - addressable_lambda:
           name: "Fire"
           update_interval: 5ms
           lambda: |-
             for( int Pixel = 0; Pixel <= it.size(); Pixel++) {
-              it[Pixel] = ESPColor(165, 93, 37);
-              ESPColor color1;
+              it[Pixel] = Color(165, 93, 37);
+              Color color1;
               uint8_t r1,g1,b1;
               uint8_t r2,g2,b2;
               uint8_t r3,g3,b3;
@@ -56,7 +94,7 @@ light:
               b2 = (color2[2] );
 
               // Add Color
-              it[Pixel] = ESPColor(constrain(r1+r2, 0, 255), constrain(g1+g2, 0, 255), constrain(b1+b2, 0, 255));
+              it[Pixel] = Color(constrain(r1+r2, 0, 255), constrain(g1+g2, 0, 255), constrain(b1+b2, 0, 255));
               int rc = random(120);
 
               // subtract
@@ -81,18 +119,42 @@ light:
               if(b<0) b=0;
 
               /// Substract Color
-              it[Pixel] = ESPColor(r, g, b);
+              it[Pixel] = Color(r, g, b);
             }
             delay(random(10,120));
+      - addressable_lambda:
+          name: Red Glitter
+          update_interval: 20ms
+          lambda:
+            static int state = 0;
+
+            if (initial_run){
+              state = 0;
+
+              it.all() = Color(255,0,0);
+
+              ESP_LOGD("custom", "Gold Glitter");
+            } else {
+
+              it.all() = Color(128,0,0);
+
+              if(state==0){
+                int i = rand() % it.size();
+                it[i] = Color::WHITE;
+                state += 1;
+              } else {
+                state += 1;
+                state = state % 10;
+              }
+            }
             
 binary_sensor:
   - platform: gpio
-    name: Bett Taste rechts
+    name: Bett Taste Beleuchtung
     pin:
       number: D5
       mode: INPUT_PULLUP
       inverted: true
-    internal: true
     filters:
       - delayed_on: 50ms
     on_click:

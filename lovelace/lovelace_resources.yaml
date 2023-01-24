@@ -1,10 +1,10 @@
 items:
 - id: b920c22028114328ab07783ba5d2252f
   type: module
-  url: /hacsfiles/lovelace-auto-entities/auto-entities.js
+  url: /hacsfiles/lovelace-auto-entities/auto-entities.js?hacstag=1677445841121
 - id: e357f7a8de65472e901cb552e7b96ea1
   type: module
-  url: /hacsfiles/mini-graph-card/mini-graph-card-bundle.js
+  url: /hacsfiles/mini-graph-card/mini-graph-card-bundle.js?hacstag=1512800620110
 - id: 900f96825c224f0e9d1deb3bbc1a5369
   type: module
   url: /hacsfiles/weather-card/weather-card.js
@@ -16,16 +16,16 @@ items:
   url: /hacsfiles/stack-in-card/stack-in-card.js
 - id: afb5b8b810b2483f83feee4f58323987
   type: module
-  url: /hacsfiles/mini-media-player/mini-media-player-bundle.js?hacstag=1485208381150
+  url: /hacsfiles/mini-media-player/mini-media-player-bundle.js?hacstag=1485208381165
 - id: c49677f6c4e54789874b9cd5a5cd7648
   type: module
-  url: /hacsfiles/love-lock-card/love-lock-card.js
+  url: /hacsfiles/love-lock-card/love-lock-card.js?hacstag=1928353348215
 - id: 4c3289f165e84afcbc93d95f0d766f9f
   type: module
   url: /hacsfiles/text-divider-row/text-divider-row.js?hacstag=179788256141
 - id: e9671e80937d432abf31033aa382fd49
   type: module
-  url: /hacsfiles/uptime-card/uptime-card.js?hacstag=350509867093
-- id: 1ad2e201b77245e2aa0702cf2bd5d6cf
+  url: /hacsfiles/uptime-card/uptime-card.js?hacstag=3505098670140
+- id: 135ddcbcbcdd42d0a3f9ed4fff290825
   type: module
-  url: /hacsfiles/kiosk-mode/kiosk-mode.js?hacstag=303101606172
+  url: /hacsfiles/apexcharts-card/apexcharts-card.js?hacstag=331701152202

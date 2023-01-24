@@ -10,7 +10,7 @@ class TestQingping:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "Qingping"
         assert sensor_msg["type"] == "CGP1W"
@@ -29,7 +29,7 @@ class TestQingping:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "Qingping"
         assert sensor_msg["type"] == "CGD1"
@@ -47,7 +47,7 @@ class TestQingping:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "Qingping"
         assert sensor_msg["type"] == "CGG1"
@@ -65,7 +65,7 @@ class TestQingping:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "Qingping"
         assert sensor_msg["type"] == "CGPR1"
@@ -82,7 +82,7 @@ class TestQingping:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "Qingping"
         assert sensor_msg["type"] == "CGPR1"
@@ -99,7 +99,7 @@ class TestQingping:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "Qingping"
         assert sensor_msg["type"] == "CGPR1"
@@ -115,6 +115,26 @@ class TestQingping:
         data = bytes(bytearray.fromhex(data_string))
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg is None
+
+    def test_qingping_CGDN1(self):
+        """Test Qingping parser for CGDN1."""
+        data_string = "043E2B02010000A5808FE648541F0201061B16CDFD080EA3808FE64854010422014C011204710072001302ED03CC"
+        data = bytes(bytearray.fromhex(data_string))
+        # pylint: disable=unused-variable
+        ble_parser = BleParser()
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+
+        assert sensor_msg["firmware"] == "Qingping"
+        assert sensor_msg["type"] == "CGDN1"
+        assert sensor_msg["mac"] == "5448E68F80A5"
+        assert sensor_msg["packet"] == "no packet id"
+        assert sensor_msg["data"]
+        assert sensor_msg["temperature"] == 29.0
+        assert sensor_msg["humidity"] == 33.2
+        assert sensor_msg["co2"] == 1005
+        assert sensor_msg["pm2.5"] == 113
+        assert sensor_msg["pm10"] == 114
+        assert sensor_msg["rssi"] == -52

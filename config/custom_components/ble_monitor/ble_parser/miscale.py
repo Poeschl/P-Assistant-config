@@ -2,6 +2,11 @@
 import logging
 from struct import unpack
 
+from .helpers import (
+    to_mac,
+    to_unformatted_mac,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -17,7 +22,7 @@ def parse_miscale(self, data, source_mac, rssi):
 
         has_impedance = False
         is_stabilized = control_byte & (1 << 5)
-        weigth_removed = control_byte & (1 << 7)
+        weight_removed = control_byte & (1 << 7)
 
         if control_byte & (1 << 0):
             weight = weight / 100
@@ -35,7 +40,7 @@ def parse_miscale(self, data, source_mac, rssi):
         (measunit, control_byte, impedance, weight) = unpack("<BB7xHH", xvalue)
         has_impedance = control_byte & (1 << 1)
         is_stabilized = control_byte & (1 << 5)
-        weigth_removed = control_byte & (1 << 7)
+        weight_removed = control_byte & (1 << 7)
 
         if measunit & (1 << 4):
             # measurement in Chinese Catty unit
@@ -68,15 +73,21 @@ def parse_miscale(self, data, source_mac, rssi):
     result = {
         "non-stabilized weight": weight,
         "weight unit": weight_unit,
-        "weight removed": 0 if weigth_removed == 0 else 1,
+        "weight removed": 0 if weight_removed == 0 else 1,
         "stabilized": 0 if is_stabilized == 0 else 1
     }
 
-    if is_stabilized and not weigth_removed:
-        result.update({"weight": weight})
-
-    if has_impedance:
-        result.update({"impedance": impedance})
+    if device_type == "Mi Scale V1":
+        if is_stabilized and not weight_removed:
+            result.update({"weight": weight})
+    elif device_type == "Mi Scale V2":
+        if is_stabilized and (weight_removed == 0):
+            result.update({"stabilized weight": weight})
+            if has_impedance:
+                result.update({"weight": weight})
+                result.update({"impedance": impedance})
+    else:
+        pass
 
     firmware = device_type
     miscale_mac = source_mac
@@ -106,14 +117,9 @@ def parse_miscale(self, data, source_mac, rssi):
     result.update({
         "type": device_type,
         "firmware": firmware,
-        "mac": ''.join('{:02X}'.format(x) for x in miscale_mac),
+        "mac": to_unformatted_mac(miscale_mac),
         "packet": packet_id,
         "rssi": rssi,
         "data": True,
     })
     return result
-
-
-def to_mac(addr: int):
-    """Return formatted MAC address"""
-    return ':'.join('{:02x}'.format(x) for x in addr).upper()

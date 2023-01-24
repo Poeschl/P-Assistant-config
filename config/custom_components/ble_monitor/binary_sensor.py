@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_NAME,
+    CONF_MAC,
     CONF_UNIQUE_ID,
     ATTR_BATTERY_LEVEL,
     STATE_OFF,
@@ -17,17 +18,31 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt
+
+from .helper import (
+    identifier_normalize,
+    identifier_clean,
+    detect_conf_type,
+    dict_get_or,
+    dict_get_or_normalize,
+)
 
 from .const import (
+    AUTO_MANUFACTURER_DICT,
+    AUTO_BINARY_SENSOR_LIST,
     CONF_PERIOD,
     CONF_RESTORE_STATE,
     CONF_DEVICE_RESTORE_STATE,
     CONF_DEVICE_RESET_TIMER,
+    CONF_UUID,
     DEFAULT_DEVICE_RESET_TIMER,
     KETTLES,
     MANUFACTURER_DICT,
     MEASUREMENT_DICT,
+    RENAMED_FIRMWARE_DICT,
+    RENAMED_MANUFACTURER_DICT,
+    RENAMED_MODEL_DICT,
     BINARY_SENSOR_TYPES,
     DOMAIN,
     BLEMonitorBinarySensorEntityDescription,
@@ -38,23 +53,25 @@ _LOGGER = logging.getLogger(__name__)
 RESTORE_ATTRIBUTES = [
     "rssi",
     "firmware",
-    "last packet id",
+    "last_packet_id",
     ATTR_BATTERY_LEVEL,
     "status",
-    "motion timer",
+    "last_motion",
     "action",
+    "door_action",
     "method",
     "error",
-    "key id",
+    "key_id",
     "timestamp",
     "result",
     "counter",
     "score",
-    "toothbrush state",
+    "toothbrush_state",
     "pressure",
     "mode",
-    "sector timer",
-    "number of sectors",
+    "sector_timer",
+    "number_of_sectors",
+    "weight",
 ]
 
 
@@ -91,61 +108,91 @@ class BLEupdaterBinary:
     async def async_run(self, hass):
         """Entities updater loop."""
 
-        async def async_add_binary_sensor(mac, sensortype, firmware):
-            device_sensors = MEASUREMENT_DICT[sensortype][2]
-            if mac not in sensors_by_mac:
-                sensors = []
-                for sensor in device_sensors:
-                    description = [item for item in BINARY_SENSOR_TYPES if item.key is sensor][0]
-                    sensors.insert(
-                        device_sensors.index(sensor),
-                        globals()[description.sensor_class](
-                            self.config, mac, sensortype, firmware, description
-                        ),
-                    )
-                if len(sensors) != 0:
-                    sensors_by_mac[mac] = sensors
-                    self.add_entities(sensors)
+        async def async_add_binary_sensor(key, device_model, firmware, auto_sensors, manufacturer=None):
+            if device_model in AUTO_MANUFACTURER_DICT:
+                sensors = {}
+                for measurement in auto_sensors:
+                    if key not in sensors_by_key:
+                        sensors_by_key[key] = {}
+                    if measurement not in sensors_by_key[key]:
+                        description = [item for item in BINARY_SENSOR_TYPES if item.key is measurement][0]
+                        sensors[measurement] = globals()[description.sensor_class](
+                            self.config, key, device_model, firmware, description, manufacturer
+                        )
+                        self.add_entities([sensors[measurement]])
+                        sensors_by_key[key].update(sensors)
+                    else:
+                        sensors = sensors_by_key[key]
             else:
-                sensors = sensors_by_mac[mac]
+                device_sensors = MEASUREMENT_DICT[device_model][2]
+                if key not in sensors_by_key:
+                    sensors = {}
+                    sensors_by_key[key] = {}
+                    for measurement in device_sensors:
+                        description = [item for item in BINARY_SENSOR_TYPES if item.key is measurement][0]
+                        sensors[measurement] = globals()[description.sensor_class](
+                            self.config, key, device_model, firmware, description, manufacturer
+                        )
+                        self.add_entities([sensors[measurement]])
+                    sensors_by_key[key] = sensors
+                else:
+                    sensors = sensors_by_key[key]
             return sensors
 
         _LOGGER.debug("Binary entities updater loop started!")
-        sensors_by_mac = {}
-        sensors = []
+        sensors_by_key = {}
+        sensors = {}
         batt = {}  # batteries
-        mibeacon_cnt = 0
+        ble_adv_cnt = 0
         hpriority = []
-        ts_last = dt_util.now()
+        ts_last = dt.now()
         ts_now = ts_last
-        data = None
+        data = {}
         await asyncio.sleep(0)
 
-        # Set up binary sensors of configured devices on startup when sensortype is available in device registry
+        # Set up binary sensors of configured devices on startup when device model is available in device registry
         if self.config[CONF_DEVICES]:
-            dev_registry = await hass.helpers.device_registry.async_get_registry()
+            dev_registry = hass.helpers.device_registry.async_get(hass)
+            ent_registry = hass.helpers.entity_registry.async_get(hass)
             for device in self.config[CONF_DEVICES]:
-                mac = device["mac"]
-
-                # get sensortype and firmware from device registry to setup sensor
-                dev = dev_registry.async_get_device({(DOMAIN, mac)}, set())
+                # get device_model and firmware from device registry to setup binary sensor
+                key = dict_get_or(device)
+                dev = dev_registry.async_get_device({(DOMAIN, key.upper())}, set())
+                auto_sensors = set()
                 if dev:
-                    mac = mac.replace(":", "")
-                    sensortype = dev.model
+                    key = identifier_clean(key)
+                    device_id = dev.id
+                    device_model = dev.model
                     firmware = dev.sw_version
-                    if sensortype and firmware:
+                    manufacturer = dev.manufacturer
+                    # migrate to new model/firmware/manufacturer if changed
+                    device_model = RENAMED_MODEL_DICT.get(device_model, device_model)
+                    firmware = RENAMED_FIRMWARE_DICT.get(firmware, firmware)
+                    manufacturer = RENAMED_MANUFACTURER_DICT.get(manufacturer, manufacturer)
+                    # get all entities for this device
+                    entity_list = hass.helpers.entity_registry.async_entries_for_device(
+                        registry=ent_registry, device_id=device_id, include_disabled_entities=False
+                    )
+                    # find the measurement key for each entity
+                    for entity in entity_list:
+                        unique_id_prefix = (entity.unique_id).removesuffix(key).removesuffix(dev.name)
+                        for binary_sensor_type in BINARY_SENSOR_TYPES:
+                            if binary_sensor_type.unique_id == unique_id_prefix:
+                                binary_sensor_key = binary_sensor_type.key
+                                auto_sensors.add(binary_sensor_key)
+                    if device_model and firmware and auto_sensors:
                         sensors = await async_add_binary_sensor(
-                            mac, sensortype, firmware
+                            key, device_model, firmware, auto_sensors, manufacturer
                         )
                     else:
                         continue
                 else:
                     pass
         else:
-            sensors = []
+            sensors = {}
 
         # Set up new binary sensors when first BLE advertisement is received
-        sensors = []
+        sensors = {}
         while True:
             try:
                 advevent = await asyncio.wait_for(self.dataqueue.get(), 1)
@@ -163,24 +210,40 @@ class BLEupdaterBinary:
                         entity.async_schedule_update_ha_state(True)
             if data:
                 _LOGGER.debug("Data binary sensor received: %s", data)
-                mibeacon_cnt += 1
-                mac = data["mac"]
+                ble_adv_cnt += 1
+                key = identifier_clean(dict_get_or(data))
                 batt_attr = None
-                sensortype = data["type"]
+                device_model = data["type"]
                 firmware = data["firmware"]
-                device_sensors = MEASUREMENT_DICT[sensortype][2]
-                sensors = await async_add_binary_sensor(mac, sensortype, firmware)
+                manufacturer = data["manufacturer"] if "manufacturer" in data else None
+                # migrate to new model/firmware/manufacturer if changed
+                device_model = RENAMED_MODEL_DICT.get(device_model, device_model)
+                firmware = RENAMED_FIRMWARE_DICT.get(firmware, firmware)
+                manufacturer = RENAMED_MANUFACTURER_DICT.get(manufacturer, manufacturer)
+                auto_sensors = set()
+                if device_model in AUTO_MANUFACTURER_DICT:
+                    for measurement in AUTO_BINARY_SENSOR_LIST:
+                        if measurement in data:
+                            auto_sensors.add(measurement)
+                sensors = await async_add_binary_sensor(
+                    key, device_model, firmware, auto_sensors, manufacturer
+                )
+                device_sensors = sensors.keys()
 
                 if data["data"] is False:
                     data = None
                     continue
 
-                # store found readings per device
-                if "battery" in MEASUREMENT_DICT[sensortype][0]:
+                # battery attribute
+                if device_model in AUTO_MANUFACTURER_DICT or (
+                    device_model in MANUFACTURER_DICT and (
+                        "battery" in MEASUREMENT_DICT[device_model][0]
+                    )
+                ):
                     if "battery" in data:
-                        batt[mac] = int(data["battery"])
-                        batt_attr = batt[mac]
-                        for entity in sensors:
+                        batt[key] = int(data["battery"])
+                        batt_attr = batt[key]
+                        for entity in sensors.values():
                             getattr(entity, "_extra_state_attributes")[
                                 ATTR_BATTERY_LEVEL
                             ] = batt_attr
@@ -188,13 +251,14 @@ class BLEupdaterBinary:
                                 entity.async_schedule_update_ha_state(False)
                     else:
                         try:
-                            batt_attr = batt[mac]
+                            batt_attr = batt[key]
                         except KeyError:
                             batt_attr = None
+
                 # schedule an immediate update of binary sensors
                 for measurement in device_sensors:
                     if measurement in data:
-                        entity = sensors[device_sensors.index(measurement)]
+                        entity = sensors[measurement]
                         entity.collect(data, batt_attr)
                         if entity.pending_update is True:
                             entity.async_schedule_update_ha_state(True)
@@ -203,17 +267,16 @@ class BLEupdaterBinary:
                         ):
                             hpriority.append(entity)
                 data = None
-            ts_now = dt_util.now()
+            ts_now = dt.now()
             if ts_now - ts_last < timedelta(seconds=self.period):
                 continue
             ts_last = ts_now
             _LOGGER.debug(
-                "%i MiBeacon BLE ADV messages processed for %i binary sensor device(s) total. Priority queue = %i",
-                mibeacon_cnt,
-                len(sensors_by_mac),
-                len(hpriority),
+                "%i BLE advertisements processed for %i binary sensor device(s)",
+                ble_adv_cnt,
+                len(sensors_by_key),
             )
-            mibeacon_cnt = 0
+            ble_adv_cnt = 0
 
 
 class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
@@ -222,29 +285,40 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
     def __init__(
         self,
         config,
-        mac: str,
+        key: str,
         devtype: str,
         firmware: str,
         description: BLEMonitorBinarySensorEntityDescription,
+        manufacturer=None
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
         self._config = config
-        self._mac = mac
-        self._fmac = ":".join(mac[i : i + 2] for i in range(0, len(self._mac), 2))
+        self._type = detect_conf_type(key)
+
+        self._key = key
+        self._fkey = identifier_normalize(key)
         self._state = None
 
         self._device_settings = self.get_device_settings()
         self._device_name = self._device_settings["name"]
         self._device_type = devtype
         self._device_firmware = firmware
-        self._device_manufacturer = MANUFACTURER_DICT[devtype]
-        self._extra_state_attributes = {}
-        self._extra_state_attributes["sensor type"] = devtype
-        self._extra_state_attributes["mac address"] = self._fmac
+        self._device_manufacturer = manufacturer \
+            if manufacturer is not None \
+            else MANUFACTURER_DICT.get(
+                devtype,
+                AUTO_MANUFACTURER_DICT.get(devtype, None)
+            )
+
+        self._extra_state_attributes = {
+            'sensor_type': devtype,
+            'uuid' if self.is_beacon else 'mac_address': self._fkey
+        }
+
         self.ready_for_update = False
-        self._restore_state = self._device_settings["restore state"]
-        self._reset_timer = self._device_settings["reset timer"]
+        self._restore_state = self._device_settings["restore_state"]
+        self._reset_timer = self._device_settings["reset_timer"]
         self._newstate = None
 
         self._attr_name = f"{description.name} {self._device_name}"
@@ -252,8 +326,9 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._attr_should_poll = False
         self._attr_force_update = description.force_update
         self._attr_extra_state_attributes = self._extra_state_attributes
+
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._extra_state_attributes["mac address"])},
+            "identifiers": {(DOMAIN, self._fkey.upper())},
             "name": self._device_name,
             "model": devtype,
             "sw_version": firmware,
@@ -278,10 +353,23 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
             self._state = True
         elif old_state.state == STATE_OFF:
             self._state = False
-        for attr in RESTORE_ATTRIBUTES:
+
+        restore_attr = RESTORE_ATTRIBUTES
+        restore_attr.append('mac_address' if self.is_beacon else 'uuid')
+
+        for attr in restore_attr:
             if attr in old_state.attributes:
+                if attr in ['uuid', 'mac_address']:
+                    self._extra_state_attributes[attr] = identifier_normalize(old_state.attributes[attr])
+                    continue
+
                 self._extra_state_attributes[attr] = old_state.attributes[attr]
         self.ready_for_update = True
+
+    @property
+    def is_beacon(self):
+        """Check if entity is beacon."""
+        return self._type == CONF_UUID
 
     @property
     def pending_update(self):
@@ -306,7 +394,7 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
         device_settings = {}
 
         # initial setup of device settings equal to integration settings
-        dev_name = self._mac
+        dev_name = self._key
         dev_restore_state = self._config[CONF_RESTORE_STATE]
         dev_reset_timer = DEFAULT_DEVICE_RESET_TIMER
 
@@ -320,7 +408,7 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
         # overrule settings with device setting if available
         if self._config[CONF_DEVICES]:
             for device in self._config[CONF_DEVICES]:
-                if self._fmac in device["mac"].upper():
+                if self._fkey.upper() == dict_get_or(device).upper():
                     if id_selector in device:
                         # get device name (from YAML config)
                         dev_name = device[id_selector]
@@ -333,18 +421,19 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
                         dev_reset_timer = device[CONF_DEVICE_RESET_TIMER]
         device_settings = {
             "name": dev_name,
-            "restore state": dev_restore_state,
-            "reset timer": dev_reset_timer,
+            "restore_state": dev_restore_state,
+            "reset_timer": dev_reset_timer,
         }
         _LOGGER.debug(
-            "Binary sensor device with mac address %s has the following settings. "
+            "Binary sensor device with %s %s has the following settings. "
             "Name: %s. "
-            "Restore state: %s. "
+            "Restore State: %s. "
             "Reset Timer: %s",
-            self._fmac,
+            'uuid' if self.is_beacon else 'mac address',
+            self._fkey,
             device_settings["name"],
-            device_settings["restore state"],
-            device_settings["reset timer"],
+            device_settings["restore_state"],
+            device_settings["reset_timer"],
         )
         return device_settings
 
@@ -353,14 +442,18 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
         if self.enabled is False:
             return
         self._newstate = data[self.entity_description.key]
-        self._extra_state_attributes["last packet id"] = data["packet"]
+        self._extra_state_attributes["last_packet_id"] = data["packet"]
         self._extra_state_attributes["rssi"] = data["rssi"]
         self._extra_state_attributes["firmware"] = data["firmware"]
+        self._extra_state_attributes['mac_address' if self.is_beacon else 'uuid'] = dict_get_or_normalize(
+            data, CONF_MAC, CONF_UUID
+        )
+
         if batt_attr is not None:
             self._extra_state_attributes[ATTR_BATTERY_LEVEL] = batt_attr
         if "motion timer" in data:
             if data["motion timer"] == 1:
-                self._extra_state_attributes["last motion"] = dt_util.now()
+                self._extra_state_attributes["last_motion"] = dt.now()
         # dirty hack for kettle status
         if self._device_type in KETTLES:
             if self._newstate == 0:
@@ -374,31 +467,42 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
             else:
                 self._extra_state_attributes["status"] = self._newstate
         if self.entity_description.key == "opening":
-            self._extra_state_attributes["status"] = data["status"]
-        if self.entity_description.key == "lock":
+            if "status" in data:
+                self._extra_state_attributes["status"] = data["status"]
+        if "locktype" in data and self.entity_description.key == data["locktype"]:
             self._extra_state_attributes["action"] = data["action"]
             self._extra_state_attributes["method"] = data["method"]
             self._extra_state_attributes["error"] = data["error"]
-            self._extra_state_attributes["key id"] = data["key id"]
+            self._extra_state_attributes["key_id"] = data["key id"]
             self._extra_state_attributes["timestamp"] = data["timestamp"]
+        if self.entity_description.key == "door":
+            self._extra_state_attributes["door_action"] = data["door action"]
         if self.entity_description.key == "fingerprint":
             self._extra_state_attributes["result"] = data["result"]
-            self._extra_state_attributes["key id"] = data["key id"]
+            self._extra_state_attributes["key_id"] = data["key id"]
         if self.entity_description.key == "toothbrush":
             if "counter" in data:
                 self._extra_state_attributes["counter"] = data["counter"]
             if "score" in data:
                 self._extra_state_attributes["score"] = data["score"]
             if "toothbrush state" in data:
-                self._extra_state_attributes["toothbrush state"] = data["toothbrush state"]
+                self._extra_state_attributes["toothbrush_state"] = data["toothbrush state"]
             if "pressure" in data:
                 self._extra_state_attributes["pressure"] = data["pressure"]
             if "mode" in data:
                 self._extra_state_attributes["mode"] = data["mode"]
             if "sector timer" in data:
-                self._extra_state_attributes["sector timer"] = data["sector timer"]
+                self._extra_state_attributes["sector_timer"] = data["sector timer"]
             if "number of sectors" in data:
-                self._extra_state_attributes["number of sectors"] = data["number of sectors"]
+                self._extra_state_attributes["number_of_sectors"] = data["number of sectors"]
+        if self.entity_description.key == "weight removed":
+            if "stabilized" in data:
+                if data["stabilized"] and data["weight removed"]:
+                    self._extra_state_attributes["weight"] = data["non-stabilized weight"]
+        if self.entity_description.key == "impact":
+            self._extra_state_attributes["impact_x"] = data["impact x"]
+            self._extra_state_attributes["impact_y"] = data["impact y"]
+            self._extra_state_attributes["impact_z"] = data["impact z"]
 
     async def async_update(self):
         """Update sensor state and attribute."""
@@ -408,15 +512,15 @@ class BaseBinarySensor(RestoreEntity, BinarySensorEntity):
 class MotionBinarySensor(BaseBinarySensor):
     """Representation of a Motion Binary Sensor."""
 
-    def __init__(self, config, mac, devtype, firmware, description):
+    def __init__(self, config, key, devtype, firmware, description, manufacturer=None):
         """Initialize the sensor."""
-        super().__init__(config, mac, devtype, firmware, description)
+        super().__init__(config, key, devtype, firmware, description, manufacturer)
         self._start_timer = None
 
     def reset_state(self, event=None):
         """Reset state of the sensor."""
         # check if the latest update of the timer is longer than the set timer value
-        if dt_util.now() - self._start_timer >= timedelta(seconds=self._reset_timer):
+        if dt.now() - self._start_timer >= timedelta(seconds=self._reset_timer):
             self._state = False
             self.schedule_update_ha_state(False)
 
@@ -425,16 +529,18 @@ class MotionBinarySensor(BaseBinarySensor):
         # check if the reset timer is enabled
         if self._reset_timer > 0:
             try:
-                # if there is a last motion attribute, check the timer
-                now = dt_util.now()
-                self._start_timer = self._extra_state_attributes["last motion"]
+                # if there is a last_motion attribute, check the timer
+                now = dt.now()
+                self._start_timer = self._extra_state_attributes["last_motion"]
+                if isinstance(self._start_timer, str):
+                    self._start_timer = dt.parse_datetime(self._start_timer)
 
                 if now - self._start_timer >= timedelta(seconds=self._reset_timer):
                     self._state = False
                 else:
                     self._state = True
                     async_call_later(self.hass, self._reset_timer, self.reset_state)
-            except KeyError:
+            except (KeyError, ValueError):
                 self._state = self._newstate
         else:
             self._state = self._newstate

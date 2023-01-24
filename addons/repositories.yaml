@@ -1,19 +1,15 @@
-'Home Assistant Add-on: Zigbee2mqtt':
-  maintainer: Daniel Welch <dwelch2102@gmail.com>
+ESPHome:
+  maintainer: ESPHome <esphome@nabucasa.com>
+  slug: 5c53de3b
+  source: https://github.com/esphome/home-assistant-addon
+'Home Assistant Add-on: Zigbee2MQTT':
+  maintainer: Koen Kanters <koenkanters94@gmail.com>
   slug: 45df7312
   source: https://github.com/zigbee2mqtt/hassio-zigbee2mqtt
 Home Assistant Community Add-ons:
   maintainer: Franck Nijhof <frenck@addons.community>
   slug: a0d7b954
   source: https://github.com/hassio-addons/repository
-Local add-ons:
-  maintainer: you
-  slug: local
-  source: local
-Official add-ons:
-  maintainer: Home Assistant
-  slug: core
-  source: core
 Poeschl Home Assistant Add-ons:
   maintainer: Poeschl <Poeschl@users.noreply.github.com>
   slug: 243ffc37

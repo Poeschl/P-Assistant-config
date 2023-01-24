@@ -1,4 +1,0 @@
----
-# Groups allow the user to combine multiple entities into one.
-#
-group: !include_dir_named ../entities/groups

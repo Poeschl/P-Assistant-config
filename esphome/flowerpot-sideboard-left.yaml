@@ -1,0 +1,9 @@
+substitutions:
+  devicename: flowerpot-sideboard-left
+  human_devicename: Blumentopf Sideboard Links
+
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+  mqtt: !include includes/mqtt.yaml
+  flowerpot: !include includes/d1-flowerpot.yaml

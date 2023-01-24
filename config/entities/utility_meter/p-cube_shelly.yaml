@@ -2,5 +2,5 @@
 # The meter for the 3d printer shelly
 #
 p_cube_energy_cum:
-  source: sensor.p_cube_switch_energy
-  cycle: monthly
+  source: sensor.p_cube_switch_power
+  cycle: daily

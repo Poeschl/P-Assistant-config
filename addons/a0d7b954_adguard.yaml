@@ -1,3 +1,0 @@
-certfile: p-assist.cert.pem
-keyfile: p-assist.key.pem
-ssl: true

@@ -1,6 +1,0 @@
----
-# The meter for the homeassistant shelly
-#
-homeassistant_plug_energy_cum:
-  source: sensor.home_assistant_switch_energy
-  cycle: daily

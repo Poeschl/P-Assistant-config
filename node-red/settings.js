@@ -41,6 +41,7 @@
  * If you like to change those settings, some are available via the add-on
  * settings/option in the Hass.io panel in Home Assistant.
  */
+process.env.TZ = "Europe/Berlin";
 
 module.exports = {
 

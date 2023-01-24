@@ -6,10 +6,13 @@ from markdownify import markdownify
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
 )
 from simple_dwd_weatherforecast import dwdforecast
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
@@ -19,13 +22,22 @@ from .const import (
     ATTR_LATEST_UPDATE,
     ATTR_STATION_ID,
     ATTR_STATION_NAME,
+    DEFAULT_WIND_DIRECTION_TYPE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class DWDWeatherData:
-    def __init__(self, hass, latitude, longitude, station_id, weather_interval):
+    def __init__(
+        self,
+        hass,
+        latitude,
+        longitude,
+        station_id,
+        weather_interval,
+        wind_direction_type,
+    ):
         """Initialize the data object."""
         self._hass = hass
         self.forecast = None
@@ -36,6 +48,7 @@ class DWDWeatherData:
         self.latitude = latitude
         self.longitude = longitude
         self.weather_interval = weather_interval
+        self.wind_direction_type = wind_direction_type
         self.infos = {}
 
         # Checks if station_id was set by the user
@@ -105,6 +118,16 @@ class DWDWeatherData:
                         if temp_min is not None:
                             temp_min = int(round(temp_min - 273.1, 0))
 
+                        wind_dir = self.dwd_weather.get_timeframe_avg(
+                            WeatherDataType.WIND_DIRECTION,
+                            timestep,
+                            self.weather_interval,
+                            False,
+                        )
+
+                        if self.wind_direction_type != DEFAULT_WIND_DIRECTION_TYPE:
+                            wind_dir = self.get_wind_direction_symbol(wind_dir)
+
                         precipitation_prop = self.dwd_weather.get_timeframe_max(
                             WeatherDataType.PRECIPITATION_PROBABILITY,
                             timestep,
@@ -123,10 +146,23 @@ class DWDWeatherData:
                                     self.weather_interval,
                                     False,
                                 ),
-                                ATTR_FORECAST_TEMP: temp_max,
-                                ATTR_FORECAST_TEMP_LOW: temp_min,
-                                ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
+                                ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                                ATTR_FORECAST_NATIVE_TEMP_LOW: temp_min,
+                                ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                                     WeatherDataType.PRECIPITATION,
+                                    timestep,
+                                    self.weather_interval,
+                                    False,
+                                ),
+                                ATTR_FORECAST_WIND_BEARING: wind_dir,
+                                ATTR_FORECAST_NATIVE_WIND_SPEED: self.dwd_weather.get_timeframe_max(
+                                    WeatherDataType.WIND_SPEED,
+                                    timestep,
+                                    self.weather_interval,
+                                    False,
+                                ),
+                                "wind_gusts": self.dwd_weather.get_timeframe_max(
+                                    WeatherDataType.WIND_GUSTS,
                                     timestep,
                                     self.weather_interval,
                                     False,
@@ -161,7 +197,10 @@ class DWDWeatherData:
             elif data_type == WeatherDataType.WIND_SPEED:
                 value = round(value * 3.6, 1)
             elif data_type == WeatherDataType.WIND_DIRECTION:
-                value = round(value, 0)
+                if self.wind_direction_type == DEFAULT_WIND_DIRECTION_TYPE:
+                    value = round(value, 0)
+                else:
+                    value = self.get_wind_direction_symbol(round(value, 0))
             elif data_type == WeatherDataType.WIND_GUSTS:
                 value = round(value * 3.6, 1)
             elif data_type == WeatherDataType.PRECIPITATION:
@@ -274,7 +313,10 @@ class DWDWeatherData:
                 elif data_type == WeatherDataType.WIND_SPEED:
                     value = round(value * 3.6, 1)
                 elif data_type == WeatherDataType.WIND_DIRECTION:
-                    value = round(value, 0)
+                    if self.wind_direction_type == DEFAULT_WIND_DIRECTION_TYPE:
+                        value = round(value, 0)
+                    else:
+                        value = self.get_wind_direction_symbol(round(value, 0))
                 elif data_type == WeatherDataType.WIND_GUSTS:
                     value = round(value * 3.6, 1)
                 elif data_type == WeatherDataType.PRECIPITATION:
@@ -347,3 +389,23 @@ class DWDWeatherData:
 
     def get_humidity_hourly(self):
         return self.get_hourly(WeatherDataType.HUMIDITY)
+
+    def get_wind_direction_symbol(self, value):
+        if value < 22.5:
+            return "N"
+        elif value < 67.5:
+            return "NO"
+        elif value < 112.5:
+            return "O"
+        elif value < 157.5:
+            return "SO"
+        elif value < 202.5:
+            return "S"
+        elif value < 247.5:
+            return "SW"
+        elif value < 292.5:
+            return "W"
+        elif value < 337.5:
+            return "NW"
+        else:
+            return "N"

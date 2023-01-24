@@ -5,7 +5,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (
-    FanEntity, PLATFORM_SCHEMA, SPEED_OFF, SUPPORT_SET_SPEED, SUPPORT_OSCILLATE, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
+    FanEntity, PLATFORM_SCHEMA, SUPPORT_SET_SPEED, SUPPORT_OSCILLATE)
 from homeassistant.const import (
     CONF_NAME, STATE_ON)
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND_OSCILLATE): cv.string,
 })
 
-FAN_SPEEDS = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_SPEEDS = ["low", "medium", "high"]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -49,11 +49,11 @@ class IrFan(FanEntity, RestoreEntity):
             CONF_COMMAND_OSCILLATE: config.get(CONF_COMMAND_OSCILLATE),
         }
 
-        self._speed = SPEED_LOW
-        self._last_on_speed = SPEED_LOW
+        self._speed = ordered_list_item_to_percentage(FAN_SPEEDS, "low")
+        self._last_on_speed = ordered_list_item_to_percentage(FAN_SPEEDS, "low")
         self._oscillating = False
 
-        self._current_speed = SPEED_OFF
+        self._current_speed = 0
         self._current_oscillating = True
         self._current_on = self.is_on
 
@@ -133,7 +133,7 @@ class IrFan(FanEntity, RestoreEntity):
             self._last_on_speed = speed
             self._speed = speed
         else:
-            self._speed = SPEED_OFF
+            self._speed = 0
 
         await self.send_command()
         await self.async_update_ha_state()
@@ -164,7 +164,7 @@ class IrFan(FanEntity, RestoreEntity):
             oscillating = self._oscillating
             last_oscillating = self._current_oscillating
 
-            if speed == SPEED_OFF:
+            if speed == 0:
                 if self.is_on:
                     await self.__send(self._commands[CONF_COMMAND_ON_OFF])
                     self._last_on_speed = last_speed

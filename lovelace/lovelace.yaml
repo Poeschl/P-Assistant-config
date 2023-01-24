@@ -198,7 +198,11 @@ config:
           - entity: climate.thermostat_wohnzimmer
             type: thermostat
           - entities:
-            - entity: sensor.thermostat_wohnzimmer_valve_postition
+            - entity: sensor.thermostat_wohnzimmer_position
+              secondary_info: last-changed
+            - entity: binary_sensor.thermostat_wohnzimmer_valve_state
+              secondary_info: last-changed
+            - entity: switch.thermostat_wohnzimmer_eco_mode
               secondary_info: last-changed
             - entity: binary_sensor.balkontur_contact
             type: entities
@@ -270,10 +274,28 @@ config:
           name: Luftfeuchte
           points_per_hour: 4
           type: custom:mini-graph-card
+        - color_thresholds:
+          - color: '#d32f2f'
+            value: 1600
+          - color: '#ffbf00'
+            value: 1200
+          - color: '#04d900'
+            value: 1000
+          entities:
+          - entity: sensor.frischluft_co2
+            index: 0
+          hour24: true
+          hours_to_show: 24
+          lower_bound: 400
+          name: CO2
+          points_per_hour: 2
+          type: custom:mini-graph-card
         type: horizontal-stack
       - entities:
         - entity: sensor.livingroom_iaq_level
           name: "Luftqualit\xE4t"
+        - entity: binary_sensor.balkontur_contact
+          name: "Balkont\xFCr"
         type: entities
       title: Wohnzimmer
       type: custom:stack-in-card
@@ -335,13 +357,13 @@ config:
           type: custom:mini-graph-card
         - color_thresholds:
           - color: '#d32f2f'
-            value: 1300
+            value: 1600
           - color: '#ffbf00'
-            value: 900
+            value: 1200
           - color: '#04d900'
-            value: 600
+            value: 1000
           entities:
-          - entity: sensor.schreibtisch_monitor_eco2
+          - entity: sensor.schreibtisch_monitor_co2
             index: 0
           hour24: true
           hours_to_show: 24
@@ -353,6 +375,8 @@ config:
       - entities:
         - entity: sensor.sleepingroom_iaq_level
           name: "Luftqualit\xE4t"
+        - entity: binary_sensor.fenster_schlafzimmer_contact
+          name: Fenster
         type: entities
       title: Schlafzimmer
       type: custom:stack-in-card
@@ -452,6 +476,26 @@ config:
     title: Klima
   - badges: []
     cards:
+    - entities:
+      - entity: button.blumentopf_ecke_giessen
+      - entity: switch.blumentopf_ecke_pumpe
+        secondary_info: last-changed
+      - entity: sensor.blumentopf_ecke_wasser_spannung
+      title: Orchidee Ecke
+      type: entities
+    - entities:
+      - entity: button.blumentopf_sideboard_links_giessen
+      - entity: switch.blumentopf_sideboard_links_pumpe
+        secondary_info: last-changed
+      - entity: sensor.blumentopf_sideboard_links_wasser_spannung
+      title: Orchidee Sideboard Links
+      type: entities
+    icon: mdi:flower-tulip
+    path: pflanzen
+    theme: Backend-selected
+    title: Pflanzen
+  - badges: []
+    cards:
     - cards:
       - camera_view: live
         entity: camera.p_dusty_rendered_map
@@ -460,6 +504,7 @@ config:
         type: picture-entity
       - entities:
         - entity: vacuum.p_dusty
+        - entity: sensor.p_dusty_battery_level
         - entity: sensor.p_dusty_main_filter
         - entity: sensor.p_dusty_main_brush
         - entity: sensor.p_dusty_right_side_brush
@@ -477,17 +522,6 @@ config:
       type: custom:auto-entities
     - cards:
       - entities:
-        - sensor.multimedia_dose_power
-        hours_to_show: 24
-        type: custom:mini-graph-card
-      - entities:
-        - sensor.rechner_plug_power
-        hours_to_show: 24
-        type: custom:mini-graph-card
-      title: Verbrauch
-      type: custom:stack-in-card
-    - cards:
-      - entities:
         - entity: lock.wohnungstuer
         show_last_changed: true
         type: entities
@@ -500,26 +534,8 @@ config:
   - badges: []
     cards:
     - artwork: cover
-      entity: media_player.fernseher_wohnzimmer
+      entity: media_player.android_tv_192_168_0_26
       icon: mdi:television
-      shortcuts:
-        buttons:
-        - icon: mdi:youtube
-          id: com.google.android.youtube.tv
-          type: source
-        - icon: mdi:netflix
-          id: com.netflix.ninja
-          type: source
-        - icon: mdi:amazon
-          id: Amazon Prime
-          type: source
-        - icon: mdi:twitch
-          id: tv.twitch.android.app
-          type: source
-        - icon: mdi:steam
-          id: com.valvesoftware.steamlink
-          type: source
-        columns: 6
       type: custom:mini-media-player
     - artwork: cover
       entity: media_player.p_radio
@@ -561,121 +577,9 @@ config:
   - badges: []
     cards:
     - cards:
-      - bar:
-          height: 10
-        entity: device_tracker.fritz_box
-        hours_to_show: 120
-        ok: home
-        status_adaptive_color: true
-        title: Device online
-        type: custom:uptime-card
-      - entities:
-        - sensor.fritz_box_7530_device_uptime
-        show_header_toggle: false
-        type: entities
-      - bar:
-          height: 10
-        entity: binary_sensor.fritz_box_7530_connection
-        hours_to_show: 120
-        name: Device online
-        ok: 'on'
-        status_adaptive_color: true
-        type: custom:uptime-card
-      - entities:
-        - sensor.fritz_box_7530_connection_uptime
-        show_header_toggle: false
-        type: entities
-      title: Fritzbox
-      type: custom:stack-in-card
-    - entities:
-      - entity: sensor.fritz_box_7530_kb_s_received
-        index: 0
-        name: Download
-        show_fill: false
-      - entity: sensor.fritz_box_7530_kb_s_sent
-        index: 1
-        name: Upload
-        show_fill: false
-      hour24: true
-      hours_to_show: 24
-      icon: mdi:wan
-      line_width: 4
-      name: Internet-Traffic
-      points_per_hour: 2
-      type: custom:mini-graph-card
-    - cards:
-      - cards:
-        - entities:
-          - entity: sensor.adguard_dns_queries_blocked
-            name: Geblockt
-            show_fill: false
-          - entity: sensor.adguard_dns_queries
-            name: Queries
-            show_fill: false
-          hour24: true
-          hours_to_show: 24
-          line_width: 6
-          name: Requests
-          points_per_hour: 1
-          type: custom:mini-graph-card
-        - entities:
-          - sensor.adguard_dns_queries_blocked_ratio
-          hour24: true
-          hours_to_show: 24
-          line_width: 6
-          name: Blockiert
-          points_per_hour: 1
-          type: custom:mini-graph-card
-        name: Anfragen
-        type: horizontal-stack
-      - entities:
-        - sensor.adguard_average_processing_speed
-        - sensor.adguard_rules_count
-        - switch.adguard_protection
-        - switch.adguard_filtering
-        show_header_toggle: false
-        type: entities
-      title: AdGuard
-      type: custom:stack-in-card
-    - entities:
-      - entity: sensor.cert_expiry_timestamp_cloud_poeschl_xyz
-      show_header_toggle: false
-      title: Zertifikatablaufdatum
-      type: entities
-    - bar:
-        height: 10
-      entity: device_tracker.p_storage
-      hours_to_show: 120
-      name: P-Storage
-      ok: home
-      status_adaptive_color: true
-      type: custom:uptime-card
-    - bar:
-        height: 10
-      entity: device_tracker.p_dusty
-      hours_to_show: 120
-      name: P-Dusty
-      ok: home
-      status_adaptive_color: true
-      type: custom:uptime-card
-    - bar:
-        height: 10
-      entity: remote.ir_livingroom_remote
-      hours_to_show: 120
-      ko: unavailable
-      name: RM Mini
-      ok: 'on'
-      status_adaptive_color: true
-      type: custom:uptime-card
-    icon: mdi:lan
-    path: network
-    title: Network
-  - badges: []
-    cards:
-    - cards:
       - entities:
         - entity: input_boolean.holiday_mode
-        - entity: input_boolean.markus_schlaft
+        - entity: input_boolean.markus_schlaeft
         show_header_toggle: false
         type: entities
       - bar:
@@ -689,22 +593,6 @@ config:
         icon: mdi:home
         ko_icon: mdi:airplane
         name: Markus
-        ok: home
-        show:
-          average: false
-          footer: false
-        type: custom:uptime-card
-      - bar:
-          height: 8
-          round: 0
-          spacing: -1
-        color:
-          half: '#aaa'
-          ko: '#444'
-        entity: device_tracker.oneplus_a6003
-        icon: mdi:home
-        ko_icon: mdi:airplane
-        name: Handy GPS
         ok: home
         show:
           average: false
@@ -765,7 +653,7 @@ config:
         color:
           half: '#aaa'
           ko: '#444'
-        entity: device_tracker.laptop_markus_wifi
+        entity: device_tracker.laptop_markus
         icon: mdi:lan-connect
         ko_icon: mdi:lan-disconnect
         name: Laptop WLAN
@@ -808,158 +696,11 @@ config:
         type: custom:uptime-card
       title: Anwesenheit
       type: custom:stack-in-card
-    - entity: sensor.oneplus_a6003_nachster_wecker
+    - entity: sensor.oneplus_a6003_next_alarm
       type: entity
     icon: mdi:home-account
     path: anwesenheit
     title: Anwesenheit
-  - badges: []
-    cards:
-    - cards:
-      - cards:
-        - entities:
-          - sensor.processor_use
-          hours_to_show: 24
-          line_width: 4
-          name: CPU
-          type: custom:mini-graph-card
-        - entities:
-          - sensor.cpu_raspi
-          hours_to_show: 24
-          line_width: 4
-          name: Temp
-          type: custom:mini-graph-card
-        type: horizontal-stack
-      - cards:
-        - entity: sensor.disk_use_percent_home
-          name: Disk space
-          positions:
-            icon: inside
-            indicator: inside
-          type: custom:bar-card
-        - entity: sensor.memory_use
-          max: 2048
-          name: RAM
-          positions:
-            icon: inside
-            indicator: inside
-          type: custom:bar-card
-        type: horizontal-stack
-      - entities:
-        - sensor.swap_use
-        - sensor.last_boot
-        - binary_sensor.cpu_temp_overheat
-        type: entities
-      - text: Power
-        type: custom:text-divider-row
-      - entities:
-        - entity: binary_sensor.rpi_power_status
-          name: Status
-        - entity: sensor.home_assistant_switch_power
-          name: Power
-        type: entities
-      - cards:
-        - entities:
-          - entity: switch.home_assistant_switch
-            icon: mdi:skull
-            name: Power Switch
-          type: entities
-        popup: confirm
-        type: custom:love-lock-card
-      title: P-Assistant
-      type: custom:stack-in-card
-    - card:
-        cards:
-        - cards:
-          - entities:
-            - sensor.p_dice_cpuusage
-            hours_to_show: 24
-            icon: mdi:memory
-            line_width: 4
-            name: CPU
-            type: custom:mini-graph-card
-          - entities:
-            - sensor.p_dice_temperature
-            hours_to_show: 24
-            line_width: 4
-            name: Temp
-            type: custom:mini-graph-card
-          type: horizontal-stack
-        - cards:
-          - entity: sensor.p_dice_diskuse
-            name: Disk space
-            positions:
-              icon: inside
-              indicator: inside
-            type: custom:bar-card
-          - entity: sensor.p_dice_memoryuse
-            name: RAM
-            positions:
-              icon: inside
-              indicator: inside
-            type: custom:bar-card
-          type: horizontal-stack
-        - entities:
-          - entity: sensor.p_dice_swapusage
-            name: Swap
-          - entity: sensor.p_dice_updates
-            name: Pending Updates
-          - entity: sensor.p_dice_wifistrength
-            name: Wifi strength
-          - entity: sensor.p_dice_powerstatus
-            name: Power status
-          - entity: sensor.p_dice_lastboot
-            name: Last boot
-          type: entities
-        title: P-Dice
-        type: custom:stack-in-card
-      conditions:
-      - entity: sensor.p_dice_cpuusage
-        state_not: unavailable
-      type: conditional
-    - cards:
-      - cards:
-        - entities:
-          - sensor.p_cube_cpu_usage
-          hours_to_show: 6
-          line_width: 4
-          name: CPU
-          points_per_hour: 4
-          type: custom:mini-graph-card
-        - entities:
-          - sensor.p_cube_temperature
-          hours_to_show: 6
-          line_width: 4
-          name: Temp
-          points_per_hour: 4
-          type: custom:mini-graph-card
-        type: horizontal-stack
-      - cards:
-        - entity: sensor.p_cube_disk_use
-          name: Disk space
-          positions:
-            icon: inside
-            indicator: inside
-          type: custom:bar-card
-        - entity: sensor.p_cube_memory_use
-          name: RAM
-          positions:
-            icon: inside
-            indicator: inside
-          type: custom:bar-card
-        type: horizontal-stack
-      - entities:
-        - sensor.p_cube_swap_usage
-        - sensor.p_cube_updates
-        - sensor.p_cube_wifi_strength
-        - binary_sensor.p_cube_under_voltage
-        - sensor.p_cube_last_boot
-        type: entities
-      title: P-Cube
-      type: custom:stack-in-card
-    icon: mdi:raspberry-pi
-    path: raspberrys
-    title: Raspberrys
   - badges: []
     cards:
     - cards:
@@ -972,6 +713,12 @@ config:
         show_name: false
         show_state: false
         type: picture-entity
+      - entities:
+        - entity: sensor.octoprint_actual_tool0_temp
+          name: Nozzle Temp
+        - entity: sensor.octoprint_actual_bed_temp
+          name: Bed Temp
+        type: entities
       title: Hypercube Evolution
       type: custom:stack-in-card
     - cards:
@@ -982,13 +729,8 @@ config:
           indicator: inside
         type: custom:bar-card
       - entities:
-        - entity: sensor.octoprint_time_remaining
-          name: Verbleibende Zeit
-          show_points: false
-        hours_to_show: 1
-        points_per_hour: 60
-        smoothing: false
-        type: custom:mini-graph-card
+        - sensor.octoprint_estimated_finish_time
+        type: entities
       title: Druckauftrag
       type: custom:stack-in-card
     - entities:
@@ -1019,63 +761,3 @@ config:
     icon: mdi:printer-3d
     path: 3d-drucker
     title: 3D Drucker
-  - badges: []
-    cards:
-    - entities:
-      - entity: input_boolean.winter_mode
-      show_header_toggle: false
-      title: Modi
-      type: entities
-    - card:
-        show_header_toggle: false
-        title: Restart
-        type: entities
-      filter:
-        include:
-        - entity_id: button*neustart
-      type: custom:auto-entities
-    - entities:
-      - entity: sensor.ble_battery_schlafzimmer
-      - entity: sensor.ble_battery_balkon
-      - entity: sensor.ble_battery_bad
-      - entity: sensor.ble_battery_wohnzimmer
-      - entity: sensor.ble_battery_filament
-      - entity: sensor.wohnungstuer_battery
-        name: "Wohnungst\xFCr Batterie"
-      - entity: binary_sensor.thermostat_wohnzimmer_battery_low
-      - entity: sensor.magiccube_battery
-        name: Magiccube Batterie
-      - entity: sensor.balkontur_battery
-      show_header_toggle: false
-      title: Batterien
-      type: entities
-    - aggregate_func: max
-      animate: false
-      entities:
-      - entity: sensor.auto_backup
-        name: Pending
-        show_points: false
-      hour24: true
-      hours_to_show: 720
-      icon: mdi:package-variant-closed
-      line_width: 4
-      name: Auto-Backups
-      points_per_hour: 0.25
-      type: custom:mini-graph-card
-    - entities:
-      - entity: binary_sensor.home_assistant_operating_system_update_available
-        name: Home Assistant OS Update available
-      - entity: sensor.hacs
-        name: Available HACS Updates
-      - entity: binary_sensor.thermostat_wohnzimmer_update_available
-      - entity: binary_sensor.shelly1pm_b1da7e_firmware_update
-      - entity: binary_sensor.shellyplug_s_7a2ce6_firmware_update
-      - entity: binary_sensor.monitor_switch_firmware_update
-      - entity: binary_sensor.home_assistant_switch_firmware_update
-      - entity: binary_sensor.p_cube_switch_firmware_update
-      - entity: binary_sensor.rechner_plug_firmware_update
-      title: Updates
-      type: entities
-    icon: mdi:cog
-    path: system
-    title: System

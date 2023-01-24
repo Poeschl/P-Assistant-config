@@ -10,8 +10,6 @@ packages:
 esp32:
   board: esp-wrover-kit
 
-web_server:
-
 globals:
   - id: thresholdWarningPPM
     type: int
@@ -29,9 +27,16 @@ globals:
     type: float
     initial_value: '0.5'
     restore_value: true
+  - id: nightMode
+    type: boolean
+    initial_value: 'false'
+    restore_value: true
   - id: calibrating
     type: boolean
     initial_value: 'false'
+  - id: lastCo2value
+    type: int
+    initial_value: '0'
 
 number:
   - platform: template
@@ -184,6 +189,9 @@ font:
   - file: "fonts/arial.ttf"
     id: arial_small
     size: 10
+  # - file: "fonts/arial.ttf"
+  #   id: arial_big
+  #   size: 40
 
 image:
   - file: "icon/bell-ring.png"
@@ -221,6 +229,18 @@ display:
           } else {
             it.graph(0, 18, id(co2_graph));
           }
+      # - id: default_page
+      #   lambda: |-
+      #     auto co2 = id(mhz19_co2).state;
+
+      #     if (co2 > id(thresholdAlarmPPM)) {
+      #       it.print(64, 18, id(arial_bold), TextAlign::BOTTOM_CENTER, "!!! Alert !!!");
+      #     } else {
+      #       it.print(64, 18, id(arial_bold), TextAlign::BOTTOM_CENTER, "CO2");
+      #     }
+
+      #     it.printf(64, 18, id(arial_big), TextAlign::TOP_CENTER, "%.0f", co2);
+      #     it.print(128, 64, id(arial_small), TextAlign::BOTTOM_RIGHT, "ppm");
       - id: status_page
         lambda: |-
           it.print(64, 18, id(arial_bold), TextAlign::BOTTOM_CENTER, "Status");
@@ -251,49 +271,56 @@ sensor:
     co2:
       name: "${human_devicename} CO2"
       id: mhz19_co2
-      on_raw_value:
+      on_value:
         then:
           - if:
               condition:
                 lambda: return !id(calibrating);
               then:
                 - lambda: |-
-                    auto lastState = id(mhz19_co2).state;
+                    auto lastState = id(lastCo2value);
                     auto currentState = x;
 
-                    auto call = id(led).turn_on();
+                    if (!id(nightMode)) {
+                      auto call = id(led).turn_on();
 
-                    if (lastState < id(thresholdAlarmPPM) && currentState >= id(thresholdAlarmPPM)) {
-                      if(id(sound)) {
-                        id(buzzer)->play("siren:d=8,o=6,b=100:d,e,d,e,d,e,d,e");
+                      if (lastState < id(thresholdAlarmPPM) && currentState >= id(thresholdAlarmPPM)) {
+                        if(id(sound)) {
+                          id(buzzer)->play("siren:d=8,o=6,b=100:d,e,d,e,d,e,d,e");
+                          call.set_brightness(1.0);
+                        }
+                        call.set_brightness(1.0);
+                      } else if ((lastState < id(thresholdWarningPPM) && currentState >= id(thresholdWarningPPM))
+                        || (lastState >= id(thresholdAlarmPPM) && currentState < id(thresholdAlarmPPM)) ) {
+                        if(id(sound)) {
+                          id(buzzer)->play("two short:d=4,o=6,b=100:16e6,16e6");
+                          call.set_brightness(1.0);
+                        }
+                        call.set_brightness(1.0);
+                      } else if ((lastState > id(thresholdWarningPPM) && currentState < id(thresholdWarningPPM)) ) {
+                        // do nothing on going to green, just make the led bright
                         call.set_brightness(1.0);
                       }
-                      call.set_brightness(1.0);
-                    } else if ((lastState < id(thresholdWarningPPM) && currentState >= id(thresholdWarningPPM))
-                      || (lastState >= id(thresholdAlarmPPM) && currentState < id(thresholdAlarmPPM)) ) {
-                      if(id(sound)) {
-                        id(buzzer)->play("two short:d=4,o=6,b=100:16e6,16e6");
-                        call.set_brightness(1.0);
+
+                      if (currentState >= id(thresholdAlarmPPM)) {
+                        call.set_rgb(1,0,0);
+                      } else if (currentState >= id(thresholdWarningPPM)) {
+                        call.set_rgb(1,1,0);
+                      } else {
+                        call.set_rgb(0,1,0);
                       }
-                      call.set_brightness(1.0);
-                    } else if ((lastState > id(thresholdWarningPPM) && currentState < id(thresholdWarningPPM)) ) {
-                      // do nothing on going to green, just make the led bright
-                      call.set_brightness(1.0);
-                    }
 
-                    if (currentState >= id(thresholdAlarmPPM)) {
-                      call.set_rgb(1,0,0);
-                    } else if (currentState >= id(thresholdWarningPPM)) {
-                      call.set_rgb(1,1,0);
-                    } else {
-                      call.set_rgb(0,1,0);
-                    }
-
-                    call.perform();
+                      call.perform();
+                      id(lastCo2value) = currentState;
+                    }                    
                 - delay: 20s
-                - light.turn_on:
-                    id: led
-                    brightness: !lambda return id(led_brightness);
+                - if:
+                    condition:
+                      lambda: return !id(nightMode);
+                    then:
+                      - light.turn_on:
+                          id: led
+                          brightness: !lambda return id(led_brightness);
     temperature:
       name: "${human_devicename} Temperature"
     update_interval: 60s
@@ -308,6 +335,20 @@ switch:
       - lambda: id(sound) = true;
     turn_off_action:
       - lambda: id(sound) = false;
+  - platform: template
+    name: "Night mode"
+    entity_category: config
+    icon: mdi:weather-night
+    lambda: return id(nightMode);
+    turn_on_action:
+      - lambda: id(nightMode) = true;
+      - light.turn_off:
+          id: led
+    turn_off_action:
+      - lambda: id(nightMode) = false;
+      - light.turn_on:
+          id: led
+          brightness: !lambda return id(led_brightness);
 
 binary_sensor:
   - platform: gpio

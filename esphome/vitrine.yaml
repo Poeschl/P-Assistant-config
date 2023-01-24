@@ -17,10 +17,9 @@ globals:
     initial_value: '4'
 
 light:
-  - platform: fastled_clockless
-    id: led
-    rgb_order: GRB
-    chipset: WS2812B
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812x
     pin: D1
     num_leds: 16
     color_correct: [100%, 60%, 65%]

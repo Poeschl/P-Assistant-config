@@ -1,0 +1,6 @@
+---
+# The meter for the internet tower plug
+#
+internet_tower_plug_cum:
+  source: sensor.internet_tower_plug_energy
+  cycle: monthly

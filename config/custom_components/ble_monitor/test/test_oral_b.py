@@ -11,7 +11,7 @@ class TestOralB:
 
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
         print(sensor_msg)
         assert sensor_msg["firmware"] == "Oral-B"
         assert sensor_msg["type"] == "SmartSeries 7000"
@@ -20,10 +20,10 @@ class TestOralB:
         assert sensor_msg["data"]
         assert sensor_msg["toothbrush"] == 1
         assert sensor_msg["toothbrush state"] == 'running'
-        assert sensor_msg["pressure"] == 40
+        assert sensor_msg["pressure"] == 'unknown pressure 40'
         assert sensor_msg["counter"] == 1041
         assert sensor_msg["mode"] == 'turbo'
-        assert sensor_msg["sector"] == 'unknown 5'
+        assert sensor_msg["sector"] == 'sector 55'
         assert sensor_msg["sector timer"] == 56
         assert sensor_msg["number of sectors"] == 4
         assert sensor_msg["rssi"] == -73

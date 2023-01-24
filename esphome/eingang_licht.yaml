@@ -10,69 +10,70 @@ packages:
 esp8266:
   board: nodemcuv2
 
-light:
-  - platform: fastled_clockless
-    rgb_order: GRB
-    chipset: WS2812B
-    pin: D1
-    num_leds: 30
-    name: "Eingangslicht LEDs"
-    effects:
-      - addressable_rainbow:
-          width: 30
-      - addressable_twinkle:
-          twinkle_probability: 15%
-          progress_interval: 15ms
-      - addressable_lambda:
-          name: "Fire"
-          update_interval: 5ms
-          lambda: |-
-            for( int Pixel = 0; Pixel <= it.size(); Pixel++) {
-              it[Pixel] = ESPColor(165, 93, 37);
-              ESPColor color1;
-              uint8_t r1,g1,b1;
-              uint8_t r2,g2,b2;
-              uint8_t r3,g3,b3;
-              int16_t r,g,b;
 
-              color1 = it[Pixel].get();
-              //int color2[] = {80,35,0};
-              int color2[] = {189, 131, 17};
+# light:
+#   - platform: neopixelbus
+#     type: GRB
+#     variant: WS2812x
+#     pin: D1
+#     num_leds: 30
+#     name: "Eingangslicht LEDs"
+#     effects:
+#       - addressable_rainbow:
+#           width: 30
+#       - addressable_twinkle:
+#           twinkle_probability: 15%
+#           progress_interval: 15ms
+#       - addressable_lambda:
+#           name: "Fire"
+#           update_interval: 5ms
+#           lambda: |-
+#             for( int Pixel = 0; Pixel <= it.size(); Pixel++) {
+#               it[Pixel] = Color(165, 93, 37);
+#               Color color1;
+#               uint8_t r1,g1,b1;
+#               uint8_t r2,g2,b2;
+#               uint8_t r3,g3,b3;
+#               int16_t r,g,b;
+
+#               color1 = it[Pixel].get();
+#               //int color2[] = {80,35,0};
+#               int color2[] = {189, 131, 17};
       
-              r1 = (color1[0] ),
-              g1 = (color1[1] ),
-              b1 = (color1[2] );
+#               r1 = (color1[0] ),
+#               g1 = (color1[1] ),
+#               b1 = (color1[2] );
 
-              r2 = (color2[0] ),
-              g2 = (color2[1] ),
-              b2 = (color2[2] );
+#               r2 = (color2[0] ),
+#               g2 = (color2[1] ),
+#               b2 = (color2[2] );
 
-              // Add Color
-              it[Pixel] = ESPColor(constrain(r1+r2, 0, 255), constrain(g1+g2, 0, 255), constrain(b1+b2, 0, 255));
-              int rc = random(120);
+#               // Add Color
+#               it[Pixel] = Color(constrain(r1+r2, 0, 255), constrain(g1+g2, 0, 255), constrain(b1+b2, 0, 255));
+#               int rc = random(120);
 
-              // subtract
+#               // subtract
               
-              color2[0] = rc;
-              color2[1] = rc/2;
-              color2[2] = rc/2;
+#               color2[0] = rc;
+#               color2[1] = rc/2;
+#               color2[2] = rc/2;
 
-              r1 = (color1[0] ),
-              g1 = (color1[1] ),
-              b1 = (color1[2] );
+#               r1 = (color1[0] ),
+#               g1 = (color1[1] ),
+#               b1 = (color1[2] );
 
-              r2 = (color2[0] ),
-              g2 = (color2[1] ),
-              b2 = (color2[2] );
+#               r2 = (color2[0] ),
+#               g2 = (color2[1] ),
+#               b2 = (color2[2] );
 
-              r=(int16_t)r1-(int16_t)r2;
-              g=(int16_t)g1-(int16_t)g2;
-              b=(int16_t)b1-(int16_t)b2;
-              if(r<0) r=0;
-              if(g<0) g=0;
-              if(b<0) b=0;
+#               r=(int16_t)r1-(int16_t)r2;
+#               g=(int16_t)g1-(int16_t)g2;
+#               b=(int16_t)b1-(int16_t)b2;
+#               if(r<0) r=0;
+#               if(g<0) g=0;
+#               if(b<0) b=0;
 
-              /// Substract Color
-              it[Pixel] = ESPColor(r, g, b);
-            }
-            delay(random(10,120));
+#               /// Substract Color
+#               it[Pixel] = Color(r, g, b);
+#             }
+#             delay(random(10,120));

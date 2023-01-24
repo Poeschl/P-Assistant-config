@@ -1,0 +1,9 @@
+substitutions:
+  devicename: flowerpot-internet-corner
+  human_devicename: Blumentopf Ecke
+
+packages:
+  wifi: !include includes/wifi.yaml
+  common: !include includes/common.yaml
+  mqtt: !include includes/mqtt.yaml
+  flowerpot: !include includes/d1-flowerpot.yaml

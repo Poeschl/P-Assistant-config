@@ -1,0 +1,400 @@
+config:
+  views:
+  - badges: []
+    cards:
+    - cards:
+      - bar:
+          height: 10
+        entity: device_tracker.fritz_box
+        hours_to_show: 120
+        ok: home
+        status_adaptive_color: true
+        title: Device online
+        type: custom:uptime-card
+      - entities:
+        - sensor.fritz_box_7530_device_uptime
+        show_header_toggle: false
+        type: entities
+      - bar:
+          height: 10
+        entity: binary_sensor.fritz_box_7530_connection
+        hours_to_show: 120
+        name: Device online
+        ok: 'on'
+        status_adaptive_color: true
+        type: custom:uptime-card
+      - entities:
+        - sensor.fritz_box_7530_connection_uptime
+        show_header_toggle: false
+        type: entities
+      title: Fritzbox
+      type: custom:stack-in-card
+    - entities:
+      - entity: sensor.fritz_box_7530_kb_s_received
+        index: 0
+        name: Download
+        show_fill: false
+      - entity: sensor.fritz_box_7530_kb_s_sent
+        index: 1
+        name: Upload
+        show_fill: false
+      hour24: true
+      hours_to_show: 24
+      icon: mdi:wan
+      line_width: 4
+      name: Internet-Traffic
+      points_per_hour: 2
+      type: custom:mini-graph-card
+    - cards:
+      - cards:
+        - entities:
+          - entity: sensor.adguard_dns_queries_blocked
+            name: Geblockt
+            show_fill: false
+          - entity: sensor.adguard_dns_queries
+            name: Queries
+            show_fill: false
+          hour24: true
+          hours_to_show: 24
+          line_width: 6
+          name: Requests
+          points_per_hour: 1
+          type: custom:mini-graph-card
+        - entities:
+          - sensor.adguard_dns_queries_blocked_ratio
+          hour24: true
+          hours_to_show: 24
+          line_width: 6
+          name: Blockiert
+          points_per_hour: 1
+          type: custom:mini-graph-card
+        name: Anfragen
+        type: horizontal-stack
+      - entities:
+        - sensor.adguard_average_processing_speed
+        - sensor.adguard_rules_count
+        - switch.adguard_protection
+        - switch.adguard_filtering
+        show_header_toggle: false
+        type: entities
+      title: AdGuard
+      type: custom:stack-in-card
+    - entities:
+      - entity: sensor.cert_expiry_timestamp_cloud_poeschl_xyz
+      show_header_toggle: false
+      title: Zertifikatablaufdatum
+      type: entities
+    - bar:
+        height: 10
+      entity: device_tracker.p_storage
+      hours_to_show: 120
+      name: P-Storage
+      ok: home
+      status_adaptive_color: true
+      type: custom:uptime-card
+    - bar:
+        height: 10
+      entity: device_tracker.p_dusty
+      hours_to_show: 120
+      name: P-Dusty
+      ok: home
+      status_adaptive_color: true
+      type: custom:uptime-card
+    - bar:
+        height: 10
+      entity: remote.ir_livingroom_remote
+      hours_to_show: 120
+      ko: unavailable
+      name: RM Mini
+      ok: 'on'
+      status_adaptive_color: true
+      type: custom:uptime-card
+    icon: mdi:lan
+    path: network
+    title: Network
+  - badges: []
+    cards:
+    - cards:
+      - cards:
+        - entities:
+          - sensor.processor_use
+          hours_to_show: 24
+          line_width: 4
+          name: CPU
+          type: custom:mini-graph-card
+        - entities:
+          - sensor.cpu_raspi
+          hours_to_show: 24
+          line_width: 4
+          name: Temp
+          type: custom:mini-graph-card
+        type: horizontal-stack
+      - cards:
+        - entity: sensor.disk_use_percent_home
+          name: Disk space
+          positions:
+            icon: inside
+            indicator: inside
+          type: custom:bar-card
+        - entity: sensor.memory_use
+          max: 2048
+          name: RAM
+          positions:
+            icon: inside
+            indicator: inside
+          type: custom:bar-card
+        type: horizontal-stack
+      - entities:
+        - sensor.swap_use
+        - sensor.last_boot
+        - binary_sensor.cpu_temp_overheat
+        type: entities
+      - text: Power
+        type: custom:text-divider-row
+      - entities:
+        - entity: binary_sensor.rpi_power_status
+          name: Status
+        type: entities
+      title: P-Assistant
+      type: custom:stack-in-card
+    - cards:
+      - cards:
+        - entities:
+          - sensor.p_cube_cpu_usage
+          hours_to_show: 6
+          line_width: 4
+          name: CPU
+          points_per_hour: 4
+          type: custom:mini-graph-card
+        - entities:
+          - sensor.p_cube_temperature
+          hours_to_show: 6
+          line_width: 4
+          name: Temp
+          points_per_hour: 4
+          type: custom:mini-graph-card
+        type: horizontal-stack
+      - cards:
+        - entity: sensor.p_cube_disk_use
+          name: Disk space
+          positions:
+            icon: inside
+            indicator: inside
+          type: custom:bar-card
+        - entity: sensor.p_cube_memory_use
+          name: RAM
+          positions:
+            icon: inside
+            indicator: inside
+          type: custom:bar-card
+        type: horizontal-stack
+      - entities:
+        - sensor.p_cube_swap_usage
+        - sensor.p_cube_updates
+        - sensor.p_cube_wifi_strength
+        - binary_sensor.p_cube_under_voltage
+        - sensor.p_cube_last_boot
+        type: entities
+      title: P-Cube
+      type: custom:stack-in-card
+    icon: mdi:raspberry-pi
+    path: raspberrys
+    title: Raspberrys
+  - badges: []
+    cards:
+    - chart_type: line
+      graph_span: 12h
+      header:
+        colorize_states: true
+        show: true
+        show_states: true
+        title: Verbrauch 12h
+      series:
+      - entity: sensor.shellyem3_c45bbe792223_channel_a_power
+        group_by:
+          duration: 2m
+          func: avg
+        name: Phase 1
+        stroke_width: 3
+      - entity: sensor.shellyem3_c45bbe792223_channel_b_power
+        group_by:
+          duration: 2m
+          func: avg
+        name: Phase 2
+        stroke_width: 3
+      - entity: sensor.shellyem3_c45bbe792223_channel_c_power
+        group_by:
+          duration: 2m
+          func: avg
+        name: Phase 3
+        stroke_width: 3
+      stacked: true
+      type: custom:apexcharts-card
+    - card:
+        title: "Ger\xE4te Verbrauch"
+        type: entities
+      filter:
+        exclude:
+        - entity_id: '*shellyem3*'
+        - state: unavailable
+        include:
+        - entity_id: '*_power'
+      sort:
+        method: state
+        numeric: true
+        reverse: true
+      type: custom:auto-entities
+    - chart_type: pie
+      header:
+        colorize_states: true
+        show: true
+        show_states: true
+        title: Aktueller Verbrauch
+      series:
+      - entity: sensor.shellyem3_c45bbe792223_channel_a_power
+        name: Phase 1
+      - entity: sensor.shellyem3_c45bbe792223_channel_b_power
+        name: Phase 2
+      - entity: sensor.shellyem3_c45bbe792223_channel_c_power
+        name: Phase 3
+      type: custom:apexcharts-card
+    - cards:
+      - entity: sensor.shellyem3_c45bbe792223_channel_a_power_factor
+        name: Phase 1
+        type: gauge
+      - entity: sensor.shellyem3_c45bbe792223_channel_b_power_factor
+        name: Phase 2
+        type: gauge
+      - entity: sensor.shellyem3_c45bbe792223_channel_c_power_factor
+        name: Phase 3
+        type: gauge
+      title: Power Faktor
+      type: horizontal-stack
+    - chart_type: radialBar
+      header:
+        colorize_states: true
+        show: true
+        show_states: true
+        title: Spannung
+      series:
+      - entity: sensor.shellyem3_c45bbe792223_channel_a_voltage
+        max: 240
+        min: 220
+        name: Phase 1
+      - entity: sensor.shellyem3_c45bbe792223_channel_b_voltage
+        max: 240
+        min: 220
+        name: Phase 2
+      - entity: sensor.shellyem3_c45bbe792223_channel_c_voltage
+        max: 240
+        min: 220
+        name: Phase 3
+      type: custom:apexcharts-card
+    - entity: input_number.strompreis
+      type: entity
+    - chart_type: pie
+      header:
+        colorize_states: true
+        show: true
+        show_states: true
+        title: Anteiliger Verbrauch
+      series:
+      - entity: sensor.shellyem3_c45bbe792223_channel_a_energy
+        name: Phase 1
+      - entity: sensor.shellyem3_c45bbe792223_channel_b_energy
+        name: Phase 2
+      - entity: sensor.shellyem3_c45bbe792223_channel_c_energy
+        name: Phase 3
+      type: custom:apexcharts-card
+    icon: mdi:transmission-tower
+    path: strom
+    theme: Backend-selected
+    title: Strom
+  - badges: []
+    cards:
+    - entities:
+      - entity: input_boolean.winter_mode
+      show_header_toggle: false
+      title: Modi
+      type: entities
+    - card:
+        show_header_toggle: false
+        title: Restart
+        type: entities
+      filter:
+        include:
+        - entity_id: button*neustart
+        - entity_id: button*reboot
+      sort:
+        method: name
+      type: custom:auto-entities
+    - card:
+        show_header_toggle: false
+        title: Batterien
+        type: entities
+      filter:
+        include:
+        - entity_id: '*_battery'
+        - entity_id: '*ble_battery_*'
+        - entity_id: '*battery_low'
+      sort:
+        method: state
+        numeric: true
+      type: custom:auto-entities
+    - aggregate_func: max
+      animate: false
+      entities:
+      - entity: sensor.auto_backup
+        name: Pending
+        show_points: false
+      hour24: true
+      hours_to_show: 720
+      icon: mdi:package-variant-closed
+      line_width: 4
+      name: Auto-Backups
+      points_per_hour: 0.25
+      type: custom:mini-graph-card
+    icon: mdi:cog
+    path: system
+    title: System
+  - badges: []
+    cards:
+    - card:
+        title: Update Status
+        type: entities
+      filter:
+        exclude:
+        - state: unavailable
+        include:
+        - entity_id: '*firmware_update'
+      sort:
+        method: state
+        reverse: true
+      type: custom:auto-entities
+    - card:
+        title: Update Devices
+        type: entities
+      filter:
+        exclude:
+        - state: unavailable
+        include:
+        - entity_id: button.*update
+      sort:
+        method: name
+      type: custom:auto-entities
+    - card:
+        title: HA Updates
+        type: glance
+      filter:
+        exclude:
+        - state: 'off'
+        include:
+        - entity_id: update.*
+      sort:
+        method: state
+        reverse: true
+      type: custom:auto-entities
+    icon: mdi:package-up
+    path: updates
+    theme: Backend-selected
+    title: Updates

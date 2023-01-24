@@ -1,24 +1,29 @@
 """Component to create and automatically remove Home Assistant backups."""
-import asyncio
 import logging
-import os
 from datetime import datetime, timedelta, timezone
+from fnmatch import fnmatchcase
+from os import getenv
 from os.path import join, isfile
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+from homeassistant.components.backup.const import DOMAIN as DOMAIN_BACKUP
 from homeassistant.components.hassio import (
     ATTR_FOLDERS,
     ATTR_ADDONS,
     ATTR_PASSWORD,
+    is_hassio,
 )
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_NAME, __version__
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from slugify import slugify
 
@@ -34,8 +39,9 @@ from .const import (
     CONF_AUTO_PURGE,
     CONF_BACKUP_TIMEOUT,
     DEFAULT_BACKUP_TIMEOUT,
+    PATCH_NAME,
 )
-from .handler import HassIO, HassioAPIError
+from .handlers import SupervisorHandler, HassioAPIError, BackupHandler, HandlerBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,45 +50,42 @@ STORAGE_VERSION = 1
 
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_INCLUDE = "include"
+ATTR_INCLUDE_ADDONS = "include_addons"
+ATTR_INCLUDE_FOLDERS = "include_folders"
 ATTR_EXCLUDE = "exclude"
+ATTR_EXCLUDE_ADDONS = "exclude_addons"
+ATTR_EXCLUDE_FOLDERS = "exclude_folders"
 ATTR_DOWNLOAD_PATH = "download_path"
 
 DEFAULT_BACKUP_FOLDERS = {
     "ssl": "ssl",
     "share": "share",
     "media": "media",
+    "addons": "addons/local",
+    "config": "homeassistant",
     "local add-ons": "addons/local",
     "home assistant configuration": "homeassistant",
 }
 
 SERVICE_PURGE = "purge"
+SERVICE_BACKUP = "backup"
 SERVICE_BACKUP_FULL = "backup_full"
 SERVICE_BACKUP_PARTIAL = "backup_partial"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: {
-            vol.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
-            vol.Optional(
-                CONF_BACKUP_TIMEOUT, default=DEFAULT_BACKUP_TIMEOUT_SECONDS
-            ): vol.Coerce(int),
-        }
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 SCHEMA_BACKUP_BASE = vol.Schema(
     {
-        vol.Optional(ATTR_NAME): cv.string,
-        vol.Optional(ATTR_PASSWORD): cv.string,
-        vol.Optional(ATTR_KEEP_DAYS): vol.Coerce(float),
-        vol.Optional(ATTR_DOWNLOAD_PATH): cv.isdir,
+        vol.Optional(ATTR_NAME): vol.Any(None, cv.string),
+        vol.Optional(ATTR_PASSWORD): vol.Any(None, cv.string),
+        vol.Optional(ATTR_KEEP_DAYS): vol.Any(None, vol.Coerce(float)),
+        vol.Optional(ATTR_DOWNLOAD_PATH): vol.All(cv.ensure_list, [cv.isdir]),
     }
 )
 
+SCHEMA_LIST_STRING = vol.All(cv.ensure_list, [cv.string])
+
 SCHEMA_ADDONS_FOLDERS = {
-    vol.Optional(ATTR_FOLDERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_ADDONS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_FOLDERS, default=[]): SCHEMA_LIST_STRING,
+    vol.Optional(ATTR_ADDONS, default=[]): SCHEMA_LIST_STRING,
 }
 
 SCHEMA_BACKUP_FULL = SCHEMA_BACKUP_BASE.extend(
@@ -91,7 +94,25 @@ SCHEMA_BACKUP_FULL = SCHEMA_BACKUP_BASE.extend(
 
 SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_BASE.extend(SCHEMA_ADDONS_FOLDERS)
 
+SCHEMA_BACKUP = vol.Any(
+    SCHEMA_BACKUP_BASE.extend(
+        {
+            vol.Optional(ATTR_INCLUDE): SCHEMA_ADDONS_FOLDERS,
+            vol.Optional(ATTR_EXCLUDE): SCHEMA_ADDONS_FOLDERS,
+        }
+    ),
+    SCHEMA_BACKUP_BASE.extend(
+        {
+            vol.Optional(ATTR_INCLUDE_ADDONS): SCHEMA_LIST_STRING,
+            vol.Optional(ATTR_INCLUDE_FOLDERS): SCHEMA_LIST_STRING,
+            vol.Optional(ATTR_EXCLUDE_ADDONS): SCHEMA_LIST_STRING,
+            vol.Optional(ATTR_EXCLUDE_FOLDERS): SCHEMA_LIST_STRING,
+        }
+    ),
+)
+
 MAP_SERVICES = {
+    SERVICE_BACKUP: SCHEMA_BACKUP,
     SERVICE_BACKUP_FULL: SCHEMA_BACKUP_FULL,
     SERVICE_BACKUP_PARTIAL: SCHEMA_BACKUP_PARTIAL,
     SERVICE_PURGE: None,
@@ -100,53 +121,44 @@ MAP_SERVICES = {
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
-    """Setup the Auto Backup component."""
-    hass.data.setdefault(DOMAIN, {})
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-    return True
+@callback
+@bind_hass
+def is_backup(hass: HomeAssistant) -> bool:
+    """Return true if backup integration is loaded.
+
+    Async friendly.
+    """
+    return DOMAIN_BACKUP in hass.config.components
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Auto Backup from a config entry."""
     _LOGGER.info("Setting up Auto Backup config entry %s", entry.entry_id)
 
-    # Check local setup
-    for env in ("HASSIO", "HASSIO_TOKEN"):
-        if os.environ.get(env):
-            continue
+    # check backup integration or supervisor is available
+    if not is_hassio(hass) and not is_backup(hass):
         _LOGGER.error(
-            "Missing %s environment variable. Please check you have Hass.io installed!",
-            env,
+            "You must be running Home Assistant Supervised or have the 'backup' integration enabled."
         )
         return False
 
-    host = os.environ["HASSIO"]
-    web_session = hass.helpers.aiohttp_client.async_get_clientsession()
-    hassio = HassIO(hass.loop, web_session, host)
+    options = {
+        CONF_AUTO_PURGE: entry.options.get(CONF_AUTO_PURGE, True),
+        CONF_BACKUP_TIMEOUT: entry.options.get(
+            CONF_BACKUP_TIMEOUT, DEFAULT_BACKUP_TIMEOUT
+        ),
+    }
 
-    options = entry.data or entry.options
+    if is_hassio(hass):
+        handler = SupervisorHandler(getenv("SUPERVISOR"), async_get_clientsession(hass))
+    else:
+        handler = BackupHandler(hass.data[DOMAIN_BACKUP])
 
-    # initialise AutoBackup class.
-    auto_backup = hass.data[DOMAIN][DATA_AUTO_BACKUP] = AutoBackup(
-        hass,
-        hassio,
-        options.get(CONF_AUTO_PURGE, True),
-        options.get(CONF_BACKUP_TIMEOUT, DEFAULT_BACKUP_TIMEOUT),
-    )
+    auto_backup = AutoBackup(hass, options, handler)
+    hass.data.setdefault(DOMAIN, {})[DATA_AUTO_BACKUP] = auto_backup
+    entry.async_on_unload(entry.add_update_listener(auto_backup.update_listener))
 
     await auto_backup.load_snapshots_expiry()
-
-    hass.data[DOMAIN][UNSUB_LISTENER] = entry.add_update_listener(
-        auto_backup.update_listener
-    )
 
     ### REGISTER SERVICES ###
     async def async_service_handler(call: ServiceCallType):
@@ -160,53 +172,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     ATTR_FOLDERS: data.pop(ATTR_FOLDERS, []),
                     ATTR_ADDONS: data.pop(ATTR_ADDONS, []),
                 }
+            elif call.service == SERVICE_BACKUP:
+                if ATTR_INCLUDE_ADDONS in data or ATTR_INCLUDE_FOLDERS in data:
+                    data[ATTR_INCLUDE] = {
+                        ATTR_FOLDERS: data.pop(ATTR_INCLUDE_FOLDERS, []),
+                        ATTR_ADDONS: data.pop(ATTR_INCLUDE_ADDONS, []),
+                    }
+                if ATTR_EXCLUDE_ADDONS in data or ATTR_EXCLUDE_FOLDERS in data:
+                    data[ATTR_EXCLUDE] = {
+                        ATTR_FOLDERS: data.pop(ATTR_EXCLUDE_FOLDERS, []),
+                        ATTR_ADDONS: data.pop(ATTR_EXCLUDE_ADDONS, []),
+                    }
+
             await auto_backup.async_create_backup(data)
 
     for service, schema in MAP_SERVICES.items():
         hass.services.async_register(DOMAIN, service, async_service_handler, schema)
 
-    # load the auto backup sensor.
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
-    hass.data[DOMAIN][UNSUB_LISTENER]()
-
     for service in MAP_SERVICES.keys():
         hass.services.async_remove(DOMAIN, service)
 
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class AutoBackup:
-    def __init__(
-        self,
-        hass: HomeAssistantType,
-        hassio: HassIO,
-        auto_purge: bool,
-        backup_timeout: int,
-    ):
+    def __init__(self, hass: HomeAssistantType, options: Dict, handler: HandlerBase):
         self._hass = hass
-        self._hassio = hassio
-        self._auto_purge = auto_purge
-        self._backup_timeout = backup_timeout * 60
+        self._handler = handler
+        self._auto_purge = options[CONF_AUTO_PURGE]
+        self._backup_timeout = options[CONF_BACKUP_TIMEOUT] * 60
         self._state = 0
         self._snapshots = {}
+        self._supervised = is_hassio(hass)
         self._store = Store(
             hass, STORAGE_VERSION, f"{DOMAIN}.{STORAGE_KEY}", encoder=JSONEncoder
         )
@@ -217,7 +220,7 @@ class AutoBackup:
         self._backup_timeout = entry.options[CONF_BACKUP_TIMEOUT] * 60
 
     async def load_snapshots_expiry(self):
-        """Load snapshots expiry dates from home assistants storage."""
+        """Load snapshots expiry dates from Home Assistant's storage."""
         data = await self._store.async_load()
 
         if data is not None:
@@ -237,34 +240,39 @@ class AutoBackup:
         return self._state
 
     @classmethod
-    def ensure_slugs(cls, inclusion, installed_addons) -> Tuple[List, List]:
+    def ensure_slugs(
+        cls, inclusion: Dict[str, List[str]], installed_addons: List[Dict]
+    ) -> Tuple[List[str], List[str]]:
         """Helper method to slugify both the addon and folder sections"""
         addons = inclusion[ATTR_ADDONS]
         folders = inclusion[ATTR_FOLDERS]
         return (
-            cls.ensure_addon_slugs(addons, installed_addons),
+            list(cls.ensure_addon_slugs(addons, installed_addons)),
             cls.ensure_folder_slugs(folders),
         )
 
     @staticmethod
-    def ensure_addon_slugs(addons, installed_addons) -> List[str]:
-        """Replace addon names with their appropriate slugs."""
+    def ensure_addon_slugs(addons: List[str], installed_addons: List[Dict]):
+        """Expand wildcards and replace addon names with their appropriate slugs."""
         if not addons:
             return []
 
-        def match_addon(addon):
+        for addon in addons:
+            matched = False
             for installed_addon in installed_addons:
-                # perform case insensitive match.
+                # perform case-insensitive match.
                 if addon.casefold() == installed_addon["name"].casefold():
-                    return installed_addon["slug"]
-                if addon == installed_addon["slug"]:
-                    return addon
-            _LOGGER.warning("Addon '%s' does not exist", addon)
-
-        return [match_addon(addon) for addon in addons]
+                    yield installed_addon["slug"]
+                    matched = True
+                if fnmatchcase(installed_addon["slug"], addon):
+                    yield installed_addon["slug"]
+                    matched = True
+            if not matched:
+                _LOGGER.warning("Addon '%s' does not exist", addon)
+                yield addon
 
     @staticmethod
-    def ensure_folder_slugs(folders) -> List[str]:
+    def ensure_folder_slugs(folders: List[str]) -> List[str]:
         """Convert folder name to lower case and replace friendly folder names."""
         if not folders:
             return []
@@ -276,13 +284,44 @@ class AutoBackup:
         return [match_folder(folder) for folder in folders]
 
     def generate_backup_name(self) -> str:
+        if not self._supervised:
+            return f"Core {__version__}"
         time_zone = dt_util.get_time_zone(self._hass.config.time_zone)
         return datetime.now(time_zone).strftime("%A, %b %d, %Y")
 
+    def validate_backup_config(self, config: Dict):
+        """Validate the backup config."""
+        if not self._supervised:
+            disallowed_options = [ATTR_PASSWORD]
+            for option in disallowed_options:
+                if config.get(option):
+                    raise HomeAssistantError(
+                        f"The '{option}' option is not supported on non-supervised installations."
+                    )
+
+            # allow `include` if it only contains the configuration
+            if ATTR_INCLUDE in config and not config.get(ATTR_EXCLUDE):
+                # ensure no addons were included
+                if not config[ATTR_INCLUDE][ATTR_ADDONS]:
+                    folders = config[ATTR_INCLUDE][ATTR_FOLDERS]
+                    folders = self.ensure_folder_slugs(folders)
+                    if folders == ["homeassistant"]:
+                        del config[ATTR_INCLUDE]
+
+            if ATTR_INCLUDE in config or ATTR_EXCLUDE in config:
+                raise HomeAssistantError(
+                    f"Partial backups (e.g. include/exclude) are not supported on non-supervised installations."
+                )
+
+            if config.get(ATTR_NAME):
+                config[PATCH_NAME] = True
+
+        if not config.get(ATTR_NAME):
+            config[ATTR_NAME] = self.generate_backup_name()
+
     async def async_create_backup(self, data: Dict):
         """Identify actual type of backup to create and handle include/exclude options"""
-        if ATTR_NAME not in data:
-            data[ATTR_NAME] = self.generate_backup_name()
+        self.validate_backup_config(data)
 
         _LOGGER.debug("Creating backup '%s'", data[ATTR_NAME])
 
@@ -293,21 +332,37 @@ class AutoBackup:
             # must be a full backup
             await self._async_create_backup(data)
         else:
-            installed_addons = await self._hassio.get_installed_addons()
-            addons, folders = self.ensure_slugs(include or exclude, installed_addons)
+            installed_addons = await self._handler.get_addons()
+
+            _LOGGER.debug("Installed addons: %s", installed_addons)
+
+            # default to include all addons and folders
+            addons: List[str] = [addon["slug"] for addon in installed_addons]
+            folders: List[str] = list(set(DEFAULT_BACKUP_FOLDERS.values()))
+
+            if include:
+                addons, folders = self.ensure_slugs(include, installed_addons)
+
+                _LOGGER.debug("Including; addons: %s, folders: %s", addons, folders)
 
             if exclude:
-                # identify included addons/folders
-                addons = [
-                    installed["slug"]
-                    for installed in installed_addons
-                    if installed["slug"] not in addons
-                ]
+                excluded_addons, excluded_folders = self.ensure_slugs(
+                    exclude, installed_addons
+                )
+
+                addons = [addon for addon in addons if addon not in excluded_addons]
                 folders = [
-                    folder
-                    for folder in DEFAULT_BACKUP_FOLDERS.values()
-                    if folder not in folders
+                    folder for folder in folders if folder not in excluded_folders
                 ]
+
+                _LOGGER.debug(
+                    "Excluding; addons: %s, folders: %s",
+                    excluded_addons,
+                    excluded_folders,
+                )
+                _LOGGER.debug(
+                    "Including (excluded); addons: %s, folders: %s", addons, folders
+                )
 
             data[ATTR_ADDONS] = addons
             data[ATTR_FOLDERS] = folders
@@ -320,7 +375,7 @@ class AutoBackup:
     async def _async_create_backup(self, data: Dict, partial: bool = False):
         """Create backup, update state, fire events, download backup and purge old backups"""
         keep_days = data.pop(ATTR_KEEP_DAYS, None)
-        download_path = data.pop(ATTR_DOWNLOAD_PATH, None)
+        download_paths: Optional[List[str]] = data.pop(ATTR_DOWNLOAD_PATH, None)
 
         ### LOG DEBUG INFO ###
         # ensure password is scrubbed from logs
@@ -347,7 +402,7 @@ class AutoBackup:
 
         try:
             try:
-                result = await self._hassio.create_backup(
+                result = await self._handler.create_backup(
                     data, partial, timeout=self._backup_timeout
                 )
             except HassioAPIError as err:
@@ -357,13 +412,13 @@ class AutoBackup:
 
             # backup creation was successful
             slug = result["slug"]
-            _LOGGER.info(
-                "Backup created successfully: '%s' (%s)", data[ATTR_NAME], slug
-            )
+            name = result.get(ATTR_NAME, data[ATTR_NAME])
+
+            _LOGGER.info("Backup created successfully: '%s' (%s)", name, slug)
 
             self._state -= 1
             self._hass.bus.async_fire(
-                EVENT_BACKUP_SUCCESSFUL, {"name": data[ATTR_NAME], "slug": slug}
+                EVENT_BACKUP_SUCCESSFUL, {"name": name, "slug": slug}
             )
 
             if keep_days is not None:
@@ -375,12 +430,13 @@ class AutoBackup:
                 await self._store.async_save(self._snapshots)
 
             # download backup to location if specified
-            if download_path:
-                self._hass.async_create_task(
-                    self.async_download_backup(data[ATTR_NAME], slug, download_path)
-                )
+            if download_paths:
+                for download_path in download_paths:
+                    self._hass.async_create_task(
+                        self.async_download_backup(name, slug, download_path)
+                    )
 
-        except HassioAPIError as err:
+        except Exception as err:
             _LOGGER.error("Error during backup. %s", err)
             self._state -= 1
             self._hass.bus.async_fire(
@@ -417,7 +473,7 @@ class AutoBackup:
         """Purge an individual snapshot from Hass.io."""
         _LOGGER.debug("Attempting to remove backup: %s", slug)
         try:
-            await self._hassio.remove_backup(slug)
+            await self._handler.remove_backup(slug)
             # remove snapshot expiry.
             del self._snapshots[slug]
         except HassioAPIError as err:
@@ -447,6 +503,6 @@ class AutoBackup:
         if isfile(destination):
             destination = join(backup_path, f"{slug}.tar")
 
-        return self._hassio.download_backup(
+        return self._handler.download_backup(
             slug, destination, timeout=self._backup_timeout
         )

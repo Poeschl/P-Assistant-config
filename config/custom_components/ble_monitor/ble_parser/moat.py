@@ -1,12 +1,17 @@
-# Parser for Moat BLE advertisements
+"""Parser for Moat BLE advertisements"""
 import logging
 from struct import unpack
+
+from .helpers import (
+    to_mac,
+    to_unformatted_mac,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def parse_moat(self, data, source_mac, rssi):
-    # check for adstruc length
+    """Parser for Moat sensors"""
     msg_length = len(data)
     firmware = "Moat"
     moat_mac = source_mac
@@ -47,20 +52,16 @@ def parse_moat(self, data, source_mac, rssi):
         return None
 
     # check for MAC presence in whitelist, if needed
-    if self.discovery is False and moat_mac.lower() not in self.whitelist:
+    if self.discovery is False and moat_mac not in self.sensor_whitelist:
         _LOGGER.debug("Discovery is disabled. MAC: %s is not whitelisted!", to_mac(moat_mac))
         return None
 
     result.update({
         "rssi": rssi,
-        "mac": ''.join('{:02X}'.format(x) for x in moat_mac[:]),
+        "mac": to_unformatted_mac(moat_mac),
         "type": device_type,
         "packet": "no packet id",
         "firmware": firmware,
         "data": True
     })
     return result
-
-
-def to_mac(addr: int):
-    return ':'.join('{:02x}'.format(x) for x in addr).upper()

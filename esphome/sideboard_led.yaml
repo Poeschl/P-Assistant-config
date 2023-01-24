@@ -17,10 +17,10 @@ globals:
     initial_value: '18'
 
 light:
-  - platform: fastled_clockless
+  - platform: neopixelbus
     id: led
-    rgb_order: GRB
-    chipset: WS2812B
+    type: GRB
+    variant: WS2812x
     pin: D1
     num_leds: 72
     name: "Sideboard LEDs"

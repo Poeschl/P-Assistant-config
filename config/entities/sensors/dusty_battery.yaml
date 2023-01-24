@@ -1,0 +1,9 @@
+---
+# Get the forecast temperature as sensor 
+#
+platform: template
+sensors:
+  p_dusty_battery_level:
+    friendly_name: "P-Dusty Batterie"
+    unit_of_measurement: '%'
+    value_template: "{{ state_attr('vacuum.p_dusty', 'battery_level') }}"

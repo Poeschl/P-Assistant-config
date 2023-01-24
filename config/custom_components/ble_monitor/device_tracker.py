@@ -1,4 +1,4 @@
-"""Passive BLE monitor binary sensor platform."""
+"""Passive BLE monitor device tracker platform."""
 from datetime import timedelta
 import asyncio
 import logging
@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_MAC,
     STATE_HOME,
     STATE_NOT_HOME,
 )
@@ -20,7 +21,14 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt
+
+from .helper import (
+    identifier_normalize,
+    identifier_clean,
+    detect_conf_type,
+    dict_get_or,
+)
 
 from .const import (
     CONF_RESTORE_STATE,
@@ -29,11 +37,23 @@ from .const import (
     CONF_DEVICE_TRACKER_SCAN_INTERVAL,
     CONF_DEVICE_TRACKER_CONSIDER_HOME,
     CONF_PERIOD,
+    CONF_GATEWAY_ID,
+    CONF_UUID,
     DEFAULT_DEVICE_TRACK,
     DEFAULT_DEVICE_TRACKER_SCAN_INTERVAL,
     DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
     DOMAIN,
 )
+
+RESTORE_ATTRIBUTES = [
+    'rssi',
+    CONF_GATEWAY_ID,
+    'major',
+    'minor',
+    'measured_power',
+    'cypress_temperature',
+    'cypress_humidity'
+]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +65,7 @@ async def async_setup_platform(hass, conf, add_entities, discovery_info=None):
 
 
 async def async_setup_entry(hass, config_entry, add_entities):
-    """Set up the binary sensor platform."""
+    """Set up the device tracker platform."""
     _LOGGER.debug("Starting device tracker entry startup")
 
     blemonitor = hass.data[DOMAIN]["blemonitor"]
@@ -72,37 +92,37 @@ class BLEupdaterTracker:
     async def async_run(self, hass):
         """Entities updater loop."""
 
-        async def async_add_device_tracker(mac):
-            if mac not in trackers_by_mac:
+        async def async_add_device_tracker(key):
+            if key not in trackers_by_key:
                 tracker_entities = []
-                tracker = BleScannerEntity(self.config, mac)
+                tracker = BleScannerEntity(self.config, key)
                 tracker_entities.insert(0, tracker)
-                trackers_by_mac[mac] = tracker_entities
+                trackers_by_key[key] = tracker_entities
                 self.add_entities(tracker_entities)
             else:
-                tracker_entities = trackers_by_mac[mac]
+                tracker_entities = trackers_by_key[key]
             return tracker_entities
 
         _LOGGER.debug("Device tracker updater loop started!")
-        trackers_by_mac = {}
+        trackers_by_key = {}
         trackers = []
-        adv_cnt = 0
-        ts_last = dt_util.now()
+        ble_adv_cnt = 0
+        ts_last = dt.now()
         ts_now = ts_last
         data = None
         await asyncio.sleep(0)
 
         # Set up device trackers of configured devices on startup when device tracker is available in device registry
         if self.config[CONF_DEVICES]:
-            dev_registry = await device_registry.async_get_registry(hass)
+            dev_registry = device_registry.async_get(hass)
             for device in self.config[CONF_DEVICES]:
-                mac = device["mac"]
+                key = dict_get_or(device)
                 if CONF_DEVICE_TRACK in device and device[CONF_DEVICE_TRACK]:
                     # setup device trackers from device registry
-                    dev = dev_registry.async_get_device({(DOMAIN, mac)}, set())
+                    dev = dev_registry.async_get_device({(DOMAIN, key.upper())}, set())
                     if dev:
-                        mac = mac.replace(":", "")
-                        trackers = await async_add_device_tracker(mac)
+                        key = identifier_clean(key)
+                        trackers = await async_add_device_tracker(key)
                     else:
                         pass
                 else:
@@ -124,16 +144,16 @@ class BLEupdaterTracker:
                 pass
             if data:
                 _LOGGER.debug("Data device tracker received: %s", data)
-                adv_cnt += 1
-                mac = data["mac"]
+                ble_adv_cnt += 1
+                key = identifier_clean(dict_get_or(data))
                 # Set up new device tracker when first BLE advertisement is received
-                trackers = await async_add_device_tracker(mac)
+                trackers = await async_add_device_tracker(key)
 
                 if data["is connected"] is False:
                     data = None
                     continue
 
-                # schedule an immediate update of remote binary sensors
+                # schedule an immediate update of device tracker
                 if "is connected" in data:
                     entity = trackers[0]
                     entity.data_update(data)
@@ -143,29 +163,30 @@ class BLEupdaterTracker:
                         except AttributeError:
                             continue
                 data = None
-            ts_now = dt_util.now()
+            ts_now = dt.now()
             if ts_now - ts_last < timedelta(seconds=self.period):
                 continue
             ts_last = ts_now
             _LOGGER.debug(
                 "%i BLE ADV messages processed last %i seconds for %i device tracker device(s)",
-                adv_cnt,
+                ble_adv_cnt,
                 self.period,
                 len(trackers),
             )
-            adv_cnt = 0
+            ble_adv_cnt = 0
         return True
 
 
 class BleScannerEntity(ScannerEntity, RestoreEntity):
     """Represent a tracked device."""
 
-    def __init__(self, config, mac):
+    def __init__(self, config, key):
         """Set up BLE Tracker entity."""
         self.ready_for_update = False
         self._config = config
-        self._mac = mac
-        self._fmac = ":".join(self._mac[i : i + 2] for i in range(0, len(self._mac), 2))
+        self._type = detect_conf_type(key)
+        self._key = key
+        self._fkey = identifier_normalize(key)
         self._device_settings = self.get_device_settings()
         self._device_name = self._device_settings["name"]
         self._name = "ble tracker {}".format(self._device_name)
@@ -190,28 +211,41 @@ class BleScannerEntity(ScannerEntity, RestoreEntity):
         if not old_state:
             self.ready_for_update = True
             return
-        if "last seen" in old_state.attributes:
-            self._last_seen = dt_util.parse_datetime(old_state.attributes["last seen"])
-            self._extra_state_attributes["last seen"] = dt_util.parse_datetime(
-                old_state.attributes["last seen"]
+        if "last_seen" in old_state.attributes:
+            self._last_seen = dt.parse_datetime(old_state.attributes["last_seen"])
+            self._extra_state_attributes["last_seen"] = dt.parse_datetime(
+                old_state.attributes["last_seen"]
             )
-        if "rssi" in old_state.attributes:
-            self._extra_state_attributes["rssi"] = old_state.attributes["rssi"]
+
+        restore_attr = RESTORE_ATTRIBUTES
+        restore_attr.append('mac_address' if self.is_beacon else 'uuid')
+
+        for attr in restore_attr:
+            if attr in old_state.attributes:
+                if attr in ['uuid', 'mac_address']:
+                    self._extra_state_attributes[attr] = identifier_normalize(old_state.attributes[attr])
+                    continue
+
+                self._extra_state_attributes[attr] = old_state.attributes[attr]
+
         self.ready_for_update = True
+
+    @property
+    def is_beacon(self):
+        """Check if entity is beacon."""
+        return self._type == CONF_UUID
 
     @property
     def is_connected(self):
         """Return the connection state of the device."""
-        return self._last_seen and (dt_util.now() - self._last_seen) < timedelta(
+        return self._last_seen and (dt.now() - self._last_seen) < timedelta(
             seconds=self._consider_home
         )
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self.is_connected:
-            return STATE_HOME
-        return STATE_NOT_HOME
+        return STATE_HOME if self.is_connected else STATE_NOT_HOME
 
     @property
     def name(self):
@@ -246,19 +280,25 @@ class BleScannerEntity(ScannerEntity, RestoreEntity):
     @property
     def mac_address(self):
         """Return the mac address of the device."""
-        return self._fmac
+        if not self.is_beacon:
+            return self._fkey
+
+        if 'mac_address' in self._extra_state_attributes:
+            return self._extra_state_attributes['mac_address']
+
+        return None
 
     @property
     def device_info(self):
         """Return device info."""
-        return {"name": self._device_name, "identifiers": {(DOMAIN, self._fmac)}}
+        return {"name": self._device_name, "identifiers": {(DOMAIN, self._fkey.upper())}}
 
     def get_device_settings(self):
         """Set device settings."""
         device_settings = {}
 
         # initial setup of device settings equal to integration settings
-        dev_name = self._mac
+        dev_name = self._key
         dev_restore_state = self._config[CONF_RESTORE_STATE]
         dev_track = DEFAULT_DEVICE_TRACK
         dev_scan_interval = DEFAULT_DEVICE_TRACKER_SCAN_INTERVAL
@@ -274,7 +314,7 @@ class BleScannerEntity(ScannerEntity, RestoreEntity):
         # overrule settings with device setting if available
         if self._config[CONF_DEVICES]:
             for device in self._config[CONF_DEVICES]:
-                if self._fmac in device["mac"].upper():
+                if self._fkey.upper() == dict_get_or(device).upper():
                     if id_selector in device:
                         # get device name (from YAML config)
                         dev_name = device[id_selector]
@@ -297,8 +337,9 @@ class BleScannerEntity(ScannerEntity, RestoreEntity):
             "consider home": dev_consider_home,
         }
         _LOGGER.debug(
-            "Device tracker device with mac address %s has the following settings. Name: %s. Restore state: %s. Track device: %s. Scan interval: %s. Consider home interval: %s. ",
-            self._fmac,
+            "Device tracker device with %s %s has the following settings. Name: %s. Restore state: %s. Track device: %s. Scan interval: %s. Consider home interval: %s. ",
+            'uuid' if self.is_beacon else 'mac address',
+            self._fkey,
             device_settings["name"],
             device_settings["restore state"],
             device_settings["track device"],
@@ -317,15 +358,26 @@ class BleScannerEntity(ScannerEntity, RestoreEntity):
         if self.enabled is False:
             return
 
-        now = dt_util.now()
+        now = dt.now()
         # Do not update within scan interval to save resources
         if self._last_seen:
             if now - self._last_seen <= timedelta(seconds=self._scan_interval):
                 self.ready_for_update = False
                 return
         self._last_seen = now
-        self._extra_state_attributes["rssi"] = data["rssi"]
-        self._extra_state_attributes["last seen"] = self._last_seen
+        self._extra_state_attributes["last_seen"] = self._last_seen
+        restore_attr = RESTORE_ATTRIBUTES
+        restore_attr.append('mac_address' if self.is_beacon else 'uuid')
+
+        for attr in restore_attr:
+            key = CONF_MAC if attr == 'mac_address' else attr
+            if key in data:
+                if attr in ['uuid', 'mac_address']:
+                    self._extra_state_attributes[attr] = identifier_normalize(data[key])
+                    continue
+
+                self._extra_state_attributes[attr] = data[key]
+
         self.ready_for_update = True
 
     def recheck_state(self, event=None):

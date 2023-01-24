@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 SENSORS = {
     "count": "mdi:virus",
-    "deaths": "mdi:christianity",
+    "deaths": "mdi:cross",
     "recovered": "mdi:bottle-tonic-plus-outline",
     "weekIncidence": "mdi:clipboard-pulse",
     "casesPer100k": "mdi:home-group",
@@ -181,8 +181,8 @@ class RKICovidNumbersSensor(CoordinatorEntity):
             return "cases"
 
     @property
-    def device_state_attributes(self):
-        """Return device attributes."""
+    def extra_state_attributes(self):
+        """Return extra attributes."""
         return {
             ATTR_ATTRIBUTION: f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
         }

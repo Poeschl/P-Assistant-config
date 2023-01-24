@@ -5,7 +5,6 @@ name: Wohnzimmer
 sources:
   temperature: sensor.ble_temperature_wohnzimmer
   humidity: sensor.ble_humidity_wohnzimmer
-  #co2: sensor.bettbeleuchtung_eco2
-  #tvoc: sensor.bettbeleuchtung_tvoc
+  co2: sensor.frischluft_co2
 sensors:
   - iaq_level
